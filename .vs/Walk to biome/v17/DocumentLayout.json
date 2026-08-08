@@ -1,0 +1,239 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\step2\\Desktop\\Walk to biome\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\logistics\\autoconnector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\logistics\\autoconnector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\systems\\gridsystem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\systems\\gridsystem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|C:\\Users\\step2\\Desktop\\Walk to biome\\assets\\script\\core\\logistics\\conveyorbelt.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\logistics\\conveyorbelt.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\logistics\\beltitemmover.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\logistics\\beltitemmover.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|C:\\Users\\step2\\Desktop\\Walk to biome\\assets\\script\\core\\player\\playerinventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\player\\playerinventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\ui\\inventoryui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\ui\\inventoryui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|C:\\Users\\step2\\Desktop\\Walk to biome\\assets\\script\\core\\player\\playerbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\player\\playerbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\data\\buildingdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\data\\buildingdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\buildings\\buildingbase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\buildings\\buildingbase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\buildings\\researchlab.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\buildings\\researchlab.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|C:\\Users\\step2\\Desktop\\Walk to biome\\assets\\script\\core\\buildings\\assembler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\buildings\\assembler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|C:\\Users\\step2\\Desktop\\Walk to biome\\assets\\script\\core\\buildings\\buildingsocket.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\buildings\\buildingsocket.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|C:\\Users\\step2\\Desktop\\Walk to biome\\assets\\script\\core\\buildings\\extractor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\buildings\\extractor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 7,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "GridSystem.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Systems\\GridSystem.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Systems\\GridSystem.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Systems\\GridSystem.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Systems\\GridSystem.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T15:55:19.632Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "BeltItemMover.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\BeltItemMover.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Logistics\\BeltItemMover.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\BeltItemMover.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Logistics\\BeltItemMover.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T15:47:27.154Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "InventoryUI.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\UI\\InventoryUI.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\UI\\InventoryUI.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\UI\\InventoryUI.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\UI\\InventoryUI.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEkAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T15:26:51.104Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "BuildingData.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Data\\BuildingData.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Data\\BuildingData.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Data\\BuildingData.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Data\\BuildingData.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T15:23:51.484Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ResearchLab.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\ResearchLab.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Buildings\\ResearchLab.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\ResearchLab.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Buildings\\ResearchLab.cs",
+              "ViewState": "AgIAAD4AAAAAAAAAAAAwwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T15:08:14.23Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "BuildingBase.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\BuildingBase.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Buildings\\BuildingBase.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\BuildingBase.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Buildings\\BuildingBase.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T15:07:31.022Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "PlayerBuilder.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "ViewState": "AgIAAKIAAAAAAAAAAAAkwKcAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T13:30:16.49Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AutoConnector.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\AutoConnector.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Logistics\\AutoConnector.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\AutoConnector.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Logistics\\AutoConnector.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAgwKMCAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T13:29:24.283Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PlayerInventory.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Player\\PlayerInventory.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Player\\PlayerInventory.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Player\\PlayerInventory.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Player\\PlayerInventory.cs",
+              "ViewState": "AgIAADsAAAAAAAAAAAAIwFQAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T13:13:12.29Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Extractor.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\Extractor.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Buildings\\Extractor.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\Extractor.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Buildings\\Extractor.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAUwDUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T13:09:02.729Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "BuildingSocket.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\BuildingSocket.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Buildings\\BuildingSocket.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\BuildingSocket.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Buildings\\BuildingSocket.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAUwC8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T12:54:26.101Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ConveyorBelt.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\ConveyorBelt.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Logistics\\ConveyorBelt.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\ConveyorBelt.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Logistics\\ConveyorBelt.cs",
+              "ViewState": "AgIAAIkAAAAAAAAAAAAmwK0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T13:10:05.613Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Assembler.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\Assembler.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Buildings\\Assembler.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\Assembler.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Buildings\\Assembler.cs",
+              "ViewState": "AgIAAFgAAAAAAAAAAAAcwHcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-08T13:00:24.348Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
