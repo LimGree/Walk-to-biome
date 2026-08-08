@@ -1,12 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Text;
 
 public class PlayerBuilder : MonoBehaviour
 {
     [Header("References")]
     public PlayerInventory inventory;
     public Camera playerCamera;
-    public LayerMask buildLayer = ~0;
+    public LayerMask buildLayer = ~0;        // Для рейкаста (поверхность)
+    public LayerMask collisionLayer = ~0;    // Для проверки коллизий (препятствия)
     public LayerMask demolishLayer = ~0;
 
     [Header("Settings")]
@@ -123,6 +125,7 @@ public class PlayerBuilder : MonoBehaviour
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
+        // Ищем поверхность для размещения
         if (Physics.Raycast(ray, out RaycastHit hit, maxBuildDistance, buildLayer))
         {
             Vector3 placePos = SnapToGrid(hit.point);
@@ -130,6 +133,7 @@ public class PlayerBuilder : MonoBehaviour
             currentGhost.transform.position = placePos;
             currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
 
+            // Проверяем коллизии отдельным LayerMask, который ИСКЛЮЧАЕТ пол
             canPlace = IsPlacementValid(placePos, currentGhost.transform.rotation);
 
             var renderers = currentGhost.GetComponentsInChildren<Renderer>();
@@ -166,14 +170,49 @@ public class PlayerBuilder : MonoBehaviour
 
     bool IsPlacementValid(Vector3 position, Quaternion rotation)
     {
-        Vector3 halfExtents = new Vector3(0.45f, 0.9f, 0.45f);
+        Vector3 halfExtents = new Vector3(0.49f, 0.9f, 0.49f);
+
+        // Включаем коллайдеры гостя
+        Collider[] ghostColliders = null;
+        if (currentGhost != null)
+        {
+            ghostColliders = currentGhost.GetComponentsInChildren<Collider>();
+            foreach (var col in ghostColliders)
+                col.enabled = true;
+        }
+
+        // ИСПОЛЬЗУЕМ collisionLayer, который НЕ содержит пол
+        // Если collisionLayer не задан, используем buildLayer но исключаем пол
+        LayerMask checkMask = collisionLayer;
+        if (checkMask == 0) // Если не задан отдельный слой
+        {
+            // Исключаем слой пола из проверки
+            int floorLayer = LayerMask.NameToLayer("Floor");
+            if (floorLayer != -1)
+            {
+                checkMask = buildLayer & ~(1 << floorLayer);
+            }
+            else
+            {
+                checkMask = buildLayer;
+            }
+        }
+
         Collider[] overlaps = Physics.OverlapBox(
             position + Vector3.up * halfExtents.y,
             halfExtents,
             rotation,
-            buildLayer
+            checkMask
         );
 
+        // Выключаем коллайдеры гостя
+        if (ghostColliders != null)
+        {
+            foreach (var col in ghostColliders)
+                col.enabled = false;
+        }
+
+        // Проверяем, есть ли препятствия
         foreach (Collider overlap in overlaps)
         {
             if (currentGhost != null && overlap.transform.IsChildOf(currentGhost.transform))

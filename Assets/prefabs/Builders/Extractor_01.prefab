@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2566710878645634629}
   - component: {fileID: 3234025898655072285}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Extractor_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 4047851838170156383}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 497.374, y: 0, z: 499.193}
+  m_LocalPosition: {x: 497.374, y: 0.5, z: 499.193}
   m_LocalScale: {x: 0.8, y: 1, z: 0.8}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -64,7 +64,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8832371818925943608}
   - component: {fileID: 824517825760340283}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: OutputSocket
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -159,8 +159,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2042232487333502000, guid: 717da1c3731ad714c9eea3973acde729, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2042232487333502000, guid: 717da1c3731ad714c9eea3973acde729, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: 2949199117945484491, guid: 717da1c3731ad714c9eea3973acde729, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2949199117945484491, guid: 717da1c3731ad714c9eea3973acde729, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -169,6 +177,10 @@ PrefabInstance:
     - target: {fileID: 7866294667119060119, guid: 717da1c3731ad714c9eea3973acde729, type: 3}
       propertyPath: m_Name
       value: Extractor_Model
+      objectReference: {fileID: 0}
+    - target: {fileID: 7866294667119060119, guid: 717da1c3731ad714c9eea3973acde729, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 7866294667119060119, guid: 717da1c3731ad714c9eea3973acde729, type: 3}
       propertyPath: m_StaticEditorFlags

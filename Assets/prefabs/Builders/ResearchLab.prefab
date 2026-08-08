@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3755874927026197261}
   - component: {fileID: 7572306935651618129}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: InputSocket
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -58,7 +58,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3961511176190890196}
   - component: {fileID: 1582543757906617771}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: ResearchLab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74,7 +74,7 @@ Transform:
   m_GameObject: {fileID: 8125453562236294625}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 503.98, y: 0, z: 506.68}
+  m_LocalPosition: {x: 503.98, y: 0.5, z: 506.68}
   m_LocalScale: {x: 0.8, y: 1, z: 0.8}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -108,9 +108,33 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3961511176190890196}
     m_Modifications:
+    - target: {fileID: 47480773813830218, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 635042646955960301, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4553296398647410942, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 4691466468073176050, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
       propertyPath: m_Name
       value: Research Lab_model
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691466468073176050, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6610055698736589771, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7029902609119167293, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 9019881886891743023, guid: 1ea48f6e1720eb84c9ebebf967a3c8e7, type: 3}
       propertyPath: m_LocalScale.x

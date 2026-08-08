@@ -1024,7 +1024,7 @@ Transform:
   m_GameObject: {fileID: 1351946384}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.5, z: 0}
+  m_LocalPosition: {x: 0, y: -0.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1447,9 +1447,12 @@ MonoBehaviour:
   buildLayer:
     serializedVersion: 2
     m_Bits: 8
-  obstacleLayer:
+  collisionLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
+  demolishLayer:
+    serializedVersion: 2
+    m_Bits: 64
   maxBuildDistance: 12
   ghostValidMaterial: {fileID: 2100000, guid: d6ee5da17f5f9174c9ef112c4a7cfb6a, type: 2}
   ghostInvalidMaterial: {fileID: 2100000, guid: 83fa8c95ac0dfd4409b01ebd374a5ff0, type: 2}

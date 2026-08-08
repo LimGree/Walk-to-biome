@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9161179211785067003}
   - component: {fileID: 5403431763437179488}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: InputSocket
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -58,7 +58,7 @@ GameObject:
   m_Component:
   - component: {fileID: 69926826559800121}
   - component: {fileID: 4146460190108093142}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: OutputSocket
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,7 @@ GameObject:
   m_Component:
   - component: {fileID: 171039147613049635}
   - component: {fileID: 552891294561650508}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Assembler_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -159,9 +159,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 171039147613049635}
     m_Modifications:
+    - target: {fileID: 1108942898697308245, guid: a4a639d0ea873f94caf351456ba0a6a1, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 1127085519168246371, guid: a4a639d0ea873f94caf351456ba0a6a1, type: 3}
       propertyPath: m_Name
       value: Assembler_Mode
+      objectReference: {fileID: 0}
+    - target: {fileID: 1127085519168246371, guid: a4a639d0ea873f94caf351456ba0a6a1, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1755806152979941528, guid: a4a639d0ea873f94caf351456ba0a6a1, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4157682436970833320, guid: a4a639d0ea873f94caf351456ba0a6a1, type: 3}
       propertyPath: m_LocalScale.x
@@ -218,6 +230,10 @@ PrefabInstance:
     - target: {fileID: 4157682436970833320, guid: a4a639d0ea873f94caf351456ba0a6a1, type: 3}
       propertyPath: m_ConstrainProportionsScale
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4633008898486864923, guid: a4a639d0ea873f94caf351456ba0a6a1, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
