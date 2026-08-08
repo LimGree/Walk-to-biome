@@ -6,20 +6,24 @@ public class PlayerBuilder : MonoBehaviour
     [Header("References")]
     public PlayerInventory inventory;
     public Camera playerCamera;
-    public LayerMask buildLayer = ~0;          // на что можно ставить (земля + здания)
-    public LayerMask obstacleLayer = ~0;       // что мешает ставить
+    public LayerMask buildLayer = ~0;
+    public LayerMask demolishLayer = ~0;
 
     [Header("Settings")]
     public float maxBuildDistance = 12f;
-    public float gridSize = 1f;
     public Material ghostValidMaterial;
     public Material ghostInvalidMaterial;
-    public Key rotateKey = Key.R;              // на будущее, если захочешь через Input System
+    public Key rotateKey = Key.R;
+
+    public bool IsBuildModeActive => isBuildMode && currentBuildingData != null;
+    public bool HasPlacementTarget { get; private set; }
+    public Vector3 CurrentPlacementPosition { get; private set; }
+    public bool CanPlaceCurrent { get; private set; }
 
     private InputSystem_Actions inputActions;
     private GameObject currentGhost;
     private BuildingData currentBuildingData;
-    private bool isBuildMode = true;           // сразу включен для удобства
+    private bool isBuildMode = true;
     private float currentRotationY = 0f;
     private bool canPlace = false;
 
@@ -40,7 +44,6 @@ public class PlayerBuilder : MonoBehaviour
     {
         inputActions.Enable();
         inputActions.Player.Attack.performed += OnPlace;
-        // Можно добавить отдельную кнопку для удаления (например Right Click)
     }
 
     void OnDisable()
@@ -48,11 +51,11 @@ public class PlayerBuilder : MonoBehaviour
         inputActions.Player.Attack.performed -= OnPlace;
         inputActions.Disable();
         DestroyGhost();
+        ClearPlacementTarget();
     }
 
     void Update()
     {
-        // Переключение слота hotbar'а уже обрабатывается в Inventory
         BuildingData selected = inventory.GetSelectedBuilding();
 
         if (selected != currentBuildingData)
@@ -61,21 +64,25 @@ public class PlayerBuilder : MonoBehaviour
             RecreateGhost();
         }
 
-        if (isBuildMode && currentBuildingData != null)
+        if (IsBuildModeActive)
         {
             UpdateGhost();
         }
         else
         {
             DestroyGhost();
+            ClearPlacementTarget();
         }
 
-        // Поворот здания (пока через старый Input, потом можно перевести)
         if (Keyboard.current != null && Keyboard.current[rotateKey].wasPressedThisFrame)
         {
             currentRotationY += 90f;
-            if (currentRotationY >= 360f) currentRotationY = 0f;
+            if (currentRotationY >= 360f)
+                currentRotationY = 0f;
         }
+
+        if (isBuildMode && Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+            TryDemolish();
     }
 
     void RecreateGhost()
@@ -86,7 +93,7 @@ public class PlayerBuilder : MonoBehaviour
             return;
 
         currentGhost = Instantiate(currentBuildingData.ghostPrefab);
-        // Отключаем коллайдеры у ghost
+
         foreach (var col in currentGhost.GetComponentsInChildren<Collider>())
             col.enabled = false;
     }
@@ -100,9 +107,19 @@ public class PlayerBuilder : MonoBehaviour
         }
     }
 
+    void ClearPlacementTarget()
+    {
+        HasPlacementTarget = false;
+        CanPlaceCurrent = false;
+    }
+
     void UpdateGhost()
     {
-        if (currentGhost == null) return;
+        if (currentGhost == null)
+        {
+            ClearPlacementTarget();
+            return;
+        }
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
@@ -115,7 +132,6 @@ public class PlayerBuilder : MonoBehaviour
 
             canPlace = IsPlacementValid(placePos, currentGhost.transform.rotation);
 
-            // Меняем материал ghost'а
             var renderers = currentGhost.GetComponentsInChildren<Renderer>();
             Material mat = canPlace ? ghostValidMaterial : ghostInvalidMaterial;
             foreach (var r in renderers)
@@ -123,40 +139,55 @@ public class PlayerBuilder : MonoBehaviour
                 if (mat != null)
                     r.material = mat;
             }
+
+            CurrentPlacementPosition = placePos;
+            HasPlacementTarget = true;
+            CanPlaceCurrent = canPlace;
+            currentGhost.SetActive(true);
         }
         else
         {
-            // Прячем ghost, если смотрим в небо
             currentGhost.SetActive(false);
             canPlace = false;
-            return;
+            ClearPlacementTarget();
         }
-
-        currentGhost.SetActive(true);
     }
 
     Vector3 SnapToGrid(Vector3 position)
     {
-        float x = Mathf.Round(position.x / gridSize) * gridSize;
-        float z = Mathf.Round(position.z / gridSize) * gridSize;
-        // Y оставляем как есть (или можно тоже снапить, если нужно)
+        if (GridSystem.Instance != null)
+            return GridSystem.Instance.SnapToGrid(position);
+
+        float cellSize = 1f;
+        float x = Mathf.Round(position.x / cellSize) * cellSize;
+        float z = Mathf.Round(position.z / cellSize) * cellSize;
         return new Vector3(x, position.y, z);
     }
 
     bool IsPlacementValid(Vector3 position, Quaternion rotation)
     {
-        // Простая проверка: нет ли коллайдеров в объёме здания
-        // Для начала используем небольшой бокс. Потом можно брать размер из BuildingData.
+        Vector3 halfExtents = new Vector3(0.45f, 0.9f, 0.45f);
+        Collider[] overlaps = Physics.OverlapBox(
+            position + Vector3.up * halfExtents.y,
+            halfExtents,
+            rotation,
+            buildLayer
+        );
 
-        Vector3 halfExtents = new Vector3(0.45f, 0.9f, 0.45f); // подгони под свои модели
-        Collider[] overlaps = Physics.OverlapBox(position + Vector3.up * halfExtents.y, halfExtents, rotation, obstacleLayer);
+        foreach (Collider overlap in overlaps)
+        {
+            if (currentGhost != null && overlap.transform.IsChildOf(currentGhost.transform))
+                continue;
 
-        return overlaps.Length == 0;
+            return false;
+        }
+
+        return true;
     }
 
     void OnPlace(InputAction.CallbackContext ctx)
     {
-        if (!isBuildMode || currentBuildingData == null || currentGhost == null || !canPlace)
+        if (!IsBuildModeActive || currentGhost == null || !canPlace)
             return;
 
         GameObject building = Instantiate(
@@ -173,13 +204,50 @@ public class PlayerBuilder : MonoBehaviour
             buildingBase.data = currentBuildingData;
             buildingBase.OnPlaced();
         }
-        AutoConnector.TryAutoConnect(building);
+
+        if (ConnectionManager.Instance != null)
+            ConnectionManager.Instance.OnPlaced(building);
     }
 
-    // Можно вызвать из UI или по кнопке
+    void TryDemolish()
+    {
+        if (playerCamera == null || ConnectionManager.Instance == null)
+            return;
+
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        if (!Physics.Raycast(ray, out RaycastHit hit, maxBuildDistance, demolishLayer))
+            return;
+
+        GameObject target = FindDemolishTarget(hit.collider);
+        if (target == null)
+            return;
+
+        ConnectionManager.Instance.RemovePlacedObject(target);
+    }
+
+    static GameObject FindDemolishTarget(Collider collider)
+    {
+        if (collider == null)
+            return null;
+
+        ConveyorBelt belt = collider.GetComponentInParent<ConveyorBelt>();
+        if (belt != null)
+            return belt.gameObject;
+
+        BuildingBase building = collider.GetComponentInParent<BuildingBase>();
+        if (building != null)
+            return building.gameObject;
+
+        return null;
+    }
+
     public void SetBuildMode(bool enabled)
     {
         isBuildMode = enabled;
-        if (!enabled) DestroyGhost();
+        if (!enabled)
+        {
+            DestroyGhost();
+            ClearPlacementTarget();
+        }
     }
 }

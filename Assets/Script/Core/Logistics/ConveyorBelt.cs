@@ -9,6 +9,7 @@ public class ConveyorBelt : MonoBehaviour
     public int maxItems = 4;
 
     [Header("Connections")]
+    public ConveyorBelt prevBelt;
     public ConveyorBelt nextBelt;
     public BuildingSocket connectedInputSocket;
     public BuildingSocket connectedOutputSocket;
@@ -51,6 +52,19 @@ public class ConveyorBelt : MonoBehaviour
         return true;
     }
 
+    void OnEnable()
+    {
+        ConveyorNetwork.Instance?.RegisterBelt(this);
+    }
+
+    void OnDisable()
+    {
+        ConveyorNetwork.Instance?.UnregisterBelt(this);
+
+        if (ConnectionManager.Instance != null)
+            ConnectionManager.Instance.DisconnectObject(gameObject);
+    }
+
     void Update()
     {
         if (items.Count == 0) return;
@@ -82,7 +96,6 @@ public class ConveyorBelt : MonoBehaviour
 
     void TryPassToNext(ItemOnBelt item, int index)
     {
-        // 1. Следующая лента
         if (nextBelt != null)
         {
             if (nextBelt.TryAccept(item.itemData, item.progress - 1f))
@@ -100,7 +113,6 @@ public class ConveyorBelt : MonoBehaviour
             }
         }
 
-        // 2. Здание через сокет
         if (connectedInputSocket != null)
         {
             BuildingBase building = connectedInputSocket.GetComponentInParent<BuildingBase>();
@@ -124,7 +136,6 @@ public class ConveyorBelt : MonoBehaviour
             }
         }
 
-        // Некуда девать
         item.progress = 1f;
         item.transform.position = GetPositionOnBelt(1f);
 

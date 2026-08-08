@@ -10,8 +10,22 @@ public class GridSystem : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+            Instance = this;
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        EnsureComponent<BuildGridVisualizer>();
+        EnsureComponent<ConnectionManager>();
+    }
+
+    void EnsureComponent<T>() where T : Component
+    {
+        if (GetComponent<T>() == null)
+            gameObject.AddComponent<T>();
     }
 
     public Vector3 SnapToGrid(Vector3 worldPosition)
@@ -19,7 +33,6 @@ public class GridSystem : MonoBehaviour
         float x = Mathf.Round((worldPosition.x - origin.x) / cellSize) * cellSize + origin.x;
         float z = Mathf.Round((worldPosition.z - origin.z) / cellSize) * cellSize + origin.z;
 
-        // Y обычно оставляем как есть (высота поверхности)
         return new Vector3(x, worldPosition.y, z);
     }
 
@@ -39,12 +52,16 @@ public class GridSystem : MonoBehaviour
         );
     }
 
-    // Для отладки
-    void OnDrawGizmos()
+    public Vector3 GetCellCenter(Vector2Int cell, float y)
     {
-        if (!Application.isPlaying) return;
+        Vector3 world = CellToWorld(cell);
+        world.y = y;
+        return world;
+    }
 
-        Gizmos.color = new Color(1f, 1f, 1f, 0.05f);
-        // Можно нарисовать сетку вокруг игрока, если нужно
+    public Vector3 SnapToCellCenter(Vector3 worldPosition)
+    {
+        Vector2Int cell = WorldToCell(worldPosition);
+        return GetCellCenter(cell, worldPosition.y);
     }
 }

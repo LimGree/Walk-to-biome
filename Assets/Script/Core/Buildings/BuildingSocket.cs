@@ -17,6 +17,16 @@ public class BuildingSocket : MonoBehaviour
     [Header("Debug")]
     public bool showDebug = true;
 
+    void OnEnable()
+    {
+        ConveyorNetwork.Instance?.RegisterSocket(this);
+    }
+
+    void OnDisable()
+    {
+        ConveyorNetwork.Instance?.UnregisterSocket(this);
+    }
+
     public void ConnectBelt(ConveyorBelt belt)
     {
         connectedBelt = belt;
