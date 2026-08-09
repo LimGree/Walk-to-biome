@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class Assembler : BuildingBase
+public class Assembler : BuildingBase, IInteractable
 {
     [Header("Assembler Settings")]
     public RecipeData currentRecipe;
@@ -116,5 +116,15 @@ public class Assembler : BuildingBase
         currentRecipe = recipe;
         craftProgress = 0f;
         inputBuffer.Clear();
+    }
+
+    public void Interact(GameObject interactor)
+    {
+        Debug.Log($"[Extractor] Interact вызван! MachineUI.Instance = {MachineUI.Instance}");
+
+        if (MachineUI.Instance != null)
+            MachineUI.Instance.Open(this);
+        else
+            Debug.LogError("MachineUI.Instance == null!");
     }
 }

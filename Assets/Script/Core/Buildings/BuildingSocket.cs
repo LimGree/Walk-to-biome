@@ -52,7 +52,8 @@ public class BuildingSocket : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = socketType == SocketType.Input ? Color.green : Color.cyan;
-        Gizmos.DrawSphere(transform.position, 0.15f);
+        Gizmos.DrawSphere(transform.position, 0.18f);
         Gizmos.DrawLine(transform.position, transform.position + transform.forward * 0.5f);
+        Gizmos.DrawRay(transform.position, transform.forward * 1.2f);
     }
 }

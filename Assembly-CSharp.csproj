@@ -70,12 +70,14 @@
     <Compile Include="Assets\Script\Core\Items\ItemStack.cs" />
     <Compile Include="Assets\Script\Core\Buildings\ResearchLab.cs" />
     <Compile Include="Assets\InputSystem_Actions.cs" />
+    <Compile Include="Assets\Script\Core\Logistics\AutoConnector.cs" />
+    <Compile Include="Assets\Script\Core\UI\MachineUI.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Assembler.cs" />
     <Compile Include="Assets\Script\Core\Logistics\ItemOnBelt.cs" />
-    <Compile Include="Assets\Script\Core\Logistics\ConnectionManager.cs" />
     <Compile Include="Assets\Script\Core\Buildings\BuildingSocket.cs" />
     <Compile Include="Assets\Script\Core\Data\BuildingData.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerBuilder.cs" />
+    <Compile Include="Assets\Script\Core\Buildings\Smelter.cs" />
     <Compile Include="Assets\Script\Core\Systems\ResearchSystem.cs" />
     <Compile Include="Assets\Script\Core\Items\ItemInstance.cs" />
     <Compile Include="Assets\Script\Core\GameManager.cs" />

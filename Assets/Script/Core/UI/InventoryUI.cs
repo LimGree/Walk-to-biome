@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -45,7 +45,7 @@ public class InventoryUI : MonoBehaviour
             slotIcons[i] = slot.transform.Find("Icon")?.GetComponent<Image>();
             slotHighlights[i] = slot.transform.Find("Highlight")?.GetComponent<Image>();
 
-            // Показываем иконку здания, если есть
+            // РџРѕРєР°Р·С‹РІР°РµРј РёРєРѕРЅРєСѓ Р·РґР°РЅРёСЏ, РµСЃР»Рё РµСЃС‚СЊ
             if (inventory.hotbar[i] != null && slotIcons[i] != null)
             {
                 slotIcons[i].sprite = inventory.hotbar[i].icon;
@@ -69,7 +69,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    // Можно вызывать, когда меняется содержимое hotbar'а
+    // РњРѕР¶РЅРѕ РІС‹Р·С‹РІР°С‚СЊ, РєРѕРіРґР° РјРµРЅСЏРµС‚СЃСЏ СЃРѕРґРµСЂР¶РёРјРѕРµ hotbar'Р°
     [ContextMenu("Refresh Hotbar")]
     public void RefreshHotbar()
     {

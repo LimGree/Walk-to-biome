@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5e80bec2d6738574d9e628019f2441e3, type: 3}
-  m_Name: Extractor0
+  m_Name: Extractor
   m_EditorClassIdentifier: 
   id: extractor
   displayName: Extractor

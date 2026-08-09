@@ -414,6 +414,7 @@
 "Assets/Script/Core/Buildings/Extractor.cs"
 "Assets/Script/Core/Buildings/PowerGenerator.cs"
 "Assets/Script/Core/Buildings/ResearchLab.cs"
+"Assets/Script/Core/Buildings/Smelter.cs"
 "Assets/Script/Core/Data/BuildingData.cs"
 "Assets/Script/Core/Data/ItemData.cs"
 "Assets/Script/Core/Data/RecipeData.cs"
@@ -421,8 +422,8 @@
 "Assets/Script/Core/GameManager.cs"
 "Assets/Script/Core/Items/ItemInstance.cs"
 "Assets/Script/Core/Items/ItemStack.cs"
+"Assets/Script/Core/Logistics/AutoConnector.cs"
 "Assets/Script/Core/Logistics/BeltItemMover.cs"
-"Assets/Script/Core/Logistics/ConnectionManager.cs"
 "Assets/Script/Core/Logistics/ConveyorBelt.cs"
 "Assets/Script/Core/Logistics/ConveyorNetwork.cs"
 "Assets/Script/Core/Logistics/ItemOnBelt.cs"
@@ -436,6 +437,7 @@
 "Assets/Script/Core/Systems/SaveSystem.cs"
 "Assets/Script/Core/UI/BuildMenuUI.cs"
 "Assets/Script/Core/UI/InventoryUI.cs"
+"Assets/Script/Core/UI/MachineUI.cs"
 "Assets/Script/Core/UI/ResearchUI.cs"
 -langversion:9.0
 /deterministic

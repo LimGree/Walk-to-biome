@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 943e43c1941a13b46bc200ba529369b4, type: 3}
+  m_Name: Basic Automation
+  m_EditorClassIdentifier: 
+  id: research_basic_automation
+  displayName: Basic Automation
+  description: Unlocks Assembler and Smelter
+  icon: {fileID: 0}
+  requiredItems:
+  - item: {fileID: 11400000, guid: 725d7895721123d41a73f359454d1d9c, type: 2}
+    amount: 15
+  requiredResearches: []
+  unlockedBuildings:
+  - {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}
+  - {fileID: 11400000, guid: fb3560e85bd56c349aa3d7327bd69798, type: 2}
+  unlockedRecipes:
+  - {fileID: 11400000, guid: 381105f3eae4e0d4ea85f7ad6a9c4f6b, type: 2}
+  - {fileID: 11400000, guid: b020d37925269d7479c9b83b0c017fbf, type: 2}

@@ -1,6 +1,7 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
+using System.Linq;
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -42,12 +43,12 @@ public class PlayerInventory : MonoBehaviour
 
     void Update()
     {
-        // Íàä¸æíîå ÷òåíèå êîë¸ñèêà ìûøè
+        // ÐÐ°Ð´Ñ‘Ð¶Ð½Ð¾Ðµ Ñ‡Ñ‚ÐµÐ½Ð¸Ðµ ÐºÐ¾Ð»Ñ‘ÑÐ¸ÐºÐ° Ð¼Ñ‹ÑˆÐ¸
         if (Mouse.current == null) return;
 
         Vector2 scroll = Mouse.current.scroll.ReadValue();
 
-        if (scroll.y > 0.1f)          // ââåðõ
+        if (scroll.y > 0.1f)          // Ð²Ð²ÐµÑ€Ñ…
         {
             selectedIndex--;
             if (selectedIndex < 0)
@@ -55,7 +56,7 @@ public class PlayerInventory : MonoBehaviour
 
             OnSelectionChanged?.Invoke(selectedIndex);
         }
-        else if (scroll.y < -0.1f)   // âíèç
+        else if (scroll.y < -0.1f)   // Ð²Ð½Ð¸Ð·
         {
             selectedIndex++;
             if (selectedIndex >= hotbarSize)
@@ -81,9 +82,6 @@ public class PlayerInventory : MonoBehaviour
 
     public void Testfillhotbar()
     {
-        for (int i = 0; i < 4; i++)
-        {
-            hotbar[i] = buildersPrefabs[Math.Clamp(i,0,3)];
-        }
+        Array.Copy(buildersPrefabs, hotbar, Math.Min(buildersPrefabs.Length, hotbar.Length));
     }
 }

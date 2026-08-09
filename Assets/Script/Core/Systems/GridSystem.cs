@@ -19,7 +19,6 @@ public class GridSystem : MonoBehaviour
         }
 
         EnsureComponent<BuildGridVisualizer>();
-        EnsureComponent<ConnectionManager>();
     }
 
     void EnsureComponent<T>() where T : Component

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Extractor : BuildingBase
+public class Extractor : BuildingBase, IInteractable
 {
     [Header("Extractor Settings")]
     public ItemData resource;
@@ -50,5 +50,14 @@ public class Extractor : BuildingBase
                 if (!success) break;
             }
         }
+    }
+    public void Interact(GameObject interactor)
+    {
+        Debug.Log($"[Extractor] Interact вызван! MachineUI.Instance = {MachineUI.Instance}");
+
+        if (MachineUI.Instance != null)
+            MachineUI.Instance.Open(this);
+        else
+            Debug.LogError("MachineUI.Instance == null!");
     }
 }

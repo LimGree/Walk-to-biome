@@ -5,20 +5,32 @@ public class ResearchSystem : MonoBehaviour
 {
     public static ResearchSystem Instance { get; private set; }
 
-    [Header("All Research")]
+    [Header("All Research Nodes")]
     public List<ResearchNodeData> allResearchNodes = new List<ResearchNodeData>();
 
     // Что уже исследовано
     private HashSet<ResearchNodeData> unlockedResearch = new HashSet<ResearchNodeData>();
 
-    // Что уже разблокировано
+    // Что разблокировано
     private HashSet<BuildingData> unlockedBuildings = new HashSet<BuildingData>();
     private HashSet<RecipeData> unlockedRecipes = new HashSet<RecipeData>();
 
     void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        // Стартовые здания (уровень 0)
+        // Их можно добавить вручную в unlockedBuildings в инспекторе
+        // или прописать здесь
     }
 
     public bool IsResearchUnlocked(ResearchNodeData node)
@@ -28,6 +40,7 @@ public class ResearchSystem : MonoBehaviour
 
     public bool CanStartResearch(ResearchNodeData node)
     {
+        if (node == null) return false;
         if (IsResearchUnlocked(node)) return false;
 
         // Проверяем зависимости
@@ -35,16 +48,17 @@ public class ResearchSystem : MonoBehaviour
         {
             foreach (var req in node.requiredResearches)
             {
-                if (!IsResearchUnlocked(req))
+                if (req != null && !IsResearchUnlocked(req))
                     return false;
             }
         }
+
         return true;
     }
 
     public void CompleteResearch(ResearchNodeData node)
     {
-        if (IsResearchUnlocked(node)) return;
+        if (node == null || IsResearchUnlocked(node)) return;
 
         unlockedResearch.Add(node);
 
@@ -53,7 +67,8 @@ public class ResearchSystem : MonoBehaviour
         {
             foreach (var building in node.unlockedBuildings)
             {
-                unlockedBuildings.Add(building);
+                if (building != null)
+                    unlockedBuildings.Add(building);
             }
         }
 
@@ -62,24 +77,43 @@ public class ResearchSystem : MonoBehaviour
         {
             foreach (var recipe in node.unlockedRecipes)
             {
-                unlockedRecipes.Add(recipe);
+                if (recipe != null)
+                    unlockedRecipes.Add(recipe);
             }
         }
 
-        Debug.Log($"Research unlocked: {node.displayName}");
+        Debug.Log($"[Research] Исследование завершено: {node.displayName}");
     }
 
     public bool IsBuildingUnlocked(BuildingData building)
     {
-        // Если список пустой — считаем, что всё открыто с начала
+        if (building == null) return false;
+
+        // Если здание в стартовом наборе — всегда доступно
         if (unlockedBuildings.Count == 0) return true;
+
         return unlockedBuildings.Contains(building);
     }
 
     public bool IsRecipeUnlocked(RecipeData recipe)
     {
+        if (recipe == null) return false;
         if (unlockedRecipes.Count == 0) return true;
+
         return unlockedRecipes.Contains(recipe);
+    }
+
+    public List<ResearchNodeData> GetAvailableResearch()
+    {
+        List<ResearchNodeData> available = new List<ResearchNodeData>();
+
+        foreach (var node in allResearchNodes)
+        {
+            if (CanStartResearch(node))
+                available.Add(node);
+        }
+
+        return available;
     }
 
     public List<ResearchNodeData> GetAllNodes() => allResearchNodes;

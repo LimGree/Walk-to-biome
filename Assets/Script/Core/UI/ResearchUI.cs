@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ public class ResearchUI : MonoBehaviour
 
     void Update()
     {
-        // Открытие по клавише T (пример)
+        // РћС‚РєСЂС‹С‚РёРµ РїРѕ РєР»Р°РІРёС€Рµ T (РїСЂРёРјРµСЂ)
         if (Input.GetKeyDown(KeyCode.T))
         {
             ToggleMenu();
@@ -60,7 +60,7 @@ public class ResearchUI : MonoBehaviour
                 text.text = node.displayName + status;
             }
 
-            // Можно добавить блокировку кнопок и т.д.
+            // РњРѕР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ РєРЅРѕРїРѕРє Рё С‚.Рґ.
         }
     }
 }

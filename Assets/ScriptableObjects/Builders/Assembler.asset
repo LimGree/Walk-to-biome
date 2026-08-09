@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Crafts items from resources
   prefab: {fileID: 8355325514519471134, guid: 735fe68b4ba56b84ba6b36c448cb7b69, type: 3}
   ghostPrefab: {fileID: 2647882281371017679, guid: 5f987cf987c548242b4044c57ef21111, type: 3}
-  icon: {fileID: -336690863, guid: 46ca628be59c5234684e63d0ef59aa64, type: 3}
+  icon: {fileID: -826178312, guid: db415878ddbf7354680b3305db1e2714, type: 3}
   size: {x: 2, y: 2}
   canRotate: 1
   buildCost: 0

@@ -15,6 +15,24 @@ public abstract class BuildingBase : MonoBehaviour
 
     public virtual void OnRemoved()
     {
+        // Отключаем все сокеты
+        if (inputSockets != null)
+        {
+            foreach (var socket in inputSockets)
+            {
+                if (socket != null)
+                    socket.DisconnectBelt();
+            }
+        }
+
+        if (outputSockets != null)
+        {
+            foreach (var socket in outputSockets)
+            {
+                if (socket != null)
+                    socket.DisconnectBelt();
+            }
+        }
     }
 
     public virtual bool TryReceiveItem(ItemData item, BuildingSocket fromSocket)

@@ -61,8 +61,6 @@ public class ConveyorBelt : MonoBehaviour
     {
         ConveyorNetwork.Instance?.UnregisterBelt(this);
 
-        if (ConnectionManager.Instance != null)
-            ConnectionManager.Instance.DisconnectObject(gameObject);
     }
 
     void Update()

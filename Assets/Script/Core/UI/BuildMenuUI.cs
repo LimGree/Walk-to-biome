@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -8,7 +8,7 @@ public class BuildMenuUI : MonoBehaviour
     public PlayerInventory inventory;
     public GameObject menuPanel;
     public Transform buttonsParent;
-    public GameObject buttonPrefab;          // кнопка-префаб
+    public GameObject buttonPrefab;          // РєРЅРѕРїРєР°-РїСЂРµС„Р°Р±
 
     [Header("Data")]
     public BuildingData[] availableBuildings;
@@ -25,7 +25,7 @@ public class BuildMenuUI : MonoBehaviour
 
     void Update()
     {
-        // Открытие/закрытие по клавише B (пример)
+        // РћС‚РєСЂС‹С‚РёРµ/Р·Р°РєСЂС‹С‚РёРµ РїРѕ РєР»Р°РІРёС€Рµ B (РїСЂРёРјРµСЂ)
         if (Input.GetKeyDown(KeyCode.B))
         {
             ToggleMenu();
@@ -44,17 +44,17 @@ public class BuildMenuUI : MonoBehaviour
             BuildingData data = availableBuildings[i];
             GameObject btnObj = Instantiate(buttonPrefab, buttonsParent);
 
-            // Текст
+            // РўРµРєСЃС‚
             var text = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null) text.text = data.displayName;
 
-            // Картинка
+            // РљР°СЂС‚РёРЅРєР°
             var image = btnObj.transform.Find("Icon")?.GetComponent<Image>();
             if (image != null && data.icon != null)
                 image.sprite = data.icon;
 
-            // Нажатие
-            int index = i; // важно для замыкания
+            // РќР°Р¶Р°С‚РёРµ
+            int index = i; // РІР°Р¶РЅРѕ РґР»СЏ Р·Р°РјС‹РєР°РЅРёСЏ
             btnObj.GetComponent<Button>().onClick.AddListener(() => SelectBuilding(index));
         }
     }
@@ -63,7 +63,7 @@ public class BuildMenuUI : MonoBehaviour
     {
         if (inventory == null || index >= availableBuildings.Length) return;
 
-        // Кладём выбранное здание в первый слот hotbar'а (можно улучшить)
+        // РљР»Р°РґС‘Рј РІС‹Р±СЂР°РЅРЅРѕРµ Р·РґР°РЅРёРµ РІ РїРµСЂРІС‹Р№ СЃР»РѕС‚ hotbar'Р° (РјРѕР¶РЅРѕ СѓР»СѓС‡С€РёС‚СЊ)
         inventory.SetHotbarSlot(0, availableBuildings[index]);
         inventory.selectedIndex = 0;
 
@@ -78,6 +78,8 @@ public class BuildMenuUI : MonoBehaviour
 
         Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = isOpen;
+
+        SetPlayerControl(!isOpen);   // в†ђ РґРѕР±Р°РІСЊ
     }
 
     public void CloseMenu()
@@ -88,5 +90,16 @@ public class BuildMenuUI : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        SetPlayerControl(true);      // в†ђ РґРѕР±Р°РІСЊ
+    }
+
+    void SetPlayerControl(bool enabled)
+    {
+        var movement = FindFirstObjectByType<PlayerMovement>();
+        if (movement != null)
+        {
+            movement.canMove = enabled;
+            movement.canLook = enabled;
+        }
     }
 }

@@ -1,11 +1,11 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerInteractor : MonoBehaviour
 {
     [Header("Settings")]
     public float interactDistance = 4f;
-    public LayerMask interactLayer = ~0; // всё по умолчанию
+    public LayerMask interactLayer = ~0; // РІСЃС‘ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
 
     private InputSystem_Actions inputActions;
     private Camera cam;
@@ -42,19 +42,29 @@ public class PlayerInteractor : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactLayer))
         {
             currentInteractable = hit.collider.GetComponentInParent<IInteractable>();
+
+            // РІСЂРµРјРµРЅРЅС‹Р№ РґРµР±Р°Рі
+            if (currentInteractable != null)
+                Debug.Log($"[Interactor] РЎРјРѕС‚СЂСЋ РЅР°: {hit.collider.name} в†’ {currentInteractable.GetType().Name}");
         }
     }
 
     void OnInteract(InputAction.CallbackContext ctx)
     {
+        Debug.Log($"[Interactor] Interact pressed. currentInteractable = {(currentInteractable != null ? currentInteractable.ToString() : "NULL")}");
+
         if (currentInteractable != null)
         {
             currentInteractable.Interact(gameObject);
         }
+        else
+        {
+            Debug.LogWarning("[Interactor] РќРµ РЅР°С€С‘Р» IInteractable РїРѕРґ РїСЂРёС†РµР»РѕРј");
+        }
     }
 }
 
-// Простой интерфейс для всего, с чем можно взаимодействовать
+// РџСЂРѕСЃС‚РѕР№ РёРЅС‚РµСЂС„РµР№СЃ РґР»СЏ РІСЃРµРіРѕ, СЃ С‡РµРј РјРѕР¶РЅРѕ РІР·Р°РёРјРѕРґРµР№СЃС‚РІРѕРІР°С‚СЊ
 public interface IInteractable
 {
     void Interact(GameObject interactor);

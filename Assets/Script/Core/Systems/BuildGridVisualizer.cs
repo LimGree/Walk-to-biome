@@ -41,7 +41,7 @@ public class BuildGridVisualizer : MonoBehaviour
             return;
         }
 
-        if (!playerBuilder.IsBuildModeActive || !playerBuilder.HasPlacementTarget)
+        if (!playerBuilder.IsBuildModeActive)
         {
             SetVisible(false);
             return;

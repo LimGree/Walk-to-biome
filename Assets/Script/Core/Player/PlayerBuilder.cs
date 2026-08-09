@@ -25,7 +25,7 @@ public class PlayerBuilder : MonoBehaviour
     private InputSystem_Actions inputActions;
     private GameObject currentGhost;
     private BuildingData currentBuildingData;
-    private bool isBuildMode = true;
+    public bool isBuildMode = true;
     private float currentRotationY = 0f;
     private bool canPlace = false;
 
@@ -81,6 +81,13 @@ public class PlayerBuilder : MonoBehaviour
             currentRotationY += 90f;
             if (currentRotationY >= 360f)
                 currentRotationY = 0f;
+
+            // Если уже стоит ghost — просто поворачиваем его
+            if (currentGhost != null)
+                currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
+
+            // Если хочешь, чтобы уже установленные здания тоже можно было поворачивать —
+            // это отдельная механика. Пока оставляем только при строительстве.
         }
 
         if (isBuildMode && Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
@@ -243,14 +250,12 @@ public class PlayerBuilder : MonoBehaviour
             buildingBase.data = currentBuildingData;
             buildingBase.OnPlaced();
         }
-
-        if (ConnectionManager.Instance != null)
-            ConnectionManager.Instance.OnPlaced(building);
+        AutoConnector.TryAutoConnect(building);
     }
 
     void TryDemolish()
     {
-        if (playerCamera == null || ConnectionManager.Instance == null)
+        if (playerCamera == null)
             return;
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
@@ -261,7 +266,53 @@ public class PlayerBuilder : MonoBehaviour
         if (target == null)
             return;
 
-        ConnectionManager.Instance.RemovePlacedObject(target);
+        // Вызываем правильное удаление
+        DemolishObject(target);
+    }
+
+    void DemolishObject(GameObject target)
+    {
+        if (target == null) return;
+
+        // 1. Конвейер
+        ConveyorBelt belt = target.GetComponent<ConveyorBelt>();
+        if (belt != null)
+        {
+            // Очищаем предметы на ленте
+            belt.ClearItems();
+
+            // Отключаем все связи
+            if (belt.connectedOutputSocket != null)
+                belt.connectedOutputSocket.DisconnectBelt();
+
+            if (belt.connectedInputSocket != null)
+                belt.connectedInputSocket.DisconnectBelt();
+
+            // Соседи, которые ссылались на эту ленту как nextBelt
+            // (простая версия — потом можно сделать умнее)
+            ConveyorBelt[] allBelts = FindObjectsByType<ConveyorBelt>(FindObjectsSortMode.None);
+            foreach (var other in allBelts)
+            {
+                if (other != null && other.nextBelt == belt)
+                    other.nextBelt = null;
+            }
+
+            Destroy(target);
+            Debug.Log($"[Demolish] Удалён конвейер {target.name}");
+            return;
+        }
+
+        // 2. Здание
+        BuildingBase building = target.GetComponent<BuildingBase>();
+        if (building != null)
+        {
+            // Вызываем OnRemoved (там уже есть отключение сокетов)
+            building.OnRemoved();
+
+            Destroy(target);
+            Debug.Log($"[Demolish] Удалено здание {target.name}");
+            return;
+        }
     }
 
     static GameObject FindDemolishTarget(Collider collider)

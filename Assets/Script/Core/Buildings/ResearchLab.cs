@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class ResearchLab : BuildingBase, IInteractable
 {
@@ -80,8 +81,12 @@ public class ResearchLab : BuildingBase, IInteractable
     // Для взаимодействия игрока (клавиша E)
     public void Interact(GameObject interactor)
     {
-        Debug.Log("Открыть меню исследований");
-        // Здесь потом откроешь UI дерева исследований
+        Debug.Log($"[Extractor] Interact вызван! MachineUI.Instance = {MachineUI.Instance}");
+
+        if (MachineUI.Instance != null)
+            MachineUI.Instance.Open(this);
+        else
+            Debug.LogError("MachineUI.Instance == null!");
     }
 
     public void SetResearch(ResearchNodeData research)
@@ -89,5 +94,10 @@ public class ResearchLab : BuildingBase, IInteractable
         currentResearch = research;
         submittedItems.Clear();
         researchProgress = 0f;
+    }
+
+    internal float GetProgress()
+    {
+        return researchProgress;
     }
 }

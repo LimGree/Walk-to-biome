@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Iron Ingot
   inputs:
   - item: {fileID: 11400000, guid: 21443c75f9e56ce45becb60f505bf5b9, type: 2}
-    amount: 2
+    amount: 1
   outputs:
   - item: {fileID: 11400000, guid: 725d7895721123d41a73f359454d1d9c, type: 2}
     amount: 1
-  craftTime: 0.5
-  requiredBuilding: {fileID: 0}
+  craftTime: 1
+  requiredBuilding: {fileID: 11400000, guid: fb3560e85bd56c349aa3d7327bd69798, type: 2}
