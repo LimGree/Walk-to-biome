@@ -46,6 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   socketType: 0
   connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1 &911847295286043558
@@ -94,6 +95,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   socketType: 1
   connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1 &8355325514519471134
@@ -123,8 +125,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 497.285, y: 0, z: 501.753}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 0.7, y: 0.8, z: 0.8}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 9161179211785067003}
   - {fileID: 69926826559800121}

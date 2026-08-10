@@ -15,23 +15,16 @@ public abstract class BuildingBase : MonoBehaviour
 
     public virtual void OnRemoved()
     {
-        // Отключаем все сокеты
         if (inputSockets != null)
         {
             foreach (var socket in inputSockets)
-            {
-                if (socket != null)
-                    socket.DisconnectBelt();
-            }
+                if (socket != null) socket.DisconnectAll();
         }
 
         if (outputSockets != null)
         {
             foreach (var socket in outputSockets)
-            {
-                if (socket != null)
-                    socket.DisconnectBelt();
-            }
+                if (socket != null) socket.DisconnectAll();
         }
     }
 
@@ -46,9 +39,22 @@ public abstract class BuildingBase : MonoBehaviour
 
         foreach (var socket in outputSockets)
         {
+            if (socket == null) continue;
+
+            // 1. Через конвейер
             if (socket.connectedBelt != null && socket.connectedBelt.TryAccept(item))
                 return true;
+
+            // 2. Прямое соединение сокет → сокет
+            if (socket.connectedSocket != null)
+            {
+                BuildingBase targetBuilding = socket.connectedSocket.GetComponentInParent<BuildingBase>();
+                if (targetBuilding != null && targetBuilding.TryReceiveItem(item, socket.connectedSocket))
+                    return true;
+            }
         }
+
         return false;
     }
+
 }

@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Extractor
   description: Extracts resources from the ground
   prefab: {fileID: 4047851838170156383, guid: 9fe6ad3d27314834b81d7bfbf2e98aa8, type: 3}
-  ghostPrefab: {fileID: 6837855627171382401, guid: 9105494cd0433b24ba6dc28c57e2d7c0, type: 3}
+  ghostPrefab: {fileID: 2307138976641504967, guid: 0d371ef89bd888f4184ecf6b4a561598, type: 3}
   icon: {fileID: -336690863, guid: 46ca628be59c5234684e63d0ef59aa64, type: 3}
   size: {x: 1, y: 1}
   canRotate: 1

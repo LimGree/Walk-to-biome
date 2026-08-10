@@ -168,58 +168,46 @@ public static class AutoConnector
 
     private static void TryConnectBuildingToNeighbor(BuildingBase building, Vector2Int neighborCell, Vector2Int offset)
     {
+        // --- Сначала пробуем конвейер ---
         ConveyorBelt belt = FindBeltInCell(neighborCell);
-        if (belt == null) return;
-
-        Vector3 beltDir = GetBeltDirection(belt);
-
-        // Output здания → лента
-        BuildingSocket output = FindSocketInDirection(building, SocketType.Output, offset);
-        if (output != null && IsDirectionMatch(beltDir, offset))
+        if (belt != null)
         {
-            ConnectOutputToBelt(output, belt);
+            Vector3 beltDir = GetBeltDirection(belt);
+
+            BuildingSocket output = FindSocketInDirection(building, SocketType.Output, offset);
+            if (output != null && IsDirectionMatch(beltDir, offset))
+            {
+                ConnectOutputToBelt(output, belt);
+            }
+
+            if (IsDirectionMatch(beltDir, -offset))
+            {
+                BuildingSocket input = FindSocketInDirection(building, SocketType.Input, offset);
+                if (input != null)
+                {
+                    ConnectBeltToInput(belt, input);
+                }
+            }
+            return;
         }
 
-        // Лента → Input здания
-        // Лента должна смотреть на здание (противоположное offset)
-        if (IsDirectionMatch(beltDir, -offset))
+        // --- Прямое соединение здание ↔ здание ---
+        BuildingBase neighbor = FindBuildingInCell(neighborCell);
+        if (neighbor == null || neighbor == building) return;
+
+        // Output текущего → Input соседа
+        BuildingSocket myOutput = FindSocketInDirection(building, SocketType.Output, offset);
+        BuildingSocket neighborInput = FindSocketInDirection(neighbor, SocketType.Input, -offset);
+
+        if (myOutput != null && neighborInput != null)
         {
-            BuildingSocket input = FindSocketInDirection(building, SocketType.Input, offset);
-            if (input != null)
+            // Проверяем, что направления примерно совпадают
+            if (Vector3.Dot(myOutput.transform.forward, -neighborInput.transform.forward) > 0.5f)
             {
-                ConnectBeltToInput(belt, input);
+                myOutput.ConnectSocket(neighborInput);
             }
         }
     }
-
-    // =========================================================
-    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
-    // =========================================================
-
-    //private static void RefreshNeighbors(Vector2Int cell)
-    //{
-    //    foreach (var offset in NeighborOffsets)
-    //    {
-    //        Vector2Int neighborCell = cell + offset;
-
-    //        ConveyorBelt belt = FindBeltInCell(neighborCell);
-    //        if (belt != null)
-    //        {
-    //            // Переподключаем соседа (без рекурсии глубже)
-    //            ClearBeltConnections(belt);
-    //            foreach (var off in NeighborOffsets)
-    //                TryConnectBeltToNeighbor(belt, neighborCell + off, off);
-    //        }
-
-    //        BuildingBase building = FindBuildingInCell(neighborCell);
-    //        if (building != null)
-    //        {
-    //            ClearBuildingConnections(building);
-    //            foreach (var off in NeighborOffsets)
-    //                TryConnectBuildingToNeighbor(building, neighborCell + off, off);
-    //        }
-    //    }
-    //}
 
     private static Vector3 GetBeltDirection(ConveyorBelt belt)
     {
