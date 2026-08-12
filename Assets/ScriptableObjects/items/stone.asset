@@ -15,7 +15,7 @@ MonoBehaviour:
   id: stone
   displayName: stone
   description: stone
-  icon: {fileID: 21300000, guid: 90c4627191833a649a4c940a181574ef, type: 3}
+  icon: {fileID: 21300000, guid: 7fbcb0e2bf881834ca4fb165a745ce53, type: 3}
   worldPrefab: {fileID: 919132149155446097, guid: 97274a67e3f6cc5448f513d4a67bff3f, type: 3}
   maxStack: 100
   isFuel: 0

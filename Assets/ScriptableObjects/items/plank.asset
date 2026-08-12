@@ -15,7 +15,7 @@ MonoBehaviour:
   id: plank
   displayName: plank
   description: plank
-  icon: {fileID: 21300000, guid: b320da272737b8940bd9b758a114e512, type: 3}
+  icon: {fileID: 21300000, guid: 15becb4bb71b2b94fb71f0d14d09d875, type: 3}
   worldPrefab: {fileID: 919132149155446097, guid: 633a2853607e1f34abe545bf01641488, type: 3}
   maxStack: 100
   isFuel: 0
