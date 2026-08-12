@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
-using System.Linq;
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -10,11 +9,11 @@ public class PlayerInventory : MonoBehaviour
     public BuildingData[] hotbar;
     public int selectedIndex = 0;
 
-    [Header("For test potom udalit")]
-    public BuildingData[] buildersPrefabs;
-
+    [Header("Каталог (все здания игры)")]
+    public BuildingData[] allBuildings;   // вместо buildersPrefabs
 
     public event Action<int> OnSelectionChanged;
+    public event Action OnHotbarChanged;
 
     private InputSystem_Actions inputActions;
 
@@ -24,46 +23,74 @@ public class PlayerInventory : MonoBehaviour
 
         if (hotbar == null || hotbar.Length != hotbarSize)
             hotbar = new BuildingData[hotbarSize];
+    }
 
+    void Start()
+    {
+        if (ResearchSystem.Instance != null)
+            ResearchSystem.Instance.OnUnlocksChanged += RefreshHotbarFromUnlocks;
 
-        Testfillhotbar();
-        var tt = FindFirstObjectByType<InventoryUI>();
-        tt.RefreshHotbar();
+        RefreshHotbarFromUnlocks();
+    }
+
+    void OnDestroy()
+    {
+        if (ResearchSystem.Instance != null)
+            ResearchSystem.Instance.OnUnlocksChanged -= RefreshHotbarFromUnlocks;
     }
 
     void OnEnable()
     {
-        inputActions.Enable();
+        inputActions?.Enable();
     }
 
     void OnDisable()
     {
-        inputActions.Disable();
+        inputActions?.Disable();
     }
 
     void Update()
     {
-        // Надёжное чтение колёсика мыши
         if (Mouse.current == null) return;
 
         Vector2 scroll = Mouse.current.scroll.ReadValue();
 
-        if (scroll.y > 0.1f)          // вверх
+        if (scroll.y > 0.1f)
         {
             selectedIndex--;
-            if (selectedIndex < 0)
-                selectedIndex = hotbarSize - 1;
-
+            if (selectedIndex < 0) selectedIndex = hotbarSize - 1;
             OnSelectionChanged?.Invoke(selectedIndex);
         }
-        else if (scroll.y < -0.1f)   // вниз
+        else if (scroll.y < -0.1f)
         {
             selectedIndex++;
-            if (selectedIndex >= hotbarSize)
-                selectedIndex = 0;
-
+            if (selectedIndex >= hotbarSize) selectedIndex = 0;
             OnSelectionChanged?.Invoke(selectedIndex);
         }
+    }
+
+    public void RefreshHotbarFromUnlocks()
+    {
+        Array.Clear(hotbar, 0, hotbar.Length);
+
+        if (allBuildings == null || ResearchSystem.Instance == null)
+            return;
+
+        int slot = 0;
+        foreach (var b in allBuildings)
+        {
+            if (b == null) continue;
+            if (!ResearchSystem.Instance.IsBuildingUnlocked(b)) continue;
+            if (slot >= hotbarSize) break;
+
+            hotbar[slot++] = b;
+        }
+
+        OnHotbarChanged?.Invoke();
+        OnSelectionChanged?.Invoke(selectedIndex);
+
+        var ui = FindFirstObjectByType<InventoryUI>();
+        if (ui != null) ui.RefreshHotbar();
     }
 
     public BuildingData GetSelectedBuilding()
@@ -71,17 +98,26 @@ public class PlayerInventory : MonoBehaviour
         if (selectedIndex < 0 || selectedIndex >= hotbar.Length)
             return null;
 
-        return hotbar[selectedIndex];
+        var b = hotbar[selectedIndex];
+        if (b != null && ResearchSystem.Instance != null
+            && !ResearchSystem.Instance.IsBuildingUnlocked(b))
+            return null;
+
+        return b;
     }
 
     public void SetHotbarSlot(int index, BuildingData building)
     {
         if (index < 0 || index >= hotbarSize) return;
-        hotbar[index] = building;
-    }
 
-    public void Testfillhotbar()
-    {
-        Array.Copy(buildersPrefabs, hotbar, Math.Min(buildersPrefabs.Length, hotbar.Length));
+        if (building != null && ResearchSystem.Instance != null
+            && !ResearchSystem.Instance.IsBuildingUnlocked(building))
+        {
+            Debug.LogWarning($"[Inventory] {building.displayName} ещё не открыто");
+            return;
+        }
+
+        hotbar[index] = building;
+        OnHotbarChanged?.Invoke();
     }
 }

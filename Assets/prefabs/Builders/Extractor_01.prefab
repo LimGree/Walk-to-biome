@@ -53,6 +53,10 @@ MonoBehaviour:
   resource: {fileID: 11400000, guid: 21443c75f9e56ce45becb60f505bf5b9, type: 2}
   extractInterval: 1.2
   itemsPerCycle: 1
+  nodeSearchRadius: 0.25
+  resourceNodeLayer:
+    serializedVersion: 2
+    m_Bits: 128
   showDebug: 1
 --- !u!1 &5096740911041764262
 GameObject:

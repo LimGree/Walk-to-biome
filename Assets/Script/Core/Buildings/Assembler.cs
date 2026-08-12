@@ -83,9 +83,6 @@ public class Assembler : BuildingBase, IInteractable
             inputBuffer[required.item] -= required.amount;
         }
 
-        // Выдаём результат
-        bool allOutputted = true;
-
         foreach (var output in currentRecipe.outputs)
         {
             for (int i = 0; i < output.amount; i++)
@@ -94,8 +91,6 @@ public class Assembler : BuildingBase, IInteractable
 
                 if (!success)
                 {
-                    allOutputted = false;
-
                     if (showDebug)
                         Debug.LogWarning($"Assembler не смог выдать {output.item.displayName} — нет места на выходе");
                 }

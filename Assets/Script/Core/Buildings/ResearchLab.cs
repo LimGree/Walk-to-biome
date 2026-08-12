@@ -68,14 +68,36 @@ public class ResearchLab : BuildingBase, IInteractable
 
     void CompleteResearch()
     {
-        Debug.Log($"Research completed: {currentResearch.displayName}");
+        if (currentResearch == null) return;
 
-        // Здесь можно разблокировать новые здания / рецепты
-        // ResearchSystem.Instance.Unlock(currentResearch);
+        ResearchNodeData finished = currentResearch;
+
+        if (ResearchSystem.Instance != null)
+            ResearchSystem.Instance.CompleteResearch(finished);
+        else
+            Debug.LogError("[ResearchLab] ResearchSystem.Instance == null");
 
         currentResearch = null;
         submittedItems.Clear();
         researchProgress = 0f;
+    }
+
+    public float GetProgress01()
+    {
+        if (currentResearch == null || currentResearch.requiredItems == null || currentResearch.requiredItems.Count == 0)
+            return 0f;
+
+        int totalRequired = 0;
+        int totalSubmitted = 0;
+
+        foreach (var req in currentResearch.requiredItems)
+        {
+            totalRequired += req.amount;
+            if (submittedItems.ContainsKey(req.item))
+                totalSubmitted += Mathf.Min(submittedItems[req.item], req.amount);
+        }
+
+        return totalRequired > 0 ? (float)totalSubmitted / totalRequired : 0f;
     }
 
     // Для взаимодействия игрока (клавиша E)

@@ -40,6 +40,10 @@ public class MachineUI : MonoBehaviour
     private BuildingBase currentBuilding;
     private bool isOpen = false;
 
+
+    [Header("All recipes in game")]
+    public RecipeData[] allRecipes;
+
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -159,28 +163,22 @@ public class MachineUI : MonoBehaviour
     {
         extractorContent.SetActive(true);
 
-        // Очищаем старые кнопки
         foreach (Transform child in extractorButtonsParent)
             Destroy(child.gameObject);
 
-        if (availableResources == null || resourceButtonPrefab == null) return;
+        if (resourceButtonPrefab == null) return;
 
-        foreach (var resource in availableResources)
+        GameObject info = Instantiate(resourceButtonPrefab, extractorButtonsParent);
+        var text = info.GetComponentInChildren<TextMeshProUGUI>();
+        if (text != null)
         {
-            if (resource == null) continue;
-
-            GameObject btnObj = Instantiate(resourceButtonPrefab, extractorButtonsParent);
-            var text = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null) text.text = resource.displayName;
-
-            ItemData captured = resource;
-            btnObj.GetComponent<Button>().onClick.AddListener(() =>
-            {
-                extractor.resource = captured;
-                Debug.Log($"[MachineUI] Extractor теперь добывает: {captured.displayName}");
-                Close();
-            });
+            text.text = extractor.resource != null
+                ? $"Mining: {extractor.resource.displayName}"
+                : "No resource node!";
         }
+
+        var btn = info.GetComponent<Button>();
+        if (btn != null) btn.interactable = false;
     }
 
     // ================== SMELTER ==================
@@ -201,14 +199,50 @@ public class MachineUI : MonoBehaviour
 
     void RefreshRecipeList(BuildingBase building)
     {
-        // Пока просто показываем все рецепты.
-        // Позже будем фильтровать по ResearchSystem и requiredBuilding.
+        if (recipeButtonsParent == null) return;
 
         foreach (Transform child in recipeButtonsParent)
             Destroy(child.gameObject);
 
-        // TODO: Здесь нужно будет брать список доступных рецептов
-        // Пока для теста можно оставить пустым или добавить поле public RecipeData[] testRecipes;
+        if (allRecipes == null || recipeButtonPrefab == null || building == null)
+            return;
+
+        BuildingData thisBuildingData = building.data;
+
+        foreach (var recipe in allRecipes)
+        {
+            if (recipe == null) continue;
+
+            // 1. Рецепт принадлежит этому зданию
+            if (recipe.requiredBuilding != null && thisBuildingData != null
+                && recipe.requiredBuilding != thisBuildingData)
+                continue;
+
+            // 2. Рецепт открыт
+            if (ResearchSystem.Instance != null
+                && !ResearchSystem.Instance.IsRecipeUnlocked(recipe))
+                continue;
+
+            GameObject btnObj = Instantiate(recipeButtonPrefab, recipeButtonsParent);
+
+            var text = btnObj.GetComponentInChildren<TextMeshProUGUI>();
+            if (text != null)
+                text.text = recipe.displayName;
+
+            RecipeData captured = recipe;
+            btnObj.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                if (building is Smelter smelter)
+                    smelter.SetRecipe(captured);
+                else if (building is Assembler assembler)
+                    assembler.SetRecipe(captured);
+
+                if (currentRecipeText != null)
+                    currentRecipeText.text = captured.displayName;
+
+                Debug.Log($"[MachineUI] Recipe set: {captured.displayName}");
+            });
+        }
     }
 
     // ================== RESEARCH LAB ==================

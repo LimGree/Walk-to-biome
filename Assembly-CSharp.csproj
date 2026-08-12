@@ -70,8 +70,10 @@
     <Compile Include="Assets\Script\Core\Items\ItemStack.cs" />
     <Compile Include="Assets\Script\Core\Buildings\ResearchLab.cs" />
     <Compile Include="Assets\InputSystem_Actions.cs" />
+    <Compile Include="Assets\Script\Core\Systems\GridOccupancy.cs" />
     <Compile Include="Assets\Script\Core\Logistics\AutoConnector.cs" />
     <Compile Include="Assets\Script\Core\UI\MachineUI.cs" />
+    <Compile Include="Assets\Script\Core\Buildings\ResourceNode.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Assembler.cs" />
     <Compile Include="Assets\Script\Core\Logistics\ItemOnBelt.cs" />
     <Compile Include="Assets\Script\Core\Buildings\BuildingSocket.cs" />

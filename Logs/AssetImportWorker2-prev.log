@@ -1,0 +1,771 @@
+Using pre-set license
+Built from '6000.0/staging' branch; Version is '6000.0.60f1 (f02d6f9f9009) revision 15740271'; Using compiler version '193933523'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) 64bit Professional' Language: 'ru' Physical Memory: 32090 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+Date: 2026-08-10T17:55:44Z
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.0.60f1\Editor\Unity.exe
+-adb2
+-batchMode
+-noUpm
+-name
+AssetImportWorker2
+-projectPath
+C:/Users/step2/Desktop/Walk to biome
+-logFile
+Logs/AssetImportWorker2.log
+-srvPort
+51664
+-job-worker-count
+5
+-background-job-worker-count
+8
+-gc-helper-count
+1
+-name
+AssetImport
+Successfully changed project path to: C:/Users/step2/Desktop/Walk to biome
+C:/Users/step2/Desktop/Walk to biome
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gfx=262144"
+Player connection [20892]  Target information:
+
+Player connection [20892]  * "[IP] 26.183.195.198 [Port] 0 [Flags] 2 [Guid] 3176479445 [EditorId] 3176479445 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [20892]  * "[IP] 198.18.0.1 [Port] 0 [Flags] 2 [Guid] 3176479445 [EditorId] 3176479445 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [20892]  * "[IP] 192.168.0.13 [Port] 0 [Flags] 2 [Guid] 3176479445 [EditorId] 3176479445 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [20892] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [20892] Host joined alternative multi-casting on [225.0.0.222:34997]...
+JobSystem: Creating JobQueue using job-worker-count value 5
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 2.53 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.0.60f1 (f02d6f9f9009)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path C:/Users/step2/Desktop/Walk to biome/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 1650 (ID=0x1f9d)
+    Vendor:   NVIDIA
+    VRAM:     3935 MB
+    Driver:   32.0.16.1062
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56888
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.dll
+Registered in 0.007774 seconds.
+- Loaded All Assemblies, in  0.512 seconds
+[usbmuxd] Start listen thread
+[usbmuxd] Listen thread started
+[usbmuxd] Send listen message
+Native extension for iOS target not found
+Native extension for Android target not found
+Android Extension - Scanning For ADB Devices 307 ms
+Native extension for WindowsStandalone target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.811 seconds
+Domain Reload Profiling: 1320ms
+	BeginReloadAssembly (167ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (1ms)
+	RebuildCommonClasses (46ms)
+	RebuildNativeTypeToScriptingClass (16ms)
+	initialDomainReloadingComplete (66ms)
+	LoadAllAssembliesAndSetupDomain (213ms)
+		LoadAssemblies (165ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (206ms)
+			TypeCache.Refresh (205ms)
+				TypeCache.ScanAssembly (189ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (812ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (762ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (423ms)
+			SetLoadedEditorAssemblies (6ms)
+			BeforeProcessingInitializeOnLoad (87ms)
+			ProcessInitializeOnLoadAttributes (164ms)
+			ProcessInitializeOnLoadMethodAttributes (82ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+========================================================================
+Worker process is ready to serve import requests
+Import Worker Mode flag is 0x00
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  1.022 seconds
+Refreshing native plugins compatible for Editor in 1.47 ms, found 3 plugins.
+Native extension for iOS target not found
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+Package Manager log level set to [2]
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.891 seconds
+Domain Reload Profiling: 1905ms
+	BeginReloadAssembly (215ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (7ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (38ms)
+	RebuildCommonClasses (46ms)
+	RebuildNativeTypeToScriptingClass (15ms)
+	initialDomainReloadingComplete (58ms)
+	LoadAllAssembliesAndSetupDomain (681ms)
+		LoadAssemblies (531ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (269ms)
+			TypeCache.Refresh (225ms)
+				TypeCache.ScanAssembly (204ms)
+			BuildScriptInfoCaches (35ms)
+			ResolveRequiredComponents (5ms)
+	FinalizeReload (891ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (758ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (25ms)
+			SetLoadedEditorAssemblies (8ms)
+			BeforeProcessingInitializeOnLoad (217ms)
+			ProcessInitializeOnLoadAttributes (468ms)
+			ProcessInitializeOnLoadMethodAttributes (31ms)
+			AfterProcessingInitializeOnLoad (8ms)
+			EditorAssembliesLoaded (1ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (7ms)
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.02 seconds
+Refreshing native plugins compatible for Editor in 1.56 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 3953 unused Assets / (1.3 MB). Loaded Objects now: 4462.
+Memory consumption went from 95.4 MB to 94.1 MB.
+Total: 7.197400 ms (FindLiveObjects: 0.571700 ms CreateObjectMapping: 0.202000 ms MarkObjects: 4.817300 ms  DeleteObjects: 1.604300 ms)
+
+========================================================================
+Received Import Request.
+  Time since last request: 301325.266137 seconds.
+  path: Assets/models/Builders/Assembler_from_blender/Materials/wMaterial.002 1.mat
+  artifactKey: Guid(d4887318493ef9e4295f556acbaeaf7a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Materials/wMaterial.002 1.mat using Guid(d4887318493ef9e4295f556acbaeaf7a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '5fade2c0c08764b5dc33ff06a449cf4e') in 0.1376197 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.399481 seconds.
+  path: Assets/models/Builders/Assembler_from_blender/Materials/wБез имени 1.mat
+  artifactKey: Guid(00384730dada7114ab8196c5db13fa65) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Materials/wБез имени 1.mat using Guid(00384730dada7114ab8196c5db13fa65) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '604d828e7e5102c84084123a832c89a8') in 0.0208938 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 14.983509 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'c44c1f6c8d2c9344495cdded15d875d8') in 0.0274658 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 87
+
+========================================================================
+Received Import Request.
+  Time since last request: 12.267350 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '642175877be163002db861a6e082b01d') in 0.0161446 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 88
+
+========================================================================
+Received Import Request.
+  Time since last request: 8.573693 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '5a51e99d916fc3c23806529ddfd0ec9a') in 0.0149349 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 52.291024 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbx
+  artifactKey: Guid(23a5ffb8448ed5e43b9ec5259cddc5d2) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbx using Guid(23a5ffb8448ed5e43b9ec5259cddc5d2) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ae50cde213a7e7ab4fe0f5227eef0f09') in 0.0874072 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 33
+
+========================================================================
+Received Import Request.
+  Time since last request: 2.845030 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ff712cf9337e93fb80b5ca8672f0ce5c') in 0.0348802 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 7.832178 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '39eee40dd27f23cf94c3a3b8ed030f7f') in 0.0853685 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 4.189326 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'dbd18862971c33b60fc7c36f3bd7060f') in 0.0254495 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 62
+
+========================================================================
+Received Import Request.
+  Time since last request: 7.284857 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '6353eb02ab39a132cf83b30e45f0e4e8') in 0.0230151 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 61
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.652643 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '67b5d59d637688ae94f9060bb448d787') in 0.0241481 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 60
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.895116 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '80002f0ed65d27cd425f661d0123a679') in 0.0275716 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 59
+
+========================================================================
+Received Import Request.
+  Time since last request: 19.203019 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '88d5c68e326fe111ec4877ce2e8a3692') in 0.0301937 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 90
+
+========================================================================
+Received Import Request.
+  Time since last request: 5.847526 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '06793453fabc632def76920be50391e7') in 0.0264964 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 90
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.968635 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '102dc108d59230477313a6d286d1fb11') in 0.0278444 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 63
+
+========================================================================
+Received Import Request.
+  Time since last request: 5.485405 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'e06f72b07bd614c991e499a0663fe6d0') in 0.0269466 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 62
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.452421 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '8ba72c58ff1d1d3a4e9c380fb05c2780') in 0.0269362 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 60
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.224525 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'f3147e45c56f39f84ade8bce92a31337') in 0.029044 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 59
+
+========================================================================
+Received Import Request.
+  Time since last request: 20.532924 seconds.
+  path: Assets/prefabs/Builders/Assembler_01.prefab
+  artifactKey: Guid(735fe68b4ba56b84ba6b36c448cb7b69) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/prefabs/Builders/Assembler_01.prefab using Guid(735fe68b4ba56b84ba6b36c448cb7b69) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '0cc63210c518275c23dae592e6fb4e43') in 0.040044 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 227
+
+========================================================================
+Received Prepare
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.956 seconds
+Refreshing native plugins compatible for Editor in 1.47 ms, found 3 plugins.
+Native extension for iOS target not found
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.915 seconds
+Domain Reload Profiling: 1868ms
+	BeginReloadAssembly (274ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (7ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (68ms)
+	RebuildCommonClasses (53ms)
+	RebuildNativeTypeToScriptingClass (15ms)
+	initialDomainReloadingComplete (43ms)
+	LoadAllAssembliesAndSetupDomain (567ms)
+		LoadAssemblies (485ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (210ms)
+			TypeCache.Refresh (7ms)
+				TypeCache.ScanAssembly (0ms)
+			BuildScriptInfoCaches (192ms)
+			ResolveRequiredComponents (6ms)
+	FinalizeReload (916ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (754ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (21ms)
+			SetLoadedEditorAssemblies (10ms)
+			BeforeProcessingInitializeOnLoad (209ms)
+			ProcessInitializeOnLoadAttributes (471ms)
+			ProcessInitializeOnLoadMethodAttributes (33ms)
+			AfterProcessingInitializeOnLoad (9ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (7ms)
+Refreshing native plugins compatible for Editor in 1.69 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 3951 unused Assets / (1.0 MB). Loaded Objects now: 4511.
+Memory consumption went from 101.1 MB to 100.1 MB.
+Total: 7.449100 ms (FindLiveObjects: 0.571400 ms CreateObjectMapping: 0.229200 ms MarkObjects: 4.664400 ms  DeleteObjects: 1.981600 ms)
+
+Prepare: number of updated asset objects reloaded= 0
+========================================================================
+Received Import Request.
+  Time since last request: 49.565816 seconds.
+  path: Assets/models/Builders/extractor_model.prefab
+  artifactKey: Guid(f10ca866f3d6c1548b865efbb27aa314) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/extractor_model.prefab using Guid(f10ca866f3d6c1548b865efbb27aa314) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '7f47ab0a45b49c800ad7208285af7429') in 0.1197365 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 60
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.565597 seconds.
+  path: Assets/models/Builders/Extractor_Model_ghost.prefab
+  artifactKey: Guid(0d371ef89bd888f4184ecf6b4a561598) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Extractor_Model_ghost.prefab using Guid(0d371ef89bd888f4184ecf6b4a561598) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ba0e52ed52499ec795133e56d0e3f2dd') in 0.0256312 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 63
+
+========================================================================
+Received Import Request.
+  Time since last request: 18.648126 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2d11bf4c5b528351d02d3652d0938a69') in 0.0162937 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 4.589367 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '60e74669870e70269173152d6c9f0db3') in 0.0223206 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 64.317217 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '66103fb515860f39cc2f8b09d5695ca5') in 0.0247333 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 12.030253 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '7a805b6da2aeb0cd0177e51a6009aba0') in 0.0162651 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.798642 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '61266c65cfdd7bb12cd22b79ff320b51') in 0.0174353 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.795234 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'bb1136ac5209e1ccd43de1ffdeb5e237') in 0.0272633 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.572342 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '6103d4e4967070fe96d17cdfb959eea0') in 0.0153101 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 10.127469 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'd618baf3dc0639056b43673501db5b93') in 0.0235681 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 14.106915 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '775dd9e6f4d4ea7efc96a9c98bd883aa') in 0.0296889 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 2.978793 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '307bde2332def0f04ae9863d46bd4546') in 0.0234271 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 4.259570 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ad88bb26b89eed17176c02676bfe8b02') in 0.0159455 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 2.213458 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '26d69861eb5295d35d990aeee0213b8f') in 0.0157811 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Prepare
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.919 seconds
+Refreshing native plugins compatible for Editor in 1.67 ms, found 3 plugins.
+Native extension for iOS target not found
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.906 seconds
+Domain Reload Profiling: 1822ms
+	BeginReloadAssembly (248ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (7ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (58ms)
+	RebuildCommonClasses (44ms)
+	RebuildNativeTypeToScriptingClass (15ms)
+	initialDomainReloadingComplete (45ms)
+	LoadAllAssembliesAndSetupDomain (563ms)
+		LoadAssemblies (484ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (202ms)
+			TypeCache.Refresh (8ms)
+				TypeCache.ScanAssembly (0ms)
+			BuildScriptInfoCaches (177ms)
+			ResolveRequiredComponents (10ms)
+	FinalizeReload (907ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (752ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (23ms)
+			SetLoadedEditorAssemblies (9ms)
+			BeforeProcessingInitializeOnLoad (213ms)
+			ProcessInitializeOnLoadAttributes (462ms)
+			ProcessInitializeOnLoadMethodAttributes (34ms)
+			AfterProcessingInitializeOnLoad (11ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (6ms)
+Refreshing native plugins compatible for Editor in 1.69 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 3951 unused Assets / (0.9 MB). Loaded Objects now: 4511.
+Memory consumption went from 101.1 MB to 100.3 MB.
+Total: 7.872300 ms (FindLiveObjects: 0.824800 ms CreateObjectMapping: 0.909000 ms MarkObjects: 4.992400 ms  DeleteObjects: 1.143300 ms)
+
+Prepare: number of updated asset objects reloaded= 0
+========================================================================
+Received Import Request.
+  Time since last request: 60.274331 seconds.
+  path: Assets/models/Builders/Assembler_Mode.prefab
+  artifactKey: Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Mode.prefab using Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '819520b05066301072b0d865893d5e4b') in 0.1197386 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 86
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.756804 seconds.
+  path: Assets/models/Builders/Assembler_Mode.prefab
+  artifactKey: Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Mode.prefab using Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'add4958ebcaeac2e2c1564408815ce79') in 0.0140308 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 86
+
+========================================================================
+Received Import Request.
+  Time since last request: 13.073343 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '54944b91581cffbcd8f6b80289f4e7ef') in 0.0244497 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 10.618355 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '625b37f025a392adb02ab51b42dc060e') in 0.0215173 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 6.288181 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'f5903bb567dd1bf2bbe12399587c6c2d') in 0.0249219 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 5.643694 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'd5610342488eef96bf25de7aaeaa0b55') in 0.0226567 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 14.257051 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2d10c9f67ba96d8b38a0c7b30d6918e9') in 0.0234142 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 7.070515 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '5926c0c662bec4cceb697204612aff60') in 0.0241256 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 10.298173 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'c42525815fc813a84d2d68ad587747ce') in 0.0229623 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.191393 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '775e878b5678b42bb20a9db627f44c0b') in 0.0212574 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 6.699295 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '4ef077ae4b2d6e355c631664bc350c4a') in 0.0246301 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 2.046050 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2ffd551f895ed78e647920e6398dc5b5') in 0.0212317 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 8.396191 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '02fd34ba1678c64035d012079a6299e0') in 0.0154698 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 2.098853 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'da3ff7691ef3b64c9254de9ed35c5e60') in 0.0244664 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 10.733286 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'fef74dae34e9b50cdb64ce31902cb1a5') in 0.0282538 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 89
+
+========================================================================
+Received Import Request.
+  Time since last request: 33.461491 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '7e5b32a3a0d17d20f024159220a5065b') in 0.0307502 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 59
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.309788 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'cb3073e677c074c2ddae436f9feb0de9') in 0.0222739 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 59
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.228122 seconds.
+  path: Assets/models/Builders/Smelter_model.prefab
+  artifactKey: Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model.prefab using Guid(08a1fcf64f93e4340b1f5585d7e96d90) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '1b55b0972358ef047c7903f4e0dc5cb9') in 0.0244429 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 59
+
+========================================================================
+Received Import Request.
+  Time since last request: 47.356308 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'f269a54391b9d3de24fb6c91c70bd2a0') in 0.0224586 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 59
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.323619 seconds.
+  path: Assets/models/Builders/Smelter_model_ghost.prefab
+  artifactKey: Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_model_ghost.prefab using Guid(4aa3baae48d05a74a942d49dfa7f3c4a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ae0f0ab8e4b9c9b85d2e02872653e418') in 0.0269734 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 59
+
+========================================================================
+Received Import Request.
+  Time since last request: 15.462521 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/Material.001.mat
+  artifactKey: Guid(e110b28bf8affb04c9f1936b4124096d) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/Material.001.mat using Guid(e110b28bf8affb04c9f1936b4124096d) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'cb034fed9c95518d826b715d69005c58') in 0.0359866 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000147 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/wUntitled 1.mat
+  artifactKey: Guid(fae80f40e9df0bc45b2157fd2e37f635) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/wUntitled 1.mat using Guid(fae80f40e9df0bc45b2157fd2e37f635) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'e308adb4ed2659a6efb466d3d329cc7c') in 0.0248251 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000034 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/wMaterial.001 1.mat
+  artifactKey: Guid(00fb6842d8bbfd94eacce311d7cfaa68) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/wMaterial.001 1.mat using Guid(00fb6842d8bbfd94eacce311d7cfaa68) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '0c7173d320bce309e6e4e78f3c146f2f') in 0.0251329 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000082 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/wstrelka 1.mat
+  artifactKey: Guid(f9c350681b4721241a6e55edad649194) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/wstrelka 1.mat using Guid(f9c350681b4721241a6e55edad649194) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '47b70081e40c97d3e13f2b1213ecd143') in 0.0238598 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+Editor requested this worker to shutdown with reason: Scaling down because of idle timeout
+AssetImportWorker is now disconnected from the server
+Process exiting
+Exiting without the bug reporter. Application will terminate with return code 0

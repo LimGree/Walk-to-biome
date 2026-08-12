@@ -18,6 +18,8 @@ public class GridSystem : MonoBehaviour
             return;
         }
 
+        // Статический словарь клеток: сброс на старте сцены (важно при Domain Reload Off)
+        GridOccupancy.ClearAll();
         EnsureComponent<BuildGridVisualizer>();
     }
 

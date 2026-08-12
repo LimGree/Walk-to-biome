@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Text;
 
 public class PlayerBuilder : MonoBehaviour
 {
     [Header("References")]
     public PlayerInventory inventory;
+    public PlayerMovement playerMovement;
+    public BuildMenuUI buildMenuUI;
     public Camera playerCamera;
     public LayerMask buildLayer = ~0;        // Для рейкаста (поверхность)
     public LayerMask collisionLayer = ~0;    // Для проверки коллизий (препятствия)
@@ -16,20 +17,32 @@ public class PlayerBuilder : MonoBehaviour
     public Material ghostValidMaterial;
     public Material ghostInvalidMaterial;
     public Key rotateKey = Key.R;
+    public Key buildMenuKey = Key.B;
 
+    /// <summary>Build Mode включён и выбран building из hotbar — показываем ghost.</summary>
     public bool IsBuildModeActive => isBuildMode && currentBuildingData != null;
     public bool HasPlacementTarget { get; private set; }
     public Vector3 CurrentPlacementPosition { get; private set; }
     public bool CanPlaceCurrent { get; private set; }
 
+    /// <summary>true = можно ставить из hotbar; false = строительство полностью выключено.</summary>
+    public bool isBuildMode = false;
+
     private InputSystem_Actions inputActions;
     private GameObject currentGhost;
     private BuildingData currentBuildingData;
-    public bool isBuildMode = true;
     private float currentRotationY = 0f;
     private bool canPlace = false;
-
     private int indexBuilding = 0;
+
+    // Соседи для очистки nextBelt при demolish (без FindObjectsByType)
+    private static readonly Vector2Int[] NeighborOffsets =
+    {
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 0),
+        new Vector2Int(0, -1),
+        new Vector2Int(-1, 0)
+    };
 
     void Awake()
     {
@@ -38,8 +51,14 @@ public class PlayerBuilder : MonoBehaviour
         if (inventory == null)
             inventory = GetComponent<PlayerInventory>();
 
+        if (playerMovement == null)
+            playerMovement = GetComponent<PlayerMovement>();
+
         if (playerCamera == null)
             playerCamera = Camera.main;
+
+        if (buildMenuUI == null)
+            buildMenuUI = FindFirstObjectByType<BuildMenuUI>();
     }
 
     void OnEnable()
@@ -58,7 +77,10 @@ public class PlayerBuilder : MonoBehaviour
 
     void Update()
     {
-        BuildingData selected = inventory.GetSelectedBuilding();
+        HandleBuildModeToggle();
+
+        // Hotbar / выбор здания — всегда (меню и режим не блокируют колёсико)
+        BuildingData selected = inventory != null ? inventory.GetSelectedBuilding() : null;
 
         if (selected != currentBuildingData)
         {
@@ -68,7 +90,17 @@ public class PlayerBuilder : MonoBehaviour
 
         if (IsBuildModeActive)
         {
-            UpdateGhost();
+            // Ghost только в build mode; при открытом меню не мешаем UI
+            if (buildMenuUI != null && buildMenuUI.IsOpen)
+            {
+                if (currentGhost != null)
+                    currentGhost.SetActive(false);
+                ClearPlacementTarget();
+            }
+            else
+            {
+                UpdateGhost();
+            }
         }
         else
         {
@@ -76,29 +108,117 @@ public class PlayerBuilder : MonoBehaviour
             ClearPlacementTarget();
         }
 
-        if (Keyboard.current != null && Keyboard.current[rotateKey].wasPressedThisFrame)
+        if (isBuildMode
+            && (buildMenuUI == null || !buildMenuUI.IsOpen)
+            && Keyboard.current != null
+            && Keyboard.current[rotateKey].wasPressedThisFrame)
         {
             currentRotationY += 90f;
             if (currentRotationY >= 360f)
                 currentRotationY = 0f;
 
-            // Если уже стоит ghost — просто поворачиваем его
             if (currentGhost != null)
                 currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
-
-            // Если хочешь, чтобы уже установленные здания тоже можно было поворачивать —
-            // это отдельная механика. Пока оставляем только при строительстве.
         }
 
-        if (isBuildMode && Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        if (isBuildMode
+            && (buildMenuUI == null || !buildMenuUI.IsOpen)
+            && Mouse.current != null
+            && Mouse.current.rightButton.wasPressedThisFrame)
+        {
             TryDemolish();
+        }
+    }
+
+    void HandleBuildModeToggle()
+    {
+        if (Keyboard.current == null || !Keyboard.current[buildMenuKey].wasPressedThisFrame)
+            return;
+
+        // Цикл: выкл → меню (build on) → build без меню → выкл
+        if (!isBuildMode)
+        {
+            EnterBuildMode(openMenu: true);
+        }
+        else if (buildMenuUI != null && buildMenuUI.IsOpen)
+        {
+            // Меню открыто → закрыть меню, остаться в build mode (hotbar placement)
+            buildMenuUI.CloseMenu(restorePlayerControl: true);
+        }
+        else
+        {
+            ExitBuildMode();
+        }
+    }
+
+    public void EnterBuildMode(bool openMenu)
+    {
+        isBuildMode = true;
+
+        if (openMenu && buildMenuUI != null)
+            buildMenuUI.OpenMenu();
+        else
+            ApplyGameplayCursorAndControl(buildMenuOpen: false);
+    }
+
+    public void ExitBuildMode()
+    {
+        isBuildMode = false;
+        DestroyGhost();
+        ClearPlacementTarget();
+
+        if (buildMenuUI != null && buildMenuUI.IsOpen)
+            buildMenuUI.CloseMenu(restorePlayerControl: false);
+
+        ApplyGameplayCursorAndControl(buildMenuOpen: false);
+    }
+
+    /// <summary>
+    /// Вызывается из BuildMenuUI при выборе здания: меню закрыто, build mode остаётся.
+    /// </summary>
+    public void OnBuildMenuClosedAfterSelection()
+    {
+        // isBuildMode остаётся true — можно ставить из hotbar
+        ApplyGameplayCursorAndControl(buildMenuOpen: false);
+    }
+
+    void ApplyGameplayCursorAndControl(bool buildMenuOpen)
+    {
+        if (buildMenuOpen)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            if (playerMovement != null)
+            {
+                playerMovement.canMove = false;
+                playerMovement.canLook = false;
+            }
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            if (playerMovement != null)
+            {
+                playerMovement.canMove = true;
+                playerMovement.canLook = true;
+            }
+        }
+    }
+
+    public void SetBuildMode(bool enabled)
+    {
+        if (enabled)
+            EnterBuildMode(openMenu: false);
+        else
+            ExitBuildMode();
     }
 
     void RecreateGhost()
     {
         DestroyGhost();
 
-        if (currentBuildingData == null || currentBuildingData.ghostPrefab == null)
+        if (!isBuildMode || currentBuildingData == null || currentBuildingData.ghostPrefab == null)
             return;
 
         currentGhost = Instantiate(currentBuildingData.ghostPrefab);
@@ -130,9 +250,15 @@ public class PlayerBuilder : MonoBehaviour
             return;
         }
 
+        if (playerCamera == null)
+        {
+            currentGhost.SetActive(false);
+            ClearPlacementTarget();
+            return;
+        }
+
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
 
-        // Ищем поверхность для размещения
         if (Physics.Raycast(ray, out RaycastHit hit, maxBuildDistance, buildLayer))
         {
             Vector3 placePos = SnapToGrid(hit.point);
@@ -140,7 +266,6 @@ public class PlayerBuilder : MonoBehaviour
             currentGhost.transform.position = placePos;
             currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
 
-            // Проверяем коллизии отдельным LayerMask, который ИСКЛЮЧАЕТ пол
             canPlace = IsPlacementValid(placePos, currentGhost.transform.rotation);
 
             var renderers = currentGhost.GetComponentsInChildren<Renderer>();
@@ -177,9 +302,28 @@ public class PlayerBuilder : MonoBehaviour
 
     bool IsPlacementValid(Vector3 position, Quaternion rotation)
     {
-        Vector3 halfExtents = new Vector3(0.49f, 0.9f, 0.49f);
+        // 1) Проверка через словарь клеток (основная)
+        if (GridSystem.Instance != null)
+        {
+            Vector2Int origin = GridSystem.Instance.WorldToCell(position);
+            Vector2Int size_ = GetPlacementSize(rotation);
 
-        // Включаем коллайдеры гостя
+            if (!GridOccupancy.IsAreaFree(origin, size_))
+                return false;
+        }
+
+        // 2) Доп. OverlapBox (AABB по сетке): твёрдые препятствия, не пол / ResourceNode
+        Vector2Int size = GetPlacementSize(rotation);
+        float cell = GridSystem.Instance != null ? GridSystem.Instance.cellSize : 1f;
+        Vector3 halfExtents = new Vector3(
+            Mathf.Max(0.1f, size.x * cell * 0.5f - 0.01f),
+            0.9f,
+            Mathf.Max(0.1f, size.y * cell * 0.5f - 0.01f)
+        );
+        // Центр площади от origin-клетки вдоль +X/+Z (как в GridOccupancy)
+        Vector3 areaCenter = position
+            + new Vector3((size.x - 1) * cell * 0.5f, halfExtents.y, (size.y - 1) * cell * 0.5f);
+
         Collider[] ghostColliders = null;
         if (currentGhost != null)
         {
@@ -188,41 +332,36 @@ public class PlayerBuilder : MonoBehaviour
                 col.enabled = true;
         }
 
-        // ИСПОЛЬЗУЕМ collisionLayer, который НЕ содержит пол
-        // Если collisionLayer не задан, используем buildLayer но исключаем пол
         LayerMask checkMask = collisionLayer;
-        if (checkMask == 0) // Если не задан отдельный слой
+        if (checkMask == 0)
         {
-            // Исключаем слой пола из проверки
             int floorLayer = LayerMask.NameToLayer("Floor");
-            if (floorLayer != -1)
-            {
-                checkMask = buildLayer & ~(1 << floorLayer);
-            }
-            else
-            {
-                checkMask = buildLayer;
-            }
+            checkMask = floorLayer != -1 ? buildLayer & ~(1 << floorLayer) : buildLayer;
         }
 
         Collider[] overlaps = Physics.OverlapBox(
-            position + Vector3.up * halfExtents.y,
+            areaCenter,
             halfExtents,
-            rotation,
+            Quaternion.identity,
             checkMask
         );
 
-        // Выключаем коллайдеры гостя
         if (ghostColliders != null)
         {
             foreach (var col in ghostColliders)
                 col.enabled = false;
         }
 
-        // Проверяем, есть ли препятствия
         foreach (Collider overlap in overlaps)
         {
+            if (overlap == null)
+                continue;
+
             if (currentGhost != null && overlap.transform.IsChildOf(currentGhost.transform))
+                continue;
+
+            // Пол и ResourceNode не блокируют
+            if (IsNonBlockingCollider(overlap))
                 continue;
 
             return false;
@@ -231,9 +370,53 @@ public class PlayerBuilder : MonoBehaviour
         return true;
     }
 
+    Vector2Int GetPlacementSize(Quaternion rotation)
+    {
+        Vector2Int size = currentBuildingData != null ? currentBuildingData.size : Vector2Int.one;
+        return GridOccupancy.GetRotatedSize(size, rotation.eulerAngles.y);
+    }
+
+    static bool IsNonBlockingCollider(Collider col)
+    {
+        if (col == null)
+            return true;
+
+        // ResourceNode не занимает клетку для строительства (экстрактор ставится поверх)
+        if (col.GetComponentInParent<ResourceNode>() != null)
+            return true;
+
+        // Floor layer
+        int floorLayer = LayerMask.NameToLayer("Floor");
+        if (floorLayer != -1 && col.gameObject.layer == floorLayer)
+            return true;
+
+        // Частые имена поверхности
+        string n = col.gameObject.name;
+        if (n.IndexOf("Floor", System.StringComparison.OrdinalIgnoreCase) >= 0
+            || n.IndexOf("Ground", System.StringComparison.OrdinalIgnoreCase) >= 0
+            || n.IndexOf("Terrain", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+
+        return false;
+    }
+
     void OnPlace(InputAction.CallbackContext ctx)
     {
         if (!IsBuildModeActive || currentGhost == null || !canPlace)
+            return;
+
+        if (buildMenuUI != null && buildMenuUI.IsOpen)
+            return;
+
+        if (ResearchSystem.Instance != null
+            && !ResearchSystem.Instance.IsBuildingUnlocked(currentBuildingData))
+        {
+            Debug.LogWarning($"[Builder] Locked: {currentBuildingData.displayName}");
+            return;
+        }
+
+        // Повторная проверка на момент клика
+        if (!IsPlacementValid(currentGhost.transform.position, currentGhost.transform.rotation))
             return;
 
         GameObject building = Instantiate(
@@ -248,9 +431,28 @@ public class PlayerBuilder : MonoBehaviour
         if (buildingBase != null)
         {
             buildingBase.data = currentBuildingData;
-            buildingBase.OnPlaced();
+            buildingBase.OnPlaced(); // Register + subclass logic
         }
+        else
+        {
+            var belt = building.GetComponent<ConveyorBelt>();
+            if (belt != null)
+                belt.OnPlaced();
+            else
+                RegisterGenericOnGrid(building);
+        }
+
         AutoConnector.TryAutoConnect(building);
+    }
+
+    void RegisterGenericOnGrid(GameObject obj)
+    {
+        if (obj == null || GridSystem.Instance == null)
+            return;
+
+        Vector2Int origin = GridSystem.Instance.WorldToCell(obj.transform.position);
+        Vector2Int size = GetPlacementSize(obj.transform.rotation);
+        GridOccupancy.Register(obj, origin, size);
     }
 
     void TryDemolish()
@@ -266,7 +468,6 @@ public class PlayerBuilder : MonoBehaviour
         if (target == null)
             return;
 
-        // Вызываем правильное удаление
         DemolishObject(target);
     }
 
@@ -274,44 +475,49 @@ public class PlayerBuilder : MonoBehaviour
     {
         if (target == null) return;
 
-        // 1. Конвейер
         ConveyorBelt belt = target.GetComponent<ConveyorBelt>();
         if (belt != null)
         {
-            // Очищаем предметы на ленте
             belt.ClearItems();
 
-            // Отключаем все связи
             if (belt.connectedOutputSocket != null)
                 belt.connectedOutputSocket.DisconnectBelt();
 
             if (belt.connectedInputSocket != null)
                 belt.connectedInputSocket.DisconnectBelt();
 
-            // Соседи, которые ссылались на эту ленту как nextBelt
-            // (простая версия — потом можно сделать умнее)
-            ConveyorBelt[] allBelts = FindObjectsByType<ConveyorBelt>(FindObjectsSortMode.None);
-            foreach (var other in allBelts)
-            {
-                if (other != null && other.nextBelt == belt)
-                    other.nextBelt = null;
-            }
-
+            ClearBeltIncomingLinks(belt);
+            belt.OnRemoved();
             Destroy(target);
-            Debug.Log($"[Demolish] Удалён конвейер {target.name}");
             return;
         }
 
-        // 2. Здание
         BuildingBase building = target.GetComponent<BuildingBase>();
         if (building != null)
         {
-            // Вызываем OnRemoved (там уже есть отключение сокетов)
             building.OnRemoved();
-
             Destroy(target);
-            Debug.Log($"[Demolish] Удалено здание {target.name}");
+        }
+    }
+
+    /// <summary>
+    /// Сбрасывает nextBelt у соседей, указывавших на удаляемую ленту (без FindObjectsByType).
+    /// </summary>
+    void ClearBeltIncomingLinks(ConveyorBelt belt)
+    {
+        if (belt == null || GridSystem.Instance == null)
             return;
+
+        Vector2Int cell = GridSystem.Instance.WorldToCell(belt.transform.position);
+
+        for (int i = 0; i < NeighborOffsets.Length; i++)
+        {
+            GameObject neighbor = GridOccupancy.GetAt(cell + NeighborOffsets[i]);
+            if (neighbor == null) continue;
+
+            ConveyorBelt other = neighbor.GetComponent<ConveyorBelt>();
+            if (other != null && other.nextBelt == belt)
+                other.nextBelt = null;
         }
     }
 
@@ -329,15 +535,5 @@ public class PlayerBuilder : MonoBehaviour
             return building.gameObject;
 
         return null;
-    }
-
-    public void SetBuildMode(bool enabled)
-    {
-        isBuildMode = enabled;
-        if (!enabled)
-        {
-            DestroyGhost();
-            ClearPlacementTarget();
-        }
     }
 }

@@ -8,12 +8,16 @@ public class ResearchSystem : MonoBehaviour
     [Header("All Research Nodes")]
     public List<ResearchNodeData> allResearchNodes = new List<ResearchNodeData>();
 
-    // Что уже исследовано
-    private HashSet<ResearchNodeData> unlockedResearch = new HashSet<ResearchNodeData>();
+    [Header("Level 0 — доступно с начала")]
+    public List<BuildingData> startingBuildings = new List<BuildingData>();
+    public List<RecipeData> startingRecipes = new List<RecipeData>();
 
-    // Что разблокировано
+    private HashSet<ResearchNodeData> unlockedResearch = new HashSet<ResearchNodeData>();
     private HashSet<BuildingData> unlockedBuildings = new HashSet<BuildingData>();
     private HashSet<RecipeData> unlockedRecipes = new HashSet<RecipeData>();
+
+    /// <summary> UI / hotbar подписываются на это </summary>
+    public event System.Action OnUnlocksChanged;
 
     void Awake()
     {
@@ -28,14 +32,32 @@ public class ResearchSystem : MonoBehaviour
             return;
         }
 
-        // Стартовые здания (уровень 0)
-        // Их можно добавить вручную в unlockedBuildings в инспекторе
-        // или прописать здесь
+        GrantStartingUnlocks();
+    }
+
+    void GrantStartingUnlocks()
+    {
+        unlockedBuildings.Clear();
+        unlockedRecipes.Clear();
+
+        if (startingBuildings != null)
+        {
+            foreach (var b in startingBuildings)
+                if (b != null) unlockedBuildings.Add(b);
+        }
+
+        if (startingRecipes != null)
+        {
+            foreach (var r in startingRecipes)
+                if (r != null) unlockedRecipes.Add(r);
+        }
+
+        Debug.Log($"[ResearchSystem] Стартовые здания: {unlockedBuildings.Count}, рецепты: {unlockedRecipes.Count}");
     }
 
     public bool IsResearchUnlocked(ResearchNodeData node)
     {
-        return unlockedResearch.Contains(node);
+        return node != null && unlockedResearch.Contains(node);
     }
 
     public bool CanStartResearch(ResearchNodeData node)
@@ -43,7 +65,6 @@ public class ResearchSystem : MonoBehaviour
         if (node == null) return false;
         if (IsResearchUnlocked(node)) return false;
 
-        // Проверяем зависимости
         if (node.requiredResearches != null)
         {
             foreach (var req in node.requiredResearches)
@@ -52,7 +73,6 @@ public class ResearchSystem : MonoBehaviour
                     return false;
             }
         }
-
         return true;
     }
 
@@ -62,58 +82,41 @@ public class ResearchSystem : MonoBehaviour
 
         unlockedResearch.Add(node);
 
-        // Разблокируем здания
         if (node.unlockedBuildings != null)
         {
             foreach (var building in node.unlockedBuildings)
-            {
-                if (building != null)
-                    unlockedBuildings.Add(building);
-            }
+                if (building != null) unlockedBuildings.Add(building);
         }
 
-        // Разблокируем рецепты
         if (node.unlockedRecipes != null)
         {
             foreach (var recipe in node.unlockedRecipes)
-            {
-                if (recipe != null)
-                    unlockedRecipes.Add(recipe);
-            }
+                if (recipe != null) unlockedRecipes.Add(recipe);
         }
 
-        Debug.Log($"[Research] Исследование завершено: {node.displayName}");
+        Debug.Log($"[Research] Completed: {node.displayName}");
+        OnUnlocksChanged?.Invoke();
     }
 
     public bool IsBuildingUnlocked(BuildingData building)
     {
         if (building == null) return false;
-
-        // Если здание в стартовом наборе — всегда доступно
-        if (unlockedBuildings.Count == 0) return true;
-
-        return unlockedBuildings.Contains(building);
+        return unlockedBuildings.Contains(building); // больше никаких "пустой = всё"
     }
 
     public bool IsRecipeUnlocked(RecipeData recipe)
     {
         if (recipe == null) return false;
-        if (unlockedRecipes.Count == 0) return true;
-
         return unlockedRecipes.Contains(recipe);
     }
 
     public List<ResearchNodeData> GetAvailableResearch()
     {
-        List<ResearchNodeData> available = new List<ResearchNodeData>();
-
+        var list = new List<ResearchNodeData>();
         foreach (var node in allResearchNodes)
-        {
             if (CanStartResearch(node))
-                available.Add(node);
-        }
-
-        return available;
+                list.Add(node);
+        return list;
     }
 
     public List<ResearchNodeData> GetAllNodes() => allResearchNodes;

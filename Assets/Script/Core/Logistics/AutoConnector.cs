@@ -1,8 +1,9 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 public static class AutoConnector
 {
+    public static bool showDebug = false;
+
     // 4 направления по сетке (в мировых координатах)
     private static readonly Vector2Int[] NeighborOffsets =
     {
@@ -41,7 +42,6 @@ public static class AutoConnector
     /// </summary>
     public static void OnRotated(GameObject rotatedObject)
     {
-        // Просто переподключаем, как будто только что поставили
         TryAutoConnect(rotatedObject);
     }
 
@@ -56,14 +56,12 @@ public static class AutoConnector
 
         Vector2Int cell = GridSystem.Instance.WorldToCell(belt.transform.position);
 
-        // Просто пытаемся соединиться с 4 соседями (без очистки)
         foreach (var offset in NeighborOffsets)
         {
             Vector2Int neighborCell = cell + offset;
             TryConnectBeltToNeighbor(belt, neighborCell, offset);
         }
 
-        // Просим соседей тоже попробовать соединиться с нами
         RefreshNeighborsSoft(cell);
     }
 
@@ -79,23 +77,20 @@ public static class AutoConnector
         {
             Vector3 otherDir = GetBeltDirection(otherBelt);
 
-            // Мы смотрим на соседа и направления совпадают → мы next для него? нет:
-            // Если наш end смотрит на start соседа
             if (IsDirectionMatch(beltDir, offset) && IsDirectionMatch(otherDir, offset))
             {
                 if (belt.nextBelt == null)
                 {
                     belt.nextBelt = otherBelt;
-                    Debug.Log($"[GridConnect] {belt.name} → {otherBelt.name}");
+                    Log($"[GridConnect] {belt.name} → {otherBelt.name}");
                 }
             }
-            // Сосед смотрит на нас
             else if (IsDirectionMatch(otherDir, -offset) && IsDirectionMatch(beltDir, -offset) == false)
             {
                 if (otherBelt.nextBelt == null)
                 {
                     otherBelt.nextBelt = belt;
-                    Debug.Log($"[GridConnect] {otherBelt.name} → {belt.name}");
+                    Log($"[GridConnect] {otherBelt.name} → {belt.name}");
                 }
             }
         }
@@ -108,18 +103,14 @@ public static class AutoConnector
             {
                 BuildingSocket input = FindSocketInDirection(building, SocketType.Input, -offset);
                 if (input != null)
-                {
                     ConnectBeltToInput(belt, input);
-                }
             }
             // Случай 2: Output здания отдаёт на ленту (здание смотрит на нас)
             else
             {
                 BuildingSocket output = FindSocketInDirection(building, SocketType.Output, offset);
                 if (output != null)
-                {
                     ConnectOutputToBelt(output, belt);
-                }
             }
         }
     }
@@ -184,9 +175,7 @@ public static class AutoConnector
             {
                 BuildingSocket input = FindSocketInDirection(building, SocketType.Input, offset);
                 if (input != null)
-                {
                     ConnectBeltToInput(belt, input);
-                }
             }
             return;
         }
@@ -195,13 +184,11 @@ public static class AutoConnector
         BuildingBase neighbor = FindBuildingInCell(neighborCell);
         if (neighbor == null || neighbor == building) return;
 
-        // Output текущего → Input соседа
         BuildingSocket myOutput = FindSocketInDirection(building, SocketType.Output, offset);
         BuildingSocket neighborInput = FindSocketInDirection(neighbor, SocketType.Input, -offset);
 
         if (myOutput != null && neighborInput != null)
         {
-            // Проверяем, что направления примерно совпадают
             if (Vector3.Dot(myOutput.transform.forward, -neighborInput.transform.forward) > 0.5f)
             {
                 myOutput.ConnectSocket(neighborInput);
@@ -247,30 +234,20 @@ public static class AutoConnector
         return best;
     }
 
-    // --- Поиск объектов в клетке ---
+    // --- Поиск объектов в клетке через GridOccupancy (O(1)) ---
 
     private static ConveyorBelt FindBeltInCell(Vector2Int cell)
     {
-        ConveyorBelt[] belts = Object.FindObjectsByType<ConveyorBelt>(FindObjectsSortMode.None);
-        foreach (var belt in belts)
-        {
-            if (belt == null) continue;
-            Vector2Int beltCell = GridSystem.Instance.WorldToCell(belt.transform.position);
-            if (beltCell == cell) return belt;
-        }
-        return null;
+        GameObject obj = GridOccupancy.GetAt(cell);
+        if (obj == null) return null;
+        return obj.GetComponent<ConveyorBelt>();
     }
 
     private static BuildingBase FindBuildingInCell(Vector2Int cell)
     {
-        BuildingBase[] buildings = Object.FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
-        foreach (var b in buildings)
-        {
-            if (b == null) continue;
-            Vector2Int bCell = GridSystem.Instance.WorldToCell(b.transform.position);
-            if (bCell == cell) return b;
-        }
-        return null;
+        GameObject obj = GridOccupancy.GetAt(cell);
+        if (obj == null) return null;
+        return obj.GetComponent<BuildingBase>();
     }
 
     // --- Реальные соединения ---
@@ -283,7 +260,7 @@ public static class AutoConnector
 
         output.ConnectBelt(belt);
         belt.connectedOutputSocket = output;
-        Debug.Log($"[GridConnect] OUTPUT {output.name} → {belt.name}");
+        Log($"[GridConnect] OUTPUT {output.name} → {belt.name}");
     }
 
     private static void ConnectBeltToInput(ConveyorBelt belt, BuildingSocket input)
@@ -294,6 +271,12 @@ public static class AutoConnector
 
         input.ConnectBelt(belt);
         belt.connectedInputSocket = input;
-        Debug.Log($"[GridConnect] {belt.name} → INPUT {input.name}");
+        Log($"[GridConnect] {belt.name} → INPUT {input.name}");
+    }
+
+    private static void Log(string message)
+    {
+        if (showDebug)
+            Debug.Log(message);
     }
 }

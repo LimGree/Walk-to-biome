@@ -2,7 +2,7 @@ Using pre-set license
 Built from '6000.0/staging' branch; Version is '6000.0.60f1 (f02d6f9f9009) revision 15740271'; Using compiler version '193933523'; Build Type 'Release'
 OS: 'Windows 11  (10.0.26200) 64bit Professional' Language: 'ru' Physical Memory: 32090 MB
 BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
-Date: 2026-08-10T11:16:37Z
+Date: 2026-08-10T16:43:16Z
 
 COMMAND LINE ARGUMENTS:
 C:\Program Files\Unity\Hub\Editor\6000.0.60f1\Editor\Unity.exe
@@ -16,7 +16,7 @@ C:/Users/step2/Desktop/Walk to biome
 -logFile
 Logs/AssetImportWorker1.log
 -srvPort
-50460
+51664
 -job-worker-count
 5
 -background-job-worker-count
@@ -62,12 +62,14 @@ C:/Users/step2/Desktop/Walk to biome
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gfx=262144"
-Player connection [30796]  Target information:
+Player connection [11884]  Target information:
 
-Player connection [30796]  * "[IP] 26.183.195.198 [Port] 0 [Flags] 2 [Guid] 678086435 [EditorId] 678086435 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [11884]  * "[IP] 26.183.195.198 [Port] 0 [Flags] 2 [Guid] 1325800366 [EditorId] 1325800366 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [30796] Host joined multi-casting on [225.0.0.222:54997]...
-Player connection [30796] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Player connection [11884]  * "[IP] 192.168.0.13 [Port] 0 [Flags] 2 [Guid] 1325800366 [EditorId] 1325800366 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [11884] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [11884] Host joined alternative multi-casting on [225.0.0.222:34997]...
 JobSystem: Creating JobQueue using job-worker-count value 5
 Input System module state changed to: Initialized.
 [Physics::Module] Initialized fallback backend.
@@ -79,7 +81,7 @@ Library Redirect Path: Library/
 [Physics::Module] SDK Version: 4.1.2
 [Physics::Module] Integration Version: 1.0.0
 [Physics::Module] Threading Mode: Multi-Threaded
-Refreshing native plugins compatible for Editor in 3.75 ms, found 3 plugins.
+Refreshing native plugins compatible for Editor in 3.19 ms, found 3 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Initialize engine version: 6000.0.60f1 (f02d6f9f9009)
 [Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/Resources/UnitySubsystems
@@ -95,51 +97,51 @@ Initialize mono
 Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/Managed'
 Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
 Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/MonoBleedingEdge/etc'
-Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56128
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56040
 Begin MonoManager ReloadAssembly
 Registering precompiled unity dll's ...
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.dll
-Registered in 0.007190 seconds.
-- Loaded All Assemblies, in  0.541 seconds
+Registered in 0.007014 seconds.
+- Loaded All Assemblies, in  0.547 seconds
 [usbmuxd] Start listen thread
 [usbmuxd] Listen thread started
 [usbmuxd] Send listen message
 Native extension for iOS target not found
 Native extension for Android target not found
-Android Extension - Scanning For ADB Devices 328 ms
+Android Extension - Scanning For ADB Devices 453 ms
 Native extension for WindowsStandalone target not found
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.896 seconds
-Domain Reload Profiling: 1433ms
-	BeginReloadAssembly (193ms)
+- Finished resetting the current domain, in  1.102 seconds
+Domain Reload Profiling: 1645ms
+	BeginReloadAssembly (181ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (0ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
 		CreateAndSetChildDomain (1ms)
-	RebuildCommonClasses (47ms)
-	RebuildNativeTypeToScriptingClass (17ms)
-	initialDomainReloadingComplete (70ms)
-	LoadAllAssembliesAndSetupDomain (208ms)
-		LoadAssemblies (190ms)
+	RebuildCommonClasses (49ms)
+	RebuildNativeTypeToScriptingClass (16ms)
+	initialDomainReloadingComplete (76ms)
+	LoadAllAssembliesAndSetupDomain (221ms)
+		LoadAssemblies (176ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (204ms)
-			TypeCache.Refresh (202ms)
-				TypeCache.ScanAssembly (187ms)
+		AnalyzeDomain (216ms)
+			TypeCache.Refresh (213ms)
+				TypeCache.ScanAssembly (195ms)
 			BuildScriptInfoCaches (0ms)
 			ResolveRequiredComponents (1ms)
-	FinalizeReload (897ms)
+	FinalizeReload (1103ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (841ms)
+		SetupLoadedEditorAssemblies (1042ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (466ms)
+			InitializePlatformSupportModulesInManaged (591ms)
 			SetLoadedEditorAssemblies (8ms)
-			BeforeProcessingInitializeOnLoad (93ms)
-			ProcessInitializeOnLoadAttributes (198ms)
-			ProcessInitializeOnLoadMethodAttributes (75ms)
+			BeforeProcessingInitializeOnLoad (95ms)
+			ProcessInitializeOnLoadAttributes (249ms)
+			ProcessInitializeOnLoadMethodAttributes (99ms)
 			AfterProcessingInitializeOnLoad (0ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
@@ -148,8 +150,8 @@ Domain Reload Profiling: 1433ms
 Worker process is ready to serve import requests
 Import Worker Mode flag is 0x00
 Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  1.064 seconds
-Refreshing native plugins compatible for Editor in 2.01 ms, found 3 plugins.
+- Loaded All Assemblies, in  1.075 seconds
+Refreshing native plugins compatible for Editor in 1.94 ms, found 3 plugins.
 Native extension for iOS target not found
 Native extension for Android target not found
 Native extension for WindowsStandalone target not found
@@ -158,333 +160,399 @@ Package Manager log level set to [2]
 [Package Manager] Unable to send message (not connected to server process).
 [Package Manager] Cannot connect to Unity Package Manager local server
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.984 seconds
-Domain Reload Profiling: 2042ms
-	BeginReloadAssembly (250ms)
+- Finished resetting the current domain, in  0.967 seconds
+Domain Reload Profiling: 2036ms
+	BeginReloadAssembly (240ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (8ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
 		CreateAndSetChildDomain (44ms)
-	RebuildCommonClasses (47ms)
-	RebuildNativeTypeToScriptingClass (15ms)
-	initialDomainReloadingComplete (60ms)
-	LoadAllAssembliesAndSetupDomain (686ms)
-		LoadAssemblies (519ms)
+	RebuildCommonClasses (50ms)
+	RebuildNativeTypeToScriptingClass (17ms)
+	initialDomainReloadingComplete (67ms)
+	LoadAllAssembliesAndSetupDomain (695ms)
+		LoadAssemblies (526ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (308ms)
-			TypeCache.Refresh (258ms)
-				TypeCache.ScanAssembly (232ms)
+		AnalyzeDomain (303ms)
+			TypeCache.Refresh (251ms)
+				TypeCache.ScanAssembly (226ms)
 			BuildScriptInfoCaches (41ms)
-			ResolveRequiredComponents (6ms)
-	FinalizeReload (984ms)
+			ResolveRequiredComponents (5ms)
+	FinalizeReload (968ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (822ms)
+		SetupLoadedEditorAssemblies (825ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (27ms)
+			InitializePlatformSupportModulesInManaged (20ms)
 			SetLoadedEditorAssemblies (8ms)
-			BeforeProcessingInitializeOnLoad (230ms)
-			ProcessInitializeOnLoadAttributes (507ms)
-			ProcessInitializeOnLoadMethodAttributes (37ms)
-			AfterProcessingInitializeOnLoad (12ms)
+			BeforeProcessingInitializeOnLoad (218ms)
+			ProcessInitializeOnLoadAttributes (530ms)
+			ProcessInitializeOnLoadMethodAttributes (38ms)
+			AfterProcessingInitializeOnLoad (10ms)
 			EditorAssembliesLoaded (1ms)
 		ExecutionOrderSort2 (0ms)
 		AwakeInstancesAfterBackupRestoration (9ms)
 Launched and connected shader compiler UnityShaderCompiler.exe after 0.02 seconds
-Refreshing native plugins compatible for Editor in 2.61 ms, found 3 plugins.
+Refreshing native plugins compatible for Editor in 2.22 ms, found 3 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 3953 unused Assets / (1.5 MB). Loaded Objects now: 4462.
-Memory consumption went from 95.2 MB to 93.8 MB.
-Total: 9.806100 ms (FindLiveObjects: 0.635900 ms CreateObjectMapping: 0.698600 ms MarkObjects: 6.109600 ms  DeleteObjects: 2.359500 ms)
+Unloading 3953 unused Assets / (1.8 MB). Loaded Objects now: 4462.
+Memory consumption went from 95.3 MB to 93.5 MB.
+Total: 9.737800 ms (FindLiveObjects: 0.601100 ms CreateObjectMapping: 0.389000 ms MarkObjects: 6.203200 ms  DeleteObjects: 2.541100 ms)
 
 ========================================================================
 Received Import Request.
-  Time since last request: 277376.209544 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Extractor.fbx
-  artifactKey: Guid(63953d97bab168b44ac864c7be8c5175) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Extractor.fbx using Guid(63953d97bab168b44ac864c7be8c5175) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '1696830e38bed4870eae9426011034fd') in 0.2483652 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 40
+  Time since last request: 296976.025846 seconds.
+  path: Assets/models/Builders/Assembler_from_blender/Assembler.fbx
+  artifactKey: Guid(c89c07f718d0e0c42bc4cd04817dc211) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Assembler.fbx using Guid(c89c07f718d0e0c42bc4cd04817dc211) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '765c3ff2ed4f57788479efe4ba614a84') in 0.3035712 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 48
 
 ========================================================================
 Received Import Request.
-  Time since last request: 261.477530 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/Material.001.mat
-  artifactKey: Guid(1a03e1bbc684a7f4dba3004da4780e19) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/Material.001.mat using Guid(1a03e1bbc684a7f4dba3004da4780e19) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '3e417fbf2f4073d6ff59930fa2fdccce') in 0.0219843 seconds
+  Time since last request: 68.349582 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/Material.mat
+  artifactKey: Guid(160fbee8205d248479c8389056307887) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/Material.mat using Guid(160fbee8205d248479c8389056307887) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '8ad52d7b15ad20cf8d3ced57e192a5f6') in 0.0416766 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 229.615814 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/Material.001.mat
-  artifactKey: Guid(1a03e1bbc684a7f4dba3004da4780e19) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/Material.001.mat using Guid(1a03e1bbc684a7f4dba3004da4780e19) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '65ca250c1c0d616e76f724fbc9c3a890') in 0.025165 seconds
+  Time since last request: 0.000149 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/Smelter.mat
+  artifactKey: Guid(ec5a39088cc5dc6439cb9507151e35ee) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/Smelter.mat using Guid(ec5a39088cc5dc6439cb9507151e35ee) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '7af201628147aa9ce3e4856c647144a9') in 0.0216665 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 232.818047 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/Extractor2-Material.mat
-  artifactKey: Guid(9bb81bb263947a24bb7d5e70f5425a24) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/Extractor2-Material.mat using Guid(9bb81bb263947a24bb7d5e70f5425a24) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '61a96644752ffc03d6c768193a3e76bc') in 0.0213096 seconds
+  Time since last request: 3259.731648 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/Untitled.png
+  artifactKey: Guid(4c4cdebd680209e4fb77ea39fdc4aa03) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/Untitled.png using Guid(4c4cdebd680209e4fb77ea39fdc4aa03) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '4553be6b07d57fb7de11118ad2de0134') in 0.0348062 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 135.448269 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/Untitled.mat
+  artifactKey: Guid(62d4fea3617d6ed4292263840354acbf) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/Untitled.mat using Guid(62d4fea3617d6ed4292263840354acbf) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2b33aab2d212ee331a6e6819fe352769') in 0.0305203 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 36.720128 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0111738 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.094533 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.008774 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.113795 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0107349 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.031430 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0088375 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.046819 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.009457 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.001935 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.010121 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.043567 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0095704 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.046169 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0100751 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.050310 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0097196 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.050253 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0089062 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.051663 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0104126 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.048371 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0100742 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.052575 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0097961 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.050635 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0101832 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.045920 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0092202 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.044487 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0099821 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.048125 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0109231 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.047741 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0109555 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.046548 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.009424 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.049294 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0108078 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.047745 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png
+  artifactKey: Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Smelter.fbm/Untitled.png using Guid(049c6a3cdde62074dabab4a1312fa212) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '00000000000000000000000000000000') in 0.0099943 seconds
+Import Error Code:(4)
+Message: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+  ERROR: Build asset version error: assets/models/builders/smelter_from_blender/smelter.fbm/untitled.png in SourceAssetDB has modification time of '2026-08-10T17:40:58.5586755Z' while content on disk has modification time of '2026-08-10T17:40:58.78108Z'
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 146.096046 seconds.
+  path: Assets/models/Builders/Smelter_from_blender/Materials/Material.001 1.mat
+  artifactKey: Guid(c885579bf838f594593848e812df8f1c) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Smelter_from_blender/Materials/Material.001 1.mat using Guid(c885579bf838f594593848e812df8f1c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '1082e2d667e1a41a9702fda5ea8a0d11') in 0.0139134 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 546.119480 seconds.
+  path: Assets/models/Builders/Assembler_Mode.prefab
+  artifactKey: Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Mode.prefab using Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2bd1e83a952518862f182f8ce6bccee2') in 0.0386655 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 141
+
+========================================================================
+Received Import Request.
+  Time since last request: 105.934877 seconds.
+  path: Assets/models/Builders/Assembler_Mode.prefab
+  artifactKey: Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Mode.prefab using Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'f1a7dbf832c393f652c303be66e8e699') in 0.023288 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 86
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000025 seconds.
+  path: Assets/models/Builders/Assembler_Model_ghost.prefab
+  artifactKey: Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Model_ghost.prefab using Guid(5f987cf987c548242b4044c57ef21111) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'b1a75d9897eeee330f00fe9c46f351ff') in 0.0246425 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 86
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.214756 seconds.
+  path: Assets/models/Builders/Assembler_from_blender/Materials/Material.002.mat
+  artifactKey: Guid(ef00c753c0eb3414ebb09bf79629cc5d) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Materials/Material.002.mat using Guid(ef00c753c0eb3414ebb09bf79629cc5d) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'db3e10ebf97d9653020e9c897ec507df') in 0.023551 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000152 seconds.
+  path: Assets/models/Builders/Assembler_from_blender/Materials/Без имени.mat
+  artifactKey: Guid(391d6028d140f2a45b17d4207a86db01) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Materials/Без имени.mat using Guid(391d6028d140f2a45b17d4207a86db01) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '65e9741479a01ff1919397dbd0d3ed11') in 0.0272863 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 38.557877 seconds.
+  path: Assets/models/Builders/Assembler_from_blender/Materials/Material.001 1.mat
+  artifactKey: Guid(2c8e01ff35f48894eb95eb94127c47e1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Materials/Material.001 1.mat using Guid(2c8e01ff35f48894eb95eb94127c47e1) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '60c1ddc7dbc37c131bd4d55a25a364bd') in 0.0235557 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
   Time since last request: 0.000050 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/Extractor2-Material.001.mat
-  artifactKey: Guid(30b3760d8a2326d419189b311453d3e5) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/Extractor2-Material.001.mat using Guid(30b3760d8a2326d419189b311453d3e5) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '8edc1dff60e576e65111bb2b2cc9e96b') in 0.0192283 seconds
+  path: Assets/models/Builders/Assembler_from_blender/Materials/Material.002.mat
+  artifactKey: Guid(ef00c753c0eb3414ebb09bf79629cc5d) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Materials/Material.002.mat using Guid(ef00c753c0eb3414ebb09bf79629cc5d) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '3177f09b3b7ff675c40fee252ed203a3') in 0.0261119 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 5.932355 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Extractor2.fbx
-  artifactKey: Guid(ab412bc0aeb6cae4a81e0ef2d0582aba) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Extractor2.fbx using Guid(ab412bc0aeb6cae4a81e0ef2d0582aba) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '5b295401eaec008bd7f783a058223dd9') in 0.0850476 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 29
-
-========================================================================
-Received Import Request.
-  Time since last request: 1136.733843 seconds.
-  path: Assets/models/Builders/CONVEER_FROM_BLENDER/WMaterial.001 1.mat
-  artifactKey: Guid(d62743db18c9adf4280859eaa142d57b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/CONVEER_FROM_BLENDER/WMaterial.001 1.mat using Guid(d62743db18c9adf4280859eaa142d57b) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'b8cec00da1be981fa456c6b3b2a9789a') in 0.0223773 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-[usbmuxd] Attached: 1 00008030-001651EC0C82202E
-[usbmuxd] Detached: 1 00008030-001651EC0C82202E
-========================================================================
-Received Import Request.
-  Time since last request: 1951.717855 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/Material.001.mat
-  artifactKey: Guid(1a03e1bbc684a7f4dba3004da4780e19) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/Material.001.mat using Guid(1a03e1bbc684a7f4dba3004da4780e19) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '63e708a07be03db4e1c97cafeb076e86') in 0.0215748 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000132 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/Без имени.mat
-  artifactKey: Guid(e4f90df70aa29124c81ba5184ee3d839) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/Без имени.mat using Guid(e4f90df70aa29124c81ba5184ee3d839) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'd5b8f267fd1af8c6cdc1015f717a5e31') in 0.0212576 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
-
-========================================================================
-Received Import Request.
-  Time since last request: 134.715079 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/Material.001 1.mat
-  artifactKey: Guid(ca402e3fc44da6948858927766840b5b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/Material.001 1.mat using Guid(ca402e3fc44da6948858927766840b5b) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2433a5cd3364e322027085170e661537') in 0.0208909 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 60.079927 seconds.
-  path: Assets/prefabs/Builders/Extractor_01.prefab
-  artifactKey: Guid(9fe6ad3d27314834b81d7bfbf2e98aa8) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/prefabs/Builders/Extractor_01.prefab using Guid(9fe6ad3d27314834b81d7bfbf2e98aa8) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ae496a9d65b7923076cf916f6b8b73e1') in 0.0325712 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 118
 
 ========================================================================
 Received Import Request.
   Time since last request: 0.000044 seconds.
-  path: Assets/prefabs/Builders/Smelter_01.prefab
-  artifactKey: Guid(0cc702c803a973043a92ee8ca7e71b96) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/prefabs/Builders/Smelter_01.prefab using Guid(0cc702c803a973043a92ee8ca7e71b96) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '1a61a6672b1bb7a3319d43c559b204f5') in 0.0335343 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 146
+  path: Assets/models/Builders/Assembler_from_blender/Materials/Без имени.mat
+  artifactKey: Guid(391d6028d140f2a45b17d4207a86db01) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_from_blender/Materials/Без имени.mat using Guid(391d6028d140f2a45b17d4207a86db01) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '5257263eea7618ea6f4b0eb3c2cc6342') in 0.0216973 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
 
 ========================================================================
 Received Import Request.
-  Time since last request: 106.139000 seconds.
-  path: Assets/models/Builders/extractor_bodel.prefab
-  artifactKey: Guid(f10ca866f3d6c1548b865efbb27aa314) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/extractor_bodel.prefab using Guid(f10ca866f3d6c1548b865efbb27aa314) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '80f37811b587c677457d4e1138415471') in 0.0160442 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 63
+  Time since last request: 0.000215 seconds.
+  path: Assets/models/Builders/Assembler_Mode.prefab
+  artifactKey: Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Assembler_Mode.prefab using Guid(a4a639d0ea873f94caf351456ba0a6a1) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'e768d9b9c5f061d1b93225d43dc7b932') in 0.0274925 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 86
 
-========================================================================
-Received Import Request.
-  Time since last request: 5.015141 seconds.
-  path: Assets/models/Builders/extractor_model.prefab
-  artifactKey: Guid(f10ca866f3d6c1548b865efbb27aa314) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/extractor_model.prefab using Guid(f10ca866f3d6c1548b865efbb27aa314) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '19de4caf7fda332893afadc20254ea27') in 0.0146966 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 63
-
-========================================================================
-Received Import Request.
-  Time since last request: 20.178121 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/wMaterial.001 1.mat
-  artifactKey: Guid(ca402e3fc44da6948858927766840b5b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/wMaterial.001 1.mat using Guid(ca402e3fc44da6948858927766840b5b) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '753b54fd51c244127479dba64239b290') in 0.0279138 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000063 seconds.
-  path: Assets/models/Builders/Extractor_from_blender/Materials/wБез имени 1.mat
-  artifactKey: Guid(006fbafead3984a4eb70cc5227716806) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
-Start importing Assets/models/Builders/Extractor_from_blender/Materials/wБез имени 1.mat using Guid(006fbafead3984a4eb70cc5227716806) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ef70c0338d1582ac6b7375749da72784') in 0.0236253 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 3
-
-========================================================================
-Received Prepare
-Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  0.887 seconds
-Refreshing native plugins compatible for Editor in 1.50 ms, found 3 plugins.
-Native extension for iOS target not found
-Native extension for Android target not found
-Native extension for WindowsStandalone target not found
-[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
-[Package Manager] Unable to send message (not connected to server process).
-[Package Manager] Cannot connect to Unity Package Manager local server
-Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.882 seconds
-Domain Reload Profiling: 1765ms
-	BeginReloadAssembly (249ms)
-		ExecutionOrderSort (0ms)
-		DisableScriptedObjects (6ms)
-		BackupInstance (0ms)
-		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (59ms)
-	RebuildCommonClasses (42ms)
-	RebuildNativeTypeToScriptingClass (14ms)
-	initialDomainReloadingComplete (40ms)
-	LoadAllAssembliesAndSetupDomain (538ms)
-		LoadAssemblies (476ms)
-		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (189ms)
-			TypeCache.Refresh (8ms)
-				TypeCache.ScanAssembly (0ms)
-			BuildScriptInfoCaches (170ms)
-			ResolveRequiredComponents (6ms)
-	FinalizeReload (883ms)
-		ReleaseScriptCaches (0ms)
-		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (746ms)
-			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (23ms)
-			SetLoadedEditorAssemblies (8ms)
-			BeforeProcessingInitializeOnLoad (217ms)
-			ProcessInitializeOnLoadAttributes (455ms)
-			ProcessInitializeOnLoadMethodAttributes (33ms)
-			AfterProcessingInitializeOnLoad (9ms)
-			EditorAssembliesLoaded (0ms)
-		ExecutionOrderSort2 (0ms)
-		AwakeInstancesAfterBackupRestoration (7ms)
-Refreshing native plugins compatible for Editor in 1.69 ms, found 3 plugins.
-Preloading 0 native plugins for Editor in 0.00 ms.
-Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 3953 unused Assets / (1.1 MB). Loaded Objects now: 4511.
-Memory consumption went from 101.0 MB to 99.9 MB.
-Total: 7.984200 ms (FindLiveObjects: 0.654700 ms CreateObjectMapping: 0.614300 ms MarkObjects: 5.263500 ms  DeleteObjects: 1.449900 ms)
-
-Prepare: number of updated asset objects reloaded= 0
-========================================================================
-Received Prepare
-Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  0.881 seconds
-Refreshing native plugins compatible for Editor in 1.97 ms, found 3 plugins.
-Native extension for iOS target not found
-Native extension for Android target not found
-Native extension for WindowsStandalone target not found
-[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
-[Package Manager] Unable to send message (not connected to server process).
-[Package Manager] Cannot connect to Unity Package Manager local server
-Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.880 seconds
-Domain Reload Profiling: 1757ms
-	BeginReloadAssembly (232ms)
-		ExecutionOrderSort (0ms)
-		DisableScriptedObjects (8ms)
-		BackupInstance (0ms)
-		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (47ms)
-	RebuildCommonClasses (43ms)
-	RebuildNativeTypeToScriptingClass (14ms)
-	initialDomainReloadingComplete (40ms)
-	LoadAllAssembliesAndSetupDomain (547ms)
-		LoadAssemblies (479ms)
-		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (187ms)
-			TypeCache.Refresh (7ms)
-				TypeCache.ScanAssembly (0ms)
-			BuildScriptInfoCaches (169ms)
-			ResolveRequiredComponents (6ms)
-	FinalizeReload (880ms)
-		ReleaseScriptCaches (0ms)
-		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (739ms)
-			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (22ms)
-			SetLoadedEditorAssemblies (7ms)
-			BeforeProcessingInitializeOnLoad (209ms)
-			ProcessInitializeOnLoadAttributes (459ms)
-			ProcessInitializeOnLoadMethodAttributes (32ms)
-			AfterProcessingInitializeOnLoad (10ms)
-			EditorAssembliesLoaded (0ms)
-		ExecutionOrderSort2 (0ms)
-		AwakeInstancesAfterBackupRestoration (6ms)
-Refreshing native plugins compatible for Editor in 1.93 ms, found 3 plugins.
-Preloading 0 native plugins for Editor in 0.00 ms.
-Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 3951 unused Assets / (1.1 MB). Loaded Objects now: 4511.
-Memory consumption went from 101.0 MB to 99.8 MB.
-Total: 8.005700 ms (FindLiveObjects: 0.603200 ms CreateObjectMapping: 0.604100 ms MarkObjects: 5.095000 ms  DeleteObjects: 1.700700 ms)
-
-Prepare: number of updated asset objects reloaded= 0
-========================================================================
-Received Prepare
-Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  0.902 seconds
-Refreshing native plugins compatible for Editor in 1.76 ms, found 3 plugins.
-Native extension for iOS target not found
-Native extension for Android target not found
-Native extension for WindowsStandalone target not found
-[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
-[Package Manager] Unable to send message (not connected to server process).
-[Package Manager] Cannot connect to Unity Package Manager local server
-Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.909 seconds
-Domain Reload Profiling: 1805ms
-	BeginReloadAssembly (233ms)
-		ExecutionOrderSort (0ms)
-		DisableScriptedObjects (7ms)
-		BackupInstance (0ms)
-		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (52ms)
-	RebuildCommonClasses (48ms)
-	RebuildNativeTypeToScriptingClass (14ms)
-	initialDomainReloadingComplete (42ms)
-	LoadAllAssembliesAndSetupDomain (559ms)
-		LoadAssemblies (483ms)
-		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (195ms)
-			TypeCache.Refresh (7ms)
-				TypeCache.ScanAssembly (0ms)
-			BuildScriptInfoCaches (177ms)
-			ResolveRequiredComponents (7ms)
-	FinalizeReload (909ms)
-		ReleaseScriptCaches (0ms)
-		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (758ms)
-			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (25ms)
-			SetLoadedEditorAssemblies (8ms)
-			BeforeProcessingInitializeOnLoad (220ms)
-			ProcessInitializeOnLoadAttributes (464ms)
-			ProcessInitializeOnLoadMethodAttributes (32ms)
-			AfterProcessingInitializeOnLoad (10ms)
-			EditorAssembliesLoaded (0ms)
-		ExecutionOrderSort2 (0ms)
-		AwakeInstancesAfterBackupRestoration (10ms)
-Refreshing native plugins compatible for Editor in 2.35 ms, found 3 plugins.
-Preloading 0 native plugins for Editor in 0.00 ms.
-Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 3951 unused Assets / (1.1 MB). Loaded Objects now: 4511.
-Memory consumption went from 101.0 MB to 99.9 MB.
-Total: 8.252100 ms (FindLiveObjects: 0.629900 ms CreateObjectMapping: 0.896500 ms MarkObjects: 5.439400 ms  DeleteObjects: 1.284100 ms)
-
-Prepare: number of updated asset objects reloaded= 0
+Editor requested this worker to shutdown with reason: Scaling down because of idle timeout
+AssetImportWorker is now disconnected from the server
+Process exiting
+Exiting without the bug reporter. Application will terminate with return code 0

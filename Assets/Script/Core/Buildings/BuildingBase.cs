@@ -11,10 +11,13 @@ public abstract class BuildingBase : MonoBehaviour
 
     public virtual void OnPlaced()
     {
+        RegisterOnGrid();
     }
 
     public virtual void OnRemoved()
     {
+        GridOccupancy.Unregister(gameObject);
+
         if (inputSockets != null)
         {
             foreach (var socket in inputSockets)
@@ -26,6 +29,23 @@ public abstract class BuildingBase : MonoBehaviour
             foreach (var socket in outputSockets)
                 if (socket != null) socket.DisconnectAll();
         }
+    }
+
+    void OnDestroy()
+    {
+        // Страховка, если объект уничтожили без OnRemoved
+        GridOccupancy.Unregister(gameObject);
+    }
+
+    protected void RegisterOnGrid()
+    {
+        if (GridSystem.Instance == null)
+            return;
+
+        Vector2Int origin = GridSystem.Instance.WorldToCell(transform.position);
+        Vector2Int size = data != null ? data.size : Vector2Int.one;
+        size = GridOccupancy.GetRotatedSize(size, transform.eulerAngles.y);
+        GridOccupancy.Register(gameObject, origin, size);
     }
 
     public virtual bool TryReceiveItem(ItemData item, BuildingSocket fromSocket)

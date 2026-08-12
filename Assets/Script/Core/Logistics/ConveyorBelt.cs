@@ -60,7 +60,23 @@ public class ConveyorBelt : MonoBehaviour
     void OnDisable()
     {
         ConveyorNetwork.Instance?.UnregisterBelt(this);
+    }
 
+    /// <summary>
+    /// Вызывать после установки игроком (регистрация в GridOccupancy).
+    /// </summary>
+    public void OnPlaced()
+    {
+        if (GridSystem.Instance == null)
+            return;
+
+        Vector2Int cell = GridSystem.Instance.WorldToCell(transform.position);
+        GridOccupancy.Register(gameObject, cell);
+    }
+
+    public void OnRemoved()
+    {
+        GridOccupancy.Unregister(gameObject);
     }
 
     void Update()
@@ -179,5 +195,6 @@ public class ConveyorBelt : MonoBehaviour
     void OnDestroy()
     {
         ClearItems();
+        GridOccupancy.Unregister(gameObject);
     }
 }

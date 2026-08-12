@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Unlocks Assembler and Smelter
   icon: {fileID: 0}
   requiredItems:
-  - item: {fileID: 11400000, guid: 725d7895721123d41a73f359454d1d9c, type: 2}
+  - item: {fileID: 11400000, guid: 21443c75f9e56ce45becb60f505bf5b9, type: 2}
     amount: 15
   requiredResearches: []
   unlockedBuildings:
