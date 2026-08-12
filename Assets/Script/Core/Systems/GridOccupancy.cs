@@ -125,6 +125,30 @@ public static class GridOccupancy
     }
 
     /// <summary>
+    /// Все уникальные объекты на сетке (для ReconnectAll без FindObjectsByType).
+    /// </summary>
+    public static void CollectAllOccupiedObjects(List<GameObject> results, HashSet<int> seen)
+    {
+        if (results == null)
+            return;
+
+        if (seen == null)
+            seen = new HashSet<int>();
+
+        // Копия ключей: на случай clear во время итерации
+        var keys = new List<GameObject>(objectCells.Keys);
+        for (int i = 0; i < keys.Count; i++)
+        {
+            GameObject obj = keys[i];
+            if (obj == null) continue;
+            if (!objectCells.ContainsKey(obj)) continue;
+            int id = obj.GetInstanceID();
+            if (!seen.Add(id)) continue;
+            results.Add(obj);
+        }
+    }
+
+    /// <summary>
     /// Размер с учётом поворота на 90° (Y). size.x = ширина по X, size.y = глубина по Z.
     /// </summary>
     public static Vector2Int GetRotatedSize(Vector2Int size, float rotationY)

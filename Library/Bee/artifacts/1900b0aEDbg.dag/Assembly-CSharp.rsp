@@ -428,6 +428,7 @@
 "Assets/Script/Core/Logistics/ConveyorBelt.cs"
 "Assets/Script/Core/Logistics/ConveyorNetwork.cs"
 "Assets/Script/Core/Logistics/ConveyorPlacement.cs"
+"Assets/Script/Core/Logistics/ConveyorReshape.cs"
 "Assets/Script/Core/Logistics/ItemOnBelt.cs"
 "Assets/Script/Core/Player/PlayerBuilder.cs"
 "Assets/Script/Core/Player/PlayerInteractor.cs"

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class SaveData
 {
     public List<BuildingSaveData> buildings = new List<BuildingSaveData>();
-    // Потом можно добавить исследования, инвентарь и т.д.
+    public List<ConveyorSaveData> conveyors = new List<ConveyorSaveData>();
 }
 
 [System.Serializable]
@@ -15,6 +15,16 @@ public class BuildingSaveData
     public string buildingId;
     public Vector3 position;
     public float rotationY;
+}
+
+[System.Serializable]
+public class ConveyorSaveData
+{
+    public string buildingId;
+    public Vector3 position;
+    public float rotationY;
+    public bool isCorner;
+    public bool mirrorX;
 }
 
 public class SaveSystem : MonoBehaviour
@@ -33,27 +43,47 @@ public class SaveSystem : MonoBehaviour
     {
         SaveData data = new SaveData();
 
-        // Находим все здания на сцене
         BuildingBase[] buildings = FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
-
-        foreach (var building in buildings)
+        for (int i = 0; i < buildings.Length; i++)
         {
-            if (building.data == null) continue;
+            BuildingBase building = buildings[i];
+            if (building == null || building.data == null) continue;
+            if (string.IsNullOrEmpty(building.data.id)) continue;
 
-            BuildingSaveData bsd = new BuildingSaveData
+            data.buildings.Add(new BuildingSaveData
             {
                 buildingId = building.data.id,
                 position = building.transform.position,
                 rotationY = building.transform.eulerAngles.y
-            };
+            });
+        }
 
-            data.buildings.Add(bsd);
+        ConveyorBelt[] belts = FindObjectsByType<ConveyorBelt>(FindObjectsSortMode.None);
+        for (int i = 0; i < belts.Length; i++)
+        {
+            ConveyorBelt belt = belts[i];
+            if (belt == null) continue;
+            // Ghost / disabled previews
+            if (!belt.enabled || !belt.gameObject.activeInHierarchy) continue;
+
+            string id = belt.buildingData != null ? belt.buildingData.id : null;
+            if (string.IsNullOrEmpty(id))
+                continue;
+
+            data.conveyors.Add(new ConveyorSaveData
+            {
+                buildingId = id,
+                position = belt.transform.position,
+                rotationY = belt.transform.eulerAngles.y,
+                isCorner = belt.isCorner,
+                mirrorX = belt.transform.localScale.x < 0f
+            });
         }
 
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SavePath, json);
 
-        Debug.Log("Game saved: " + SavePath);
+        Debug.Log($"Game saved: {data.buildings.Count} buildings, {data.conveyors.Count} conveyors в†’ {SavePath}");
     }
 
     public void LoadGame()
@@ -66,15 +96,203 @@ public class SaveSystem : MonoBehaviour
 
         string json = File.ReadAllText(SavePath);
         SaveData data = JsonUtility.FromJson<SaveData>(json);
+        if (data == null)
+        {
+            Debug.LogError("[SaveSystem] Failed to parse save file");
+            return;
+        }
 
-        // Здесь нужна будет база всех BuildingData по id
-        // Пока просто заготовка
-        Debug.Log($"Loaded {data.buildings.Count} buildings (логика загрузки зданий пока не реализована)");
+        BuildingData[] catalog = ResolveBuildingCatalog();
+        if (catalog == null || catalog.Length == 0)
+        {
+            Debug.LogError("[SaveSystem] No BuildingData catalog (PlayerInventory.allBuildings)");
+            return;
+        }
+
+        ClearWorldPlaceables();
+
+        int spawnedBuildings = 0;
+        if (data.buildings != null)
+        {
+            for (int i = 0; i < data.buildings.Count; i++)
+            {
+                BuildingSaveData bsd = data.buildings[i];
+                if (SpawnBuilding(bsd, catalog))
+                    spawnedBuildings++;
+            }
+        }
+
+        int spawnedBelts = 0;
+        if (data.conveyors != null)
+        {
+            for (int i = 0; i < data.conveyors.Count; i++)
+            {
+                ConveyorSaveData csd = data.conveyors[i];
+                if (SpawnConveyor(csd, catalog))
+                    spawnedBelts++;
+            }
+        }
+
+        // Р•РґРёРЅС‹Р№ reconnect РїРѕСЃР»Рµ РїРѕР»РЅРѕР№ Р·Р°РіСЂСѓР·РєРё СЃРµС‚Рё
+        AutoConnector.ReconnectAll();
+
+        Debug.Log($"Game loaded: {spawnedBuildings} buildings, {spawnedBelts} conveyors + ReconnectAll");
     }
 
     public void DeleteSave()
     {
         if (File.Exists(SavePath))
             File.Delete(SavePath);
+    }
+
+    /// <summary>РўРѕР»СЊРєРѕ РїРµСЂРµСЃРѕР±СЂР°С‚СЊ СЃРІСЏР·Рё (РїРѕСЃР»Рµ СЂСѓС‡РЅРѕРіРѕ СЃРїР°РІРЅР° / РѕС‚Р»Р°РґРєР°).</summary>
+    public void ReconnectLogistics()
+    {
+        AutoConnector.ReconnectAll();
+    }
+
+    static BuildingData[] ResolveBuildingCatalog()
+    {
+        PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
+        if (inv != null && inv.allBuildings != null && inv.allBuildings.Length > 0)
+            return inv.allBuildings;
+        return null;
+    }
+
+    static BuildingData FindBuildingData(string id, BuildingData[] catalog)
+    {
+        if (string.IsNullOrEmpty(id) || catalog == null)
+            return null;
+
+        for (int i = 0; i < catalog.Length; i++)
+        {
+            BuildingData d = catalog[i];
+            if (d != null && d.id == id)
+                return d;
+        }
+        return null;
+    }
+
+    static void ClearWorldPlaceables()
+    {
+        // Р›РµРЅС‚С‹
+        ConveyorBelt[] belts = Object.FindObjectsByType<ConveyorBelt>(FindObjectsSortMode.None);
+        for (int i = 0; i < belts.Length; i++)
+        {
+            ConveyorBelt belt = belts[i];
+            if (belt == null) continue;
+            if (!belt.enabled) continue; // ghost
+
+            belt.ClearItems();
+            AutoConnector.ClearBeltLinks(belt);
+            belt.OnRemoved();
+            belt.suppressDestroyCleanup = true;
+            Object.Destroy(belt.gameObject);
+        }
+
+        BuildingBase[] buildings = Object.FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
+        for (int i = 0; i < buildings.Length; i++)
+        {
+            BuildingBase b = buildings[i];
+            if (b == null) continue;
+            b.OnRemoved();
+            Object.Destroy(b.gameObject);
+        }
+
+        // РќР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№ вЂ” РµСЃР»Рё РѕСЃС‚Р°Р»РёСЃСЊ РјС‘СЂС‚РІС‹Рµ Р·Р°РїРёСЃРё
+        // (Destroy РѕС‚Р»РѕР¶РµРЅ, occupancy СѓР¶Рµ СЃРЅСЏС‚ РІ OnRemoved)
+    }
+
+    static bool SpawnBuilding(BuildingSaveData bsd, BuildingData[] catalog)
+    {
+        if (bsd == null) return false;
+
+        BuildingData data = FindBuildingData(bsd.buildingId, catalog);
+        if (data == null || data.prefab == null)
+        {
+            Debug.LogWarning($"[SaveSystem] Missing building prefab for id={bsd.buildingId}");
+            return false;
+        }
+
+        Quaternion rot = Quaternion.Euler(0f, bsd.rotationY, 0f);
+        GameObject go = Object.Instantiate(data.prefab, bsd.position, rot);
+        BuildingBase building = go.GetComponent<BuildingBase>();
+        if (building != null)
+        {
+            building.data = data;
+            // OnPlaced: register + reshape (СЃРµС‚СЊ РµС‰С‘ РЅРµ РїРѕР»РЅР°СЏ вЂ” reshape РѕРє, connect РІ РєРѕРЅС†Рµ)
+            bool prev = ConveyorBelt.SuppressReshapeOnPlaced;
+            ConveyorBelt.SuppressReshapeOnPlaced = true;
+            try
+            {
+                building.OnPlaced();
+            }
+            finally
+            {
+                ConveyorBelt.SuppressReshapeOnPlaced = prev;
+            }
+        }
+        else
+        {
+            if (GridSystem.Instance != null)
+            {
+                Vector2Int origin = GridSystem.Instance.WorldToCell(bsd.position);
+                Vector2Int size = GridOccupancy.GetRotatedSize(
+                    data.size, bsd.rotationY);
+                GridOccupancy.Register(go, origin, size);
+            }
+        }
+
+        return true;
+    }
+
+    static bool SpawnConveyor(ConveyorSaveData csd, BuildingData[] catalog)
+    {
+        if (csd == null) return false;
+
+        BuildingData data = FindBuildingData(csd.buildingId, catalog);
+        if (data == null)
+        {
+            Debug.LogWarning($"[SaveSystem] Missing conveyor BuildingData id={csd.buildingId}");
+            return false;
+        }
+
+        GameObject prefab = data.GetConveyorPrefab(csd.isCorner);
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[SaveSystem] Missing conveyor prefab id={csd.buildingId}");
+            return false;
+        }
+
+        Quaternion rot = Quaternion.Euler(0f, csd.rotationY, 0f);
+        GameObject go = Object.Instantiate(prefab, csd.position, rot);
+
+        if (csd.mirrorX)
+        {
+            Vector3 scale = go.transform.localScale;
+            scale.x = -Mathf.Abs(scale.x);
+            go.transform.localScale = scale;
+        }
+
+        ConveyorBelt belt = go.GetComponent<ConveyorBelt>();
+        if (belt != null)
+        {
+            belt.buildingData = data;
+            belt.isCorner = csd.isCorner;
+            ConveyorReshape.DefaultConveyorData = data;
+
+            bool prev = ConveyorBelt.SuppressReshapeOnPlaced;
+            ConveyorBelt.SuppressReshapeOnPlaced = true;
+            try
+            {
+                belt.OnPlaced();
+            }
+            finally
+            {
+                ConveyorBelt.SuppressReshapeOnPlaced = prev;
+            }
+        }
+
+        return true;
     }
 }

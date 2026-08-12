@@ -4,21 +4,24 @@ public class ItemOnBelt : MonoBehaviour
 {
     [HideInInspector] public ItemData itemData;
     [HideInInspector] public ConveyorBelt currentBelt;
-    [HideInInspector] public float progress;          // 0..1 по текущему сегменту
+    [HideInInspector] public float progress;
 
-    // Вызывается, когда предмет создаётся
     public void Init(ItemData data, ConveyorBelt belt, float startProgress = 0f)
     {
         itemData = data;
         currentBelt = belt;
-        progress = startProgress;
-
-        // Можно здесь подставить меш/материал из data.worldPrefab
-        // Пока просто оставляем как есть
+        progress = Mathf.Clamp(startProgress, 0f, 1f);
     }
 
     public void SetProgress(float value)
     {
         progress = Mathf.Clamp01(value);
+    }
+
+    void OnDestroy()
+    {
+        // РќРµ С‚СЂРѕРіР°РµРј belt.list РµСЃР»Рё reshape/clear СѓР¶Рµ СЃРЅСЏР» СЃСЃС‹Р»РєСѓ
+        if (currentBelt != null)
+            currentBelt.RemoveItem(this, destroyGameObject: false);
     }
 }

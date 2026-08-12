@@ -9,6 +9,12 @@ public enum ConveyorShape
 
 public class ConveyorBelt : MonoBehaviour
 {
+    public struct ItemSnapshot
+    {
+        public ItemData data;
+        public float progress;
+    }
+
     [Header("Settings")]
     public float speed = 2.5f;
     public float length = 1f;
@@ -22,6 +28,9 @@ public class ConveyorBelt : MonoBehaviour
         set => shape = value ? ConveyorShape.Corner : ConveyorShape.Straight;
     }
 
+    [Header("Data")]
+    public BuildingData buildingData;
+
     [Header("Connections")]
     public ConveyorBelt prevBelt;
     public ConveyorBelt nextBelt;
@@ -31,56 +40,114 @@ public class ConveyorBelt : MonoBehaviour
     [Header("Visual Path")]
     public Transform startPoint;
     public Transform endPoint;
-    [Tooltip("Центр поворота для Corner. Если null — вычисляется из start/end.")]
     public Transform midPoint;
 
     [Header("Debug")]
     public bool showDebug = false;
 
-    private List<ItemOnBelt> items = new List<ItemOnBelt>();
+    /// <summary>OnDestroy не чистит (reshape/demolish уже сделали).</summary>
+    [System.NonSerialized] public bool suppressDestroyCleanup;
 
-    public bool CanAccept()
+    public static bool SuppressReshapeOnPlaced { get; set; }
+
+    private readonly List<ItemOnBelt> items = new List<ItemOnBelt>();
+
+    public float ItemSpacing => 1f / Mathf.Max(1, maxItems);
+    public int ItemCount => items.Count;
+
+    // ------------------------------------------------------------------
+    // Links (1 next — без merge/split в этой фазе)
+    // ------------------------------------------------------------------
+
+    public void SetNextBelt(ConveyorBelt other)
     {
-        return items.Count < maxItems;
+        if (other == this)
+            return;
+        nextBelt = other;
+    }
+
+    public void ClearOutgoingBelts()
+    {
+        nextBelt = null;
+    }
+
+    // ------------------------------------------------------------------
+    // Accept / spacing
+    // ------------------------------------------------------------------
+
+    public bool CanAccept() => CanAcceptAtProgress(0f);
+
+    public bool CanAcceptAtProgress(float startProgress)
+    {
+        if (items.Count >= maxItems)
+            return false;
+
+        float spacing = ItemSpacing;
+        float p = Mathf.Clamp(startProgress, 0f, 1f);
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            ItemOnBelt item = items[i];
+            if (item == null) continue;
+            if (Mathf.Abs(item.progress - p) < spacing * 0.99f)
+                return false;
+        }
+
+        return true;
     }
 
     public bool TryAccept(ItemData data, float startProgress = 0f)
     {
-        if (!CanAccept() || data == null)
-        {
-            if (showDebug)
-                Debug.LogWarning($"[Belt {name}] Отказ принять {data?.displayName}. Причина: {(data == null ? "data null" : "нет места")}");
+        if (data == null || !CanAcceptAtProgress(startProgress))
             return false;
-        }
 
         GameObject prefab = data.worldPrefab != null ? data.worldPrefab : CreateFallbackItem();
         GameObject go = Instantiate(prefab, GetPositionOnBelt(startProgress), Quaternion.identity);
 
         ItemOnBelt item = go.GetComponent<ItemOnBelt>();
-        if (item == null) item = go.AddComponent<ItemOnBelt>();
+        if (item == null)
+            item = go.AddComponent<ItemOnBelt>();
 
         item.Init(data, this, startProgress);
         items.Add(item);
-
-        if (showDebug)
-            Debug.Log($"[Belt {name}] Принял {data.displayName}. Предметов на ленте: {items.Count}");
-
+        RefreshItemTransform(item);
         return true;
     }
 
-    void OnEnable()
+    public bool TryAcceptItem(ItemOnBelt item, float startProgress = 0f)
     {
-        ConveyorNetwork.Instance?.RegisterBelt(this);
+        if (item == null || item.itemData == null)
+            return false;
+        if (!CanAcceptAtProgress(startProgress))
+            return false;
+
+        ConveyorBelt oldBelt = item.currentBelt;
+        if (oldBelt != null && oldBelt != this)
+            oldBelt.RemoveItem(item, destroyGameObject: false);
+
+        item.currentBelt = this;
+        item.progress = Mathf.Clamp(startProgress, 0f, 1f);
+        if (!items.Contains(item))
+            items.Add(item);
+
+        RefreshItemTransform(item);
+        return true;
     }
 
-    void OnDisable()
+    public void RemoveItem(ItemOnBelt item, bool destroyGameObject)
     {
-        ConveyorNetwork.Instance?.UnregisterBelt(this);
+        if (item == null) return;
+        items.Remove(item);
+        if (item.currentBelt == this)
+            item.currentBelt = null;
+        if (destroyGameObject && item != null)
+            Destroy(item.gameObject);
     }
 
-    /// <summary>
-    /// Вызывать после установки игроком (регистрация в GridOccupancy).
-    /// </summary>
+    // ------------------------------------------------------------------
+    // Lifecycle
+    // ------------------------------------------------------------------
+
     public void OnPlaced()
     {
         if (GridSystem.Instance == null)
@@ -88,6 +155,11 @@ public class ConveyorBelt : MonoBehaviour
 
         Vector2Int cell = GridSystem.Instance.WorldToCell(transform.position);
         GridOccupancy.Register(gameObject, cell);
+
+        if (buildingData != null)
+            ConveyorReshape.DefaultConveyorData = buildingData;
+
+        // Reshape соседей вызывается снаружи (PlayerBuilder) — один раз
     }
 
     public void OnRemoved()
@@ -95,13 +167,50 @@ public class ConveyorBelt : MonoBehaviour
         GridOccupancy.Unregister(gameObject);
     }
 
+    public List<ItemSnapshot> CaptureItemSnapshots()
+    {
+        var list = new List<ItemSnapshot>(items.Count);
+        for (int i = 0; i < items.Count; i++)
+        {
+            ItemOnBelt item = items[i];
+            if (item == null || item.itemData == null) continue;
+            list.Add(new ItemSnapshot { data = item.itemData, progress = item.progress });
+        }
+        return list;
+    }
+
+    public void RestoreItemSnapshots(List<ItemSnapshot> snapshots)
+    {
+        if (snapshots == null) return;
+        for (int i = 0; i < snapshots.Count; i++)
+        {
+            if (snapshots[i].data == null) continue;
+            TryAccept(snapshots[i].data, snapshots[i].progress);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Simulation
+    // ------------------------------------------------------------------
+
     void Update()
     {
         if (items.Count == 0) return;
 
-        float moveDelta = (speed / length) * Time.deltaTime;
-
         for (int i = items.Count - 1; i >= 0; i--)
+        {
+            if (items[i] == null)
+                items.RemoveAt(i);
+        }
+
+        if (items.Count == 0) return;
+
+        items.Sort((a, b) => b.progress.CompareTo(a.progress));
+
+        float moveDelta = (speed / Mathf.Max(0.01f, length)) * Time.deltaTime;
+        float spacing = ItemSpacing;
+
+        for (int i = 0; i < items.Count;)
         {
             ItemOnBelt item = items[i];
             if (item == null)
@@ -110,73 +219,67 @@ public class ConveyorBelt : MonoBehaviour
                 continue;
             }
 
-            item.progress += moveDelta;
-            item.transform.position = GetPositionOnBelt(item.progress);
+            float maxProgress = 1f;
+            if (i > 0 && items[i - 1] != null)
+                maxProgress = Mathf.Min(maxProgress, items[i - 1].progress - spacing);
+            if (maxProgress < 0f)
+                maxProgress = 0f;
 
-            Vector3 dir = GetDirectionAtProgress(item.progress);
-            if (dir.sqrMagnitude > 0.0001f)
-                item.transform.rotation = Quaternion.LookRotation(dir);
+            item.progress = Mathf.Min(item.progress + moveDelta, maxProgress);
+            RefreshItemTransform(item);
 
-            if (item.progress >= 1f)
+            if (item.progress >= 1f - 0.0001f)
             {
-                TryPassToNext(item, i);
+                int before = items.Count;
+                TryPassToNext(item);
+                if (items.Count < before)
+                    continue;
             }
+
+            i++;
         }
     }
 
-    void TryPassToNext(ItemOnBelt item, int index)
+    void RefreshItemTransform(ItemOnBelt item)
     {
+        if (item == null) return;
+        item.transform.position = GetPositionOnBelt(item.progress);
+        Vector3 dir = GetDirectionAtProgress(item.progress);
+        if (dir.sqrMagnitude > 0.0001f)
+            item.transform.rotation = Quaternion.LookRotation(dir);
+    }
+
+    void TryPassToNext(ItemOnBelt item)
+    {
+        if (item == null) return;
+
         if (nextBelt != null)
         {
-            if (nextBelt.TryAccept(item.itemData, item.progress - 1f))
-            {
-                if (showDebug)
-                    Debug.Log($"[Belt {name}] Передал {item.itemData.displayName} → {nextBelt.name}");
-
-                Destroy(item.gameObject);
-                items.RemoveAt(index);
+            float handoff = Mathf.Max(0f, item.progress - 1f);
+            if (nextBelt.TryAcceptItem(item, handoff))
                 return;
-            }
-            else if (showDebug)
-            {
-                Debug.LogWarning($"[Belt {name}] Не смог передать на следующую ленту {nextBelt.name}");
-            }
         }
 
         if (connectedInputSocket != null)
         {
             BuildingBase building = connectedInputSocket.GetComponentInParent<BuildingBase>();
-            if (building != null)
+            if (building != null && building.TryReceiveItem(item.itemData, connectedInputSocket))
             {
-                bool received = building.TryReceiveItem(item.itemData, connectedInputSocket);
-
-                if (received)
-                {
-                    if (showDebug)
-                        Debug.Log($"[Belt {name}] Передал {item.itemData.displayName} в здание {building.name}");
-
-                    Destroy(item.gameObject);
-                    items.RemoveAt(index);
-                    return;
-                }
-                else if (showDebug)
-                {
-                    Debug.LogWarning($"[Belt {name}] Здание {building.name} отказалось принять {item.itemData.displayName}");
-                }
+                items.Remove(item);
+                item.currentBelt = null;
+                Destroy(item.gameObject);
+                return;
             }
         }
 
         item.progress = 1f;
-        item.transform.position = GetPositionOnBelt(1f);
-
-        if (showDebug)
-            Debug.LogWarning($"[Belt {name}] Предмет {item.itemData.displayName} застрял в конце ленты");
+        RefreshItemTransform(item);
     }
 
-    /// <summary>
-    /// Направление ВЫХОДА ленты (куда уходит поток). Для AutoConnector.
-    /// Straight: end - start. Corner: mid → end (или fallback).
-    /// </summary>
+    // ------------------------------------------------------------------
+    // Directions
+    // ------------------------------------------------------------------
+
     public Vector3 GetExitDirection()
     {
         if (isCorner)
@@ -199,57 +302,46 @@ public class ConveyorBelt : MonoBehaviour
                 return d.normalized;
         }
 
+        // Fallback: transform.forward (yaw; negative scale.x does not flip forward)
         Vector3 f = transform.forward;
         f.y = 0f;
         return f.sqrMagnitude > 0.0001f ? f.normalized : Vector3.forward;
     }
 
-    /// <summary>
-    /// Направление ВХОДА (как движется предмет в начале ленты).
-    /// Straight: end - start. Corner: start → mid.
-    /// </summary>
     public Vector3 GetEntryDirection()
     {
-        if (isCorner)
+        if (isCorner && startPoint != null)
         {
-            if (startPoint != null)
-            {
-                Vector3 mid = GetMidWorldPosition();
-                Vector3 d = mid - startPoint.position;
-                d.y = 0f;
-                if (d.sqrMagnitude > 0.0001f)
-                    return d.normalized;
-            }
+            Vector3 mid = GetMidWorldPosition();
+            Vector3 d = mid - startPoint.position;
+            d.y = 0f;
+            if (d.sqrMagnitude > 0.0001f)
+                return d.normalized;
         }
 
         return GetExitDirection();
     }
 
-    /// <summary>Алиас для совместимости: направление потока на выходе.</summary>
     public Vector3 GetBeltDirection() => GetExitDirection();
 
     public Vector3 GetPositionOnBelt(float t)
     {
         t = Mathf.Clamp01(t);
-
         if (startPoint == null || endPoint == null)
             return transform.position;
 
         if (!isCorner)
             return Vector3.Lerp(startPoint.position, endPoint.position, t);
 
-        // Corner: start → mid → end (равные по параметру сегменты)
         Vector3 mid = GetMidWorldPosition();
         if (t <= 0.5f)
             return Vector3.Lerp(startPoint.position, mid, t * 2f);
-
         return Vector3.Lerp(mid, endPoint.position, (t - 0.5f) * 2f);
     }
 
     public Vector3 GetDirectionAtProgress(float t)
     {
         t = Mathf.Clamp01(t);
-
         if (!isCorner)
             return GetExitDirection();
 
@@ -273,14 +365,9 @@ public class ConveyorBelt : MonoBehaviour
         if (midPoint != null)
             return midPoint.position;
 
-        // Fallback: ломаная L в плоскости XZ через центр объекта
         if (startPoint != null && endPoint != null)
         {
-            Vector3 s = startPoint.position;
-            Vector3 e = endPoint.position;
-            float y = (s.y + e.y) * 0.5f;
-            // Точка излома: (end.x, start.z) в мире относительно ориентации —
-            // ближе к transform.position
+            float y = (startPoint.position.y + endPoint.position.y) * 0.5f;
             return new Vector3(transform.position.x, y, transform.position.z);
         }
 
@@ -291,14 +378,26 @@ public class ConveyorBelt : MonoBehaviour
     {
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.transform.localScale = Vector3.one * 0.3f;
-        Destroy(go.GetComponent<Collider>());
+        Collider col = go.GetComponent<Collider>();
+        if (col != null) Destroy(col);
         return go;
+    }
+
+    public void ClearItems()
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            ItemOnBelt item = items[i];
+            if (item == null) continue;
+            item.currentBelt = null;
+            Destroy(item.gameObject);
+        }
+        items.Clear();
     }
 
     void OnDrawGizmos()
     {
-        if (startPoint == null || endPoint == null)
-            return;
+        if (startPoint == null || endPoint == null) return;
 
         if (isCorner)
         {
@@ -317,18 +416,22 @@ public class ConveyorBelt : MonoBehaviour
             Gizmos.DrawSphere(startPoint.position, 0.08f);
             Gizmos.DrawSphere(endPoint.position, 0.08f);
         }
-    }
 
-    public void ClearItems()
-    {
-        foreach (var item in items)
-            if (item != null) Destroy(item.gameObject);
-        items.Clear();
+        if (nextBelt != null)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(transform.position + Vector3.up * 0.2f,
+                nextBelt.transform.position + Vector3.up * 0.2f);
+        }
     }
 
     void OnDestroy()
     {
+        if (suppressDestroyCleanup)
+            return;
+
         ClearItems();
+        AutoConnector.ClearBeltLinks(this);
         GridOccupancy.Unregister(gameObject);
     }
 }

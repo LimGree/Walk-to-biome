@@ -96,6 +96,49 @@ public static class ConveyorPlacement
         return BuildStraightResult(data, preferredRotationY);
     }
 
+    /// <summary>
+    /// Для reshape уже стоящей ленты: учитывает текущий yaw потока.
+    /// Может выбрать Corner при боковом accept даже без источника сзади
+    /// (у ленты уже есть entry direction).
+    /// </summary>
+    public static Result ResolveForReshape(BuildingData data, Vector2Int cell, float preferredRotationY)
+    {
+        Result primary = Resolve(data, cell, preferredRotationY);
+        if (primary.isCorner)
+            return primary;
+
+        Vector3 forward = YawToForward(preferredRotationY);
+        Vector2Int fwd = WorldToCardinal(forward);
+        Vector2Int left = new Vector2Int(-fwd.y, fwd.x);
+        Vector2Int right = new Vector2Int(fwd.y, -fwd.x);
+
+        bool hasFrontAccept = NeighborCanAcceptFromUs(cell, fwd);
+        bool hasLeftOut = NeighborCanAcceptFromUs(cell, left);
+        bool hasRightOut = NeighborCanAcceptFromUs(cell, right);
+
+        // Прямая цепочка вперёд важнее — не ломаем
+        if (hasFrontAccept)
+            return primary;
+
+        if (hasLeftOut || hasRightOut)
+        {
+            Vector2Int exitDir = hasRightOut && !hasLeftOut ? right
+                : hasLeftOut && !hasRightOut ? left
+                : right;
+
+            Result corner = BuildCornerResult(
+                data,
+                entryTravel: CardinalToWorld(fwd),
+                exitTravel: CardinalToWorld(exitDir),
+                preferredRotationY);
+
+            if (corner.isCorner && corner.prefab != null)
+                return corner;
+        }
+
+        return primary;
+    }
+
     static Result BuildStraightResult(BuildingData data, float rotationY)
     {
         GameObject prefab = null;
@@ -115,6 +158,11 @@ public static class ConveyorPlacement
     /// Corner prefab convention (local): entry along +Z (forward), exit along +X (right).
     /// Left turn → mirrorX.
     /// </summary>
+    public static Result BuildCornerResultPublic(BuildingData data, Vector3 entryTravel, Vector3 exitTravel, float fallbackYaw)
+    {
+        return BuildCornerResult(data, entryTravel, exitTravel, fallbackYaw);
+    }
+
     static Result BuildCornerResult(BuildingData data, Vector3 entryTravel, Vector3 exitTravel, float fallbackYaw)
     {
         entryTravel.y = 0f;
@@ -183,14 +231,10 @@ public static class ConveyorPlacement
         ConveyorBelt belt = obj.GetComponent<ConveyorBelt>();
         if (belt != null)
         {
+            // Строго: Entry соседа продолжает наш Exit (промт §1).
+            // Для Straight entry==exit — цепочка работает.
             Vector3 ourExit = CardinalToWorld(toNeighborOffset);
-            // Сосед принимает поток с нашей стороны: entry совпадает с нашим exit,
-            // либо его exit продолжает то же направление (прямая цепочка).
-            if (Vector3.Dot(belt.GetEntryDirection(), ourExit) > 0.7f)
-                return true;
-            if (Vector3.Dot(belt.GetExitDirection(), ourExit) > 0.7f)
-                return true;
-            return false;
+            return Vector3.Dot(belt.GetEntryDirection(), ourExit) > 0.7f;
         }
 
         BuildingBase building = obj.GetComponent<BuildingBase>();

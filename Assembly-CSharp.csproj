@@ -83,6 +83,7 @@
     <Compile Include="Assets\Script\Core\Buildings\Smelter.cs" />
     <Compile Include="Assets\Script\Core\Systems\ResearchSystem.cs" />
     <Compile Include="Assets\Script\Core\Items\ItemInstance.cs" />
+    <Compile Include="Assets\Script\Core\Logistics\ConveyorReshape.cs" />
     <Compile Include="Assets\Script\Core\GameManager.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerInventory.cs" />
     <Compile Include="Assets\Script\Core\UI\BuildMenuUI.cs" />

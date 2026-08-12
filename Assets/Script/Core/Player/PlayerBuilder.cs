@@ -35,14 +35,10 @@ public class PlayerBuilder : MonoBehaviour
     private bool canPlace = false;
     private int indexBuilding = 0;
 
-    // Соседи для очистки nextBelt при demolish (без FindObjectsByType)
-    private static readonly Vector2Int[] NeighborOffsets =
-    {
-        new Vector2Int(0, 1),
-        new Vector2Int(1, 0),
-        new Vector2Int(0, -1),
-        new Vector2Int(-1, 0)
-    };
+    // Ghost preview: last resolved conveyor shape
+    private bool ghostIsCorner;
+    private bool ghostMirrorX;
+    private GameObject ghostPrefabSource;
 
     void Awake()
     {
@@ -113,12 +109,7 @@ public class PlayerBuilder : MonoBehaviour
             && Keyboard.current != null
             && Keyboard.current[rotateKey].wasPressedThisFrame)
         {
-            currentRotationY += 90f;
-            if (currentRotationY >= 360f)
-                currentRotationY = 0f;
-
-            if (currentGhost != null)
-                currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
+            HandleRotateKey();
         }
 
         if (isBuildMode
@@ -128,6 +119,117 @@ public class PlayerBuilder : MonoBehaviour
         {
             TryDemolish();
         }
+    }
+
+    /// <summary>
+    /// R: ghost → +90°; луч на стоящий объект → rotate in place (§4.2 промт).
+    /// </summary>
+    void HandleRotateKey()
+    {
+        // Сначала пробуем повернуть уже стоящий объект под прицелом
+        if (TryRotatePlacedObject())
+            return;
+
+        // Иначе крутим ghost
+        currentRotationY += 90f;
+        if (currentRotationY >= 360f)
+            currentRotationY = 0f;
+
+        if (currentGhost != null)
+            currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
+    }
+
+    bool TryRotatePlacedObject()
+    {
+        if (playerCamera == null || GridSystem.Instance == null)
+            return false;
+
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        if (!Physics.Raycast(ray, out RaycastHit hit, maxBuildDistance, demolishLayer))
+            return false;
+
+        GameObject target = FindDemolishTarget(hit.collider);
+        if (target == null)
+            return false;
+
+        ConveyorBelt belt = target.GetComponent<ConveyorBelt>();
+        if (belt != null)
+        {
+            RotatePlacedBelt(belt);
+            return true;
+        }
+
+        BuildingBase building = target.GetComponent<BuildingBase>();
+        if (building != null)
+        {
+            RotatePlacedBuilding(building);
+            return true;
+        }
+
+        return false;
+    }
+
+    void RotatePlacedBelt(ConveyorBelt belt)
+    {
+        if (belt == null) return;
+
+        // Предметы сбрасываем (допустимо по §4.2)
+        belt.ClearItems();
+        AutoConnector.ClearBeltLinks(belt);
+
+        float yaw = ConveyorPlacement.NormalizeYaw(belt.transform.eulerAngles.y + 90f);
+        belt.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+        // Сбросить mirror после поворота (иначе направления плывут)
+        Vector3 scale = belt.transform.localScale;
+        scale.x = Mathf.Abs(scale.x);
+        belt.transform.localScale = scale;
+
+        // Straight: оставить форму. Corner: остаётся corner, yaw+90.
+        // Occupancy 1x1 — re-register на всякий
+        belt.OnRemoved();
+        belt.OnPlaced();
+
+        ConveyorReshape.TryReshapeNeighborsAfterPlace(belt.gameObject);
+        AutoConnector.ReconnectObject(belt.gameObject);
+    }
+
+    void RotatePlacedBuilding(BuildingBase building)
+    {
+        if (building == null) return;
+
+        // Буферы НЕ трогаем (§4.2)
+        AutoConnector.ClearBuildingLinks(building);
+
+        float prevYaw = building.transform.eulerAngles.y;
+        float newYaw = prevYaw + 90f;
+        building.transform.rotation = Quaternion.Euler(0f, newYaw, 0f);
+
+        // size может смениться на 90° — перерегистрация
+        if (GridSystem.Instance != null && building.data != null)
+        {
+            Vector2Int origin = GridSystem.Instance.WorldToCell(building.transform.position);
+            Vector2Int newSize = GridOccupancy.GetRotatedSize(building.data.size, newYaw);
+
+            GridOccupancy.Unregister(building.gameObject);
+            if (!GridOccupancy.IsAreaFree(origin, newSize))
+            {
+                building.transform.rotation = Quaternion.Euler(0f, prevYaw, 0f);
+                building.ReRegisterOnGrid();
+                AutoConnector.ReconnectObject(building.gameObject);
+                Debug.LogWarning($"[Builder] Rotate blocked: footprint occupied for {building.name}");
+                return;
+            }
+
+            GridOccupancy.Register(building.gameObject, origin, newSize);
+        }
+        else
+        {
+            building.ReRegisterOnGrid();
+        }
+
+        ConveyorReshape.TryReshapeNeighborsAfterPlace(building.gameObject);
+        AutoConnector.ReconnectObject(building.gameObject);
     }
 
     void HandleBuildModeToggle()
@@ -229,15 +331,41 @@ public class PlayerBuilder : MonoBehaviour
         if (ghostSource == null)
             return;
 
+        SpawnGhostFromPrefab(ghostSource, isCorner: false, mirrorX: false);
+    }
+
+    void SpawnGhostFromPrefab(GameObject ghostSource, bool isCorner, bool mirrorX)
+    {
+        if (ghostSource == null)
+            return;
+
+        if (currentGhost != null)
+            Destroy(currentGhost);
+
+        ghostPrefabSource = ghostSource;
+        ghostIsCorner = isCorner;
+        ghostMirrorX = mirrorX;
+
         currentGhost = Instantiate(ghostSource);
 
         foreach (var col in currentGhost.GetComponentsInChildren<Collider>())
             col.enabled = false;
 
-        // На ghost не гоняем логику ленты
         var belt = currentGhost.GetComponent<ConveyorBelt>();
         if (belt != null)
             belt.enabled = false;
+
+        ApplyGhostMirror(mirrorX);
+    }
+
+    void ApplyGhostMirror(bool mirrorX)
+    {
+        if (currentGhost == null) return;
+        Vector3 scale = currentGhost.transform.localScale;
+        float ax = Mathf.Abs(scale.x);
+        if (ax < 0.0001f) ax = 1f;
+        scale.x = mirrorX ? -ax : ax;
+        currentGhost.transform.localScale = scale;
     }
 
     void DestroyGhost()
@@ -247,6 +375,9 @@ public class PlayerBuilder : MonoBehaviour
             Destroy(currentGhost);
             currentGhost = null;
         }
+        ghostPrefabSource = null;
+        ghostIsCorner = false;
+        ghostMirrorX = false;
     }
 
     void ClearPlacementTarget()
@@ -257,15 +388,10 @@ public class PlayerBuilder : MonoBehaviour
 
     void UpdateGhost()
     {
-        if (currentGhost == null)
-        {
-            ClearPlacementTarget();
-            return;
-        }
-
         if (playerCamera == null)
         {
-            currentGhost.SetActive(false);
+            if (currentGhost != null)
+                currentGhost.SetActive(false);
             ClearPlacementTarget();
             return;
         }
@@ -275,9 +401,59 @@ public class PlayerBuilder : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, maxBuildDistance, buildLayer))
         {
             Vector3 placePos = SnapToGrid(hit.point);
+            float yaw = currentRotationY;
+            bool mirrorX = false;
+
+            // Conveyor: preview straight/corner + mirror
+            if (currentBuildingData != null && currentBuildingData.IsConveyor && GridSystem.Instance != null)
+            {
+                Vector2Int cell = GridSystem.Instance.WorldToCell(placePos);
+                var resolved = ConveyorPlacement.Resolve(currentBuildingData, cell, currentRotationY);
+
+                GameObject desiredPrefab = resolved.prefab;
+                if (desiredPrefab == null)
+                    desiredPrefab = currentBuildingData.GetDefaultPlacePrefab();
+
+                // Corner ghost prefab optional
+                if (resolved.isCorner && currentBuildingData.cornerGhostPrefab != null)
+                    desiredPrefab = currentBuildingData.cornerGhostPrefab;
+                else if (!resolved.isCorner && currentBuildingData.ghostPrefab != null)
+                    desiredPrefab = currentBuildingData.ghostPrefab;
+
+                if (desiredPrefab != null
+                    && (currentGhost == null
+                        || ghostPrefabSource != desiredPrefab
+                        || ghostIsCorner != resolved.isCorner
+                        || ghostMirrorX != resolved.mirrorX))
+                {
+                    SpawnGhostFromPrefab(desiredPrefab, resolved.isCorner, resolved.mirrorX);
+                }
+                else if (currentGhost != null && ghostMirrorX != resolved.mirrorX)
+                {
+                    ghostMirrorX = resolved.mirrorX;
+                    ApplyGhostMirror(resolved.mirrorX);
+                }
+
+                yaw = resolved.rotationY;
+                mirrorX = resolved.mirrorX;
+                ghostIsCorner = resolved.isCorner;
+                ghostMirrorX = mirrorX;
+            }
+            else if (currentGhost == null)
+            {
+                RecreateGhost();
+            }
+
+            if (currentGhost == null)
+            {
+                ClearPlacementTarget();
+                return;
+            }
 
             currentGhost.transform.position = placePos;
-            currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
+            currentGhost.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            if (currentBuildingData != null && currentBuildingData.IsConveyor)
+                ApplyGhostMirror(mirrorX);
 
             canPlace = IsPlacementValid(placePos, currentGhost.transform.rotation);
 
@@ -296,7 +472,8 @@ public class PlayerBuilder : MonoBehaviour
         }
         else
         {
-            currentGhost.SetActive(false);
+            if (currentGhost != null)
+                currentGhost.SetActive(false);
             canPlace = false;
             ClearPlacementTarget();
         }
@@ -455,42 +632,42 @@ public class PlayerBuilder : MonoBehaviour
         if (prefabToSpawn == null)
             return;
 
-        GameObject building = Instantiate(prefabToSpawn, placePos, placeRot);
-        building.name = building.name + $"{indexBuilding}";
+        GameObject go = Instantiate(prefabToSpawn, placePos, placeRot);
+        go.name = go.name + $"{indexBuilding}";
         indexBuilding += 1;
 
         if (conveyorMirrorX)
         {
-            Vector3 scale = building.transform.localScale;
+            Vector3 scale = go.transform.localScale;
             scale.x = -Mathf.Abs(scale.x);
-            building.transform.localScale = scale;
+            go.transform.localScale = scale;
         }
 
-        var buildingBase = building.GetComponent<BuildingBase>();
+        // 1) Register only
+        var buildingBase = go.GetComponent<BuildingBase>();
+        var belt = go.GetComponent<ConveyorBelt>();
+
         if (buildingBase != null)
         {
             buildingBase.data = currentBuildingData;
             buildingBase.OnPlaced();
         }
+        else if (belt != null)
+        {
+            belt.buildingData = currentBuildingData;
+            ConveyorReshape.DefaultConveyorData = currentBuildingData;
+            belt.isCorner = conveyorCorner;
+            belt.OnPlaced();
+        }
         else
         {
-            var belt = building.GetComponent<ConveyorBelt>();
-            if (belt != null)
-            {
-                if (conveyorCorner)
-                    belt.isCorner = true;
-                else if (currentBuildingData.IsConveyor)
-                    belt.isCorner = false;
-
-                belt.OnPlaced();
-            }
-            else
-            {
-                RegisterGenericOnGrid(building);
-            }
+            RegisterGenericOnGrid(go);
         }
 
-        AutoConnector.TryAutoConnect(building);
+        // 2) Reshape neighbors (root сам сделает ReconnectObject)
+        ConveyorReshape.TryReshapeNeighborsAfterPlace(go);
+        // 3) Повторный reconnect идемпотентен (на случай early-return reshape)
+        AutoConnector.ReconnectObject(go);
     }
 
     void RegisterGenericOnGrid(GameObject obj)
@@ -523,49 +700,29 @@ public class PlayerBuilder : MonoBehaviour
     {
         if (target == null) return;
 
+        // Снимок клеток ДО unregister
+        var freedCells = ConveyorReshape.GetOccupiedCells(target);
+
         ConveyorBelt belt = target.GetComponent<ConveyorBelt>();
         if (belt != null)
         {
             belt.ClearItems();
-
-            if (belt.connectedOutputSocket != null)
-                belt.connectedOutputSocket.DisconnectBelt();
-
-            if (belt.connectedInputSocket != null)
-                belt.connectedInputSocket.DisconnectBelt();
-
-            ClearBeltIncomingLinks(belt);
+            AutoConnector.ClearBeltLinks(belt);
             belt.OnRemoved();
+            belt.suppressDestroyCleanup = true; // не трогать соседей в OnDestroy
             Destroy(target);
+
+            AutoConnector.ReconnectCells(freedCells);
             return;
         }
 
         BuildingBase building = target.GetComponent<BuildingBase>();
         if (building != null)
         {
-            building.OnRemoved();
+            building.OnRemoved(); // clear links + unregister
             Destroy(target);
-        }
-    }
 
-    /// <summary>
-    /// Сбрасывает nextBelt у соседей, указывавших на удаляемую ленту (без FindObjectsByType).
-    /// </summary>
-    void ClearBeltIncomingLinks(ConveyorBelt belt)
-    {
-        if (belt == null || GridSystem.Instance == null)
-            return;
-
-        Vector2Int cell = GridSystem.Instance.WorldToCell(belt.transform.position);
-
-        for (int i = 0; i < NeighborOffsets.Length; i++)
-        {
-            GameObject neighbor = GridOccupancy.GetAt(cell + NeighborOffsets[i]);
-            if (neighbor == null) continue;
-
-            ConveyorBelt other = neighbor.GetComponent<ConveyorBelt>();
-            if (other != null && other.nextBelt == belt)
-                other.nextBelt = null;
+            AutoConnector.ReconnectCells(freedCells);
         }
     }
 

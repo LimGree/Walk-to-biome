@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public enum SocketType
 {
@@ -12,19 +12,37 @@ public class BuildingSocket : MonoBehaviour
 
     [Header("Connections")]
     public ConveyorBelt connectedBelt;
-    public BuildingSocket connectedSocket;      // ← прямое соединение здание-здание
+    public BuildingSocket connectedSocket;
 
     [Header("Visual (optional)")]
     public GameObject connectionIndicator;
 
     [Header("Debug")]
-    public bool showDebug = true;
+    public bool showDebug = false;
 
+    /// <summary>Двусторонняя связь socket ↔ belt.</summary>
     public void ConnectBelt(ConveyorBelt belt)
     {
-        // Если уже есть прямое соединение — разрываем его
+        if (belt == null) return;
+
         if (connectedSocket != null)
             DisconnectSocket();
+
+        if (connectedBelt != null && connectedBelt != belt)
+            DisconnectBelt();
+
+        if (socketType == SocketType.Input)
+        {
+            if (belt.connectedInputSocket != null && belt.connectedInputSocket != this)
+                belt.connectedInputSocket.DisconnectBeltOnly();
+            belt.connectedInputSocket = this;
+        }
+        else
+        {
+            if (belt.connectedOutputSocket != null && belt.connectedOutputSocket != this)
+                belt.connectedOutputSocket.DisconnectBeltOnly();
+            belt.connectedOutputSocket = this;
+        }
 
         connectedBelt = belt;
 
@@ -32,48 +50,70 @@ public class BuildingSocket : MonoBehaviour
             connectionIndicator.SetActive(true);
 
         if (showDebug)
-            Debug.Log($"[Socket] {name} подключён к ленте {belt?.name}");
+            Debug.Log($"[Socket] {name} подключён к ленте {belt.name}");
     }
 
     public void ConnectSocket(BuildingSocket other)
     {
         if (other == null) return;
 
-        // Разрываем старые связи
         if (connectedBelt != null)
             DisconnectBelt();
         if (connectedSocket != null && connectedSocket != other)
             DisconnectSocket();
 
+        if (other.connectedBelt != null)
+            other.DisconnectBelt();
+        if (other.connectedSocket != null && other.connectedSocket != this)
+            other.DisconnectSocket();
+
         connectedSocket = other;
-        other.connectedSocket = this;   // двусторонняя связь
+        other.connectedSocket = this;
 
         if (connectionIndicator != null)
             connectionIndicator.SetActive(true);
+        if (other.connectionIndicator != null)
+            other.connectionIndicator.SetActive(true);
 
         if (showDebug)
-            Debug.Log($"[Socket] {name} ↔ {other.name} (прямое соединение)");
+            Debug.Log($"[Socket] {name} ↔ {other.name}");
     }
 
+    /// <summary>Полный disconnect: socket + belt refs.</summary>
     public void DisconnectBelt()
     {
-        if (showDebug && connectedBelt != null)
-            Debug.Log($"[Socket] {name} отключён от ленты");
-
+        ConveyorBelt belt = connectedBelt;
         connectedBelt = null;
 
-        if (connectionIndicator != null && connectedSocket == null)
-            connectionIndicator.SetActive(false);
+        if (belt != null)
+        {
+            if (belt.connectedInputSocket == this)
+                belt.connectedInputSocket = null;
+            if (belt.connectedOutputSocket == this)
+                belt.connectedOutputSocket = null;
+
+            if (showDebug)
+                Debug.Log($"[Socket] {name} отключён от ленты {belt.name}");
+        }
+
+        RefreshIndicator();
+    }
+
+    /// <summary>
+    /// Только сторона socket (belt refs уже обнулены снаружи).
+    /// Избегает рекурсии ClearBeltLinks ↔ DisconnectBelt.
+    /// </summary>
+    public void DisconnectBeltOnly()
+    {
+        connectedBelt = null;
+        RefreshIndicator();
     }
 
     public void DisconnectSocket()
     {
         if (connectedSocket != null)
         {
-            if (showDebug)
-                Debug.Log($"[Socket] {name} отключён от {connectedSocket.name}");
-
-            var other = connectedSocket;
+            BuildingSocket other = connectedSocket;
             connectedSocket = null;
             other.connectedSocket = null;
 
@@ -81,14 +121,42 @@ public class BuildingSocket : MonoBehaviour
                 other.connectionIndicator.SetActive(false);
         }
 
-        if (connectionIndicator != null && connectedBelt == null)
-            connectionIndicator.SetActive(false);
+        RefreshIndicator();
     }
 
     public void DisconnectAll()
     {
         DisconnectBelt();
         DisconnectSocket();
+    }
+
+    void RefreshIndicator()
+    {
+        if (connectionIndicator != null && connectedBelt == null && connectedSocket == null)
+            connectionIndicator.SetActive(false);
+    }
+
+    void OnDestroy()
+    {
+        // Не вызывать DisconnectAll если belt уже уничтожается —
+        // только снять свои ссылки на belt
+        ConveyorBelt belt = connectedBelt;
+        connectedBelt = null;
+        if (belt != null)
+        {
+            if (belt.connectedInputSocket == this)
+                belt.connectedInputSocket = null;
+            if (belt.connectedOutputSocket == this)
+                belt.connectedOutputSocket = null;
+        }
+
+        if (connectedSocket != null)
+        {
+            BuildingSocket other = connectedSocket;
+            connectedSocket = null;
+            if (other != null)
+                other.connectedSocket = null;
+        }
     }
 
     void OnDrawGizmos()
