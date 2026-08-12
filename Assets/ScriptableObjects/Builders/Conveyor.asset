@@ -14,9 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: conveyor
   displayName: Conveyor Belt
-  description: 
+  description: Auto straight / corner belt
   prefab: {fileID: 2231626150087735378, guid: acd66be220377a34299666b51d5a9028, type: 3}
   ghostPrefab: {fileID: 3990423543645863618, guid: 5a4479ae761e1de4cba4c055cf89b480, type: 3}
+  straightPrefab: {fileID: 2231626150087735378, guid: acd66be220377a34299666b51d5a9028, type: 3}
+  cornerPrefab: {fileID: 8100000000, guid: b7e4c9a12f3d4e8a9c0b1d2e3f4a5b6c, type: 3}
+  cornerGhostPrefab: {fileID: 8100000000, guid: b7e4c9a12f3d4e8a9c0b1d2e3f4a5b6c, type: 3}
   icon: {fileID: 652848585, guid: d47a8880addd4ee4ba4ab786bd555255, type: 3}
   size: {x: 1, y: 1}
   canRotate: 1

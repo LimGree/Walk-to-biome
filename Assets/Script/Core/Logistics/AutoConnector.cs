@@ -196,12 +196,15 @@ public static class AutoConnector
         }
     }
 
+    /// <summary>
+    /// Направление выхода ленты (для Corner — mid→end, не диагональ start→end).
+    /// </summary>
     private static Vector3 GetBeltDirection(ConveyorBelt belt)
     {
-        if (belt.startPoint == null || belt.endPoint == null)
-            return belt.transform.forward;
+        if (belt == null)
+            return Vector3.forward;
 
-        return (belt.endPoint.position - belt.startPoint.position).normalized;
+        return belt.GetExitDirection();
     }
 
     private static bool IsDirectionMatch(Vector3 direction, Vector2Int offset)

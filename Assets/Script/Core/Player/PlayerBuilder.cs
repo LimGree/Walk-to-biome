@@ -218,13 +218,26 @@ public class PlayerBuilder : MonoBehaviour
     {
         DestroyGhost();
 
-        if (!isBuildMode || currentBuildingData == null || currentBuildingData.ghostPrefab == null)
+        if (!isBuildMode || currentBuildingData == null)
             return;
 
-        currentGhost = Instantiate(currentBuildingData.ghostPrefab);
+        GameObject ghostSource = currentBuildingData.ghostPrefab;
+        if (ghostSource == null && currentBuildingData.IsConveyor)
+            ghostSource = currentBuildingData.GetDefaultPlacePrefab();
+        if (ghostSource == null)
+            ghostSource = currentBuildingData.prefab;
+        if (ghostSource == null)
+            return;
+
+        currentGhost = Instantiate(ghostSource);
 
         foreach (var col in currentGhost.GetComponentsInChildren<Collider>())
             col.enabled = false;
+
+        // На ghost не гоняем логику ленты
+        var belt = currentGhost.GetComponent<ConveyorBelt>();
+        if (belt != null)
+            belt.enabled = false;
     }
 
     void DestroyGhost()
@@ -419,27 +432,62 @@ public class PlayerBuilder : MonoBehaviour
         if (!IsPlacementValid(currentGhost.transform.position, currentGhost.transform.rotation))
             return;
 
-        GameObject building = Instantiate(
-            currentBuildingData.prefab,
-            currentGhost.transform.position,
-            currentGhost.transform.rotation
-        );
+        Vector3 placePos = currentGhost.transform.position;
+        Quaternion placeRot = currentGhost.transform.rotation;
+        GameObject prefabToSpawn = currentBuildingData.prefab;
+        bool conveyorCorner = false;
+        bool conveyorMirrorX = false;
+
+        // --- Conveyor: auto straight / corner ---
+        if (currentBuildingData.IsConveyor && GridSystem.Instance != null)
+        {
+            Vector2Int cell = GridSystem.Instance.WorldToCell(placePos);
+            var resolved = ConveyorPlacement.Resolve(currentBuildingData, cell, currentRotationY);
+
+            if (resolved.prefab != null)
+                prefabToSpawn = resolved.prefab;
+
+            placeRot = Quaternion.Euler(0f, resolved.rotationY, 0f);
+            conveyorCorner = resolved.isCorner;
+            conveyorMirrorX = resolved.mirrorX;
+        }
+
+        if (prefabToSpawn == null)
+            return;
+
+        GameObject building = Instantiate(prefabToSpawn, placePos, placeRot);
         building.name = building.name + $"{indexBuilding}";
         indexBuilding += 1;
+
+        if (conveyorMirrorX)
+        {
+            Vector3 scale = building.transform.localScale;
+            scale.x = -Mathf.Abs(scale.x);
+            building.transform.localScale = scale;
+        }
 
         var buildingBase = building.GetComponent<BuildingBase>();
         if (buildingBase != null)
         {
             buildingBase.data = currentBuildingData;
-            buildingBase.OnPlaced(); // Register + subclass logic
+            buildingBase.OnPlaced();
         }
         else
         {
             var belt = building.GetComponent<ConveyorBelt>();
             if (belt != null)
+            {
+                if (conveyorCorner)
+                    belt.isCorner = true;
+                else if (currentBuildingData.IsConveyor)
+                    belt.isCorner = false;
+
                 belt.OnPlaced();
+            }
             else
+            {
                 RegisterGenericOnGrid(building);
+            }
         }
 
         AutoConnector.TryAutoConnect(building);

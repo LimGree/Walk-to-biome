@@ -9,16 +9,57 @@ public class BuildingData : ScriptableObject
     [TextArea] public string description;
 
     [Header("Prefabs")]
-    public GameObject prefab;            // настоящий префаб здания
-    public GameObject ghostPrefab;       // полупрозрачный ghost для строительства
+    public GameObject prefab;            // РѕСЃРЅРѕРІРЅРѕР№ РїСЂРµС„Р°Р± (Р·РґР°РЅРёСЏ / fallback)
+    public GameObject ghostPrefab;       // ghost РґР»СЏ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂР°
+
+    [Header("Conveyor variants (optional)")]
+    [Tooltip("РџСЂСЏРјР°СЏ Р»РµРЅС‚Р°. Р•СЃР»Рё Р·Р°РґР°РЅ вЂ” hotbar В«ConveyorВ» РјРѕР¶РµС‚ РІС‹Р±РёСЂР°С‚СЊ С„РѕСЂРјСѓ.")]
+    public GameObject straightPrefab;
+    [Tooltip("РЈРіР»РѕРІР°СЏ Р»РµРЅС‚Р° 90В°.")]
+    public GameObject cornerPrefab;
+    [Tooltip("РћРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ ghost РґР»СЏ СѓРіР»Р°. Р•СЃР»Рё null вЂ” РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ ghostPrefab.")]
+    public GameObject cornerGhostPrefab;
 
     [Header("Visuals")]
-    public Sprite icon;                  // иконка в меню строительства / hotbar
+    public Sprite icon;
 
     [Header("Grid & Placement")]
-    public Vector2Int size = Vector2Int.one;     // размер в клетках (1x1, 2x2 и т.д.)
+    public Vector2Int size = Vector2Int.one;
     public bool canRotate = true;
 
     [Header("Optional")]
-    public int buildCost = 0;            // если потом появится валюта/ресурсы на строительство
+    public int buildCost = 0;
+
+    /// <summary>Р•СЃС‚СЊ Р»Рё РѕС‚РґРµР»СЊРЅС‹Рµ РїСЂРµС„Р°Р±С‹ Р»РµРЅС‚С‹ (straight/corner).</summary>
+    public bool HasConveyorVariants =>
+        straightPrefab != null || cornerPrefab != null;
+
+    /// <summary>РЎС‡РёС‚Р°С‚СЊ Р»Рё СЌС‚РѕС‚ BuildingData РєРѕРЅРІРµР№РµСЂРѕРј.</summary>
+    public bool IsConveyor
+    {
+        get
+        {
+            if (HasConveyorVariants)
+                return true;
+            if (prefab == null)
+                return false;
+            return prefab.GetComponent<ConveyorBelt>() != null;
+        }
+    }
+
+    public GameObject GetConveyorPrefab(bool isCorner)
+    {
+        if (isCorner && cornerPrefab != null)
+            return cornerPrefab;
+        if (straightPrefab != null)
+            return straightPrefab;
+        return prefab;
+    }
+
+    public GameObject GetDefaultPlacePrefab()
+    {
+        if (straightPrefab != null)
+            return straightPrefab;
+        return prefab;
+    }
 }

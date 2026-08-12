@@ -1,5 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
+
+public enum ConveyorShape
+{
+    Straight = 0,
+    Corner = 1
+}
 
 public class ConveyorBelt : MonoBehaviour
 {
@@ -7,6 +13,14 @@ public class ConveyorBelt : MonoBehaviour
     public float speed = 2.5f;
     public float length = 1f;
     public int maxItems = 4;
+
+    [Header("Shape")]
+    public ConveyorShape shape = ConveyorShape.Straight;
+    public bool isCorner
+    {
+        get => shape == ConveyorShape.Corner;
+        set => shape = value ? ConveyorShape.Corner : ConveyorShape.Straight;
+    }
 
     [Header("Connections")]
     public ConveyorBelt prevBelt;
@@ -17,9 +31,11 @@ public class ConveyorBelt : MonoBehaviour
     [Header("Visual Path")]
     public Transform startPoint;
     public Transform endPoint;
+    [Tooltip("Центр поворота для Corner. Если null — вычисляется из start/end.")]
+    public Transform midPoint;
 
     [Header("Debug")]
-    public bool showDebug = true;
+    public bool showDebug = false;
 
     private List<ItemOnBelt> items = new List<ItemOnBelt>();
 
@@ -97,8 +113,8 @@ public class ConveyorBelt : MonoBehaviour
             item.progress += moveDelta;
             item.transform.position = GetPositionOnBelt(item.progress);
 
-            Vector3 dir = (endPoint.position - startPoint.position).normalized;
-            if (dir != Vector3.zero)
+            Vector3 dir = GetDirectionAtProgress(item.progress);
+            if (dir.sqrMagnitude > 0.0001f)
                 item.transform.rotation = Quaternion.LookRotation(dir);
 
             if (item.progress >= 1f)
@@ -157,13 +173,118 @@ public class ConveyorBelt : MonoBehaviour
             Debug.LogWarning($"[Belt {name}] Предмет {item.itemData.displayName} застрял в конце ленты");
     }
 
-    Vector3 GetPositionOnBelt(float t)
+    /// <summary>
+    /// Направление ВЫХОДА ленты (куда уходит поток). Для AutoConnector.
+    /// Straight: end - start. Corner: mid → end (или fallback).
+    /// </summary>
+    public Vector3 GetExitDirection()
+    {
+        if (isCorner)
+        {
+            Vector3 mid = GetMidWorldPosition();
+            if (endPoint != null)
+            {
+                Vector3 d = endPoint.position - mid;
+                d.y = 0f;
+                if (d.sqrMagnitude > 0.0001f)
+                    return d.normalized;
+            }
+        }
+
+        if (startPoint != null && endPoint != null)
+        {
+            Vector3 d = endPoint.position - startPoint.position;
+            d.y = 0f;
+            if (d.sqrMagnitude > 0.0001f)
+                return d.normalized;
+        }
+
+        Vector3 f = transform.forward;
+        f.y = 0f;
+        return f.sqrMagnitude > 0.0001f ? f.normalized : Vector3.forward;
+    }
+
+    /// <summary>
+    /// Направление ВХОДА (как движется предмет в начале ленты).
+    /// Straight: end - start. Corner: start → mid.
+    /// </summary>
+    public Vector3 GetEntryDirection()
+    {
+        if (isCorner)
+        {
+            if (startPoint != null)
+            {
+                Vector3 mid = GetMidWorldPosition();
+                Vector3 d = mid - startPoint.position;
+                d.y = 0f;
+                if (d.sqrMagnitude > 0.0001f)
+                    return d.normalized;
+            }
+        }
+
+        return GetExitDirection();
+    }
+
+    /// <summary>Алиас для совместимости: направление потока на выходе.</summary>
+    public Vector3 GetBeltDirection() => GetExitDirection();
+
+    public Vector3 GetPositionOnBelt(float t)
     {
         t = Mathf.Clamp01(t);
+
         if (startPoint == null || endPoint == null)
             return transform.position;
 
-        return Vector3.Lerp(startPoint.position, endPoint.position, t);
+        if (!isCorner)
+            return Vector3.Lerp(startPoint.position, endPoint.position, t);
+
+        // Corner: start → mid → end (равные по параметру сегменты)
+        Vector3 mid = GetMidWorldPosition();
+        if (t <= 0.5f)
+            return Vector3.Lerp(startPoint.position, mid, t * 2f);
+
+        return Vector3.Lerp(mid, endPoint.position, (t - 0.5f) * 2f);
+    }
+
+    public Vector3 GetDirectionAtProgress(float t)
+    {
+        t = Mathf.Clamp01(t);
+
+        if (!isCorner)
+            return GetExitDirection();
+
+        Vector3 mid = GetMidWorldPosition();
+        if (t < 0.5f)
+        {
+            if (startPoint == null) return GetEntryDirection();
+            Vector3 d = mid - startPoint.position;
+            d.y = 0f;
+            return d.sqrMagnitude > 0.0001f ? d.normalized : GetEntryDirection();
+        }
+
+        if (endPoint == null) return GetExitDirection();
+        Vector3 d2 = endPoint.position - mid;
+        d2.y = 0f;
+        return d2.sqrMagnitude > 0.0001f ? d2.normalized : GetExitDirection();
+    }
+
+    Vector3 GetMidWorldPosition()
+    {
+        if (midPoint != null)
+            return midPoint.position;
+
+        // Fallback: ломаная L в плоскости XZ через центр объекта
+        if (startPoint != null && endPoint != null)
+        {
+            Vector3 s = startPoint.position;
+            Vector3 e = endPoint.position;
+            float y = (s.y + e.y) * 0.5f;
+            // Точка излома: (end.x, start.z) в мире относительно ориентации —
+            // ближе к transform.position
+            return new Vector3(transform.position.x, y, transform.position.z);
+        }
+
+        return transform.position + Vector3.up * 0.3f;
     }
 
     GameObject CreateFallbackItem()
@@ -176,7 +297,20 @@ public class ConveyorBelt : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (startPoint != null && endPoint != null)
+        if (startPoint == null || endPoint == null)
+            return;
+
+        if (isCorner)
+        {
+            Vector3 mid = GetMidWorldPosition();
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(startPoint.position, mid);
+            Gizmos.DrawLine(mid, endPoint.position);
+            Gizmos.DrawSphere(startPoint.position, 0.08f);
+            Gizmos.DrawSphere(mid, 0.06f);
+            Gizmos.DrawSphere(endPoint.position, 0.08f);
+        }
+        else
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(startPoint.position, endPoint.position);

@@ -81,13 +81,15 @@ MonoBehaviour:
   speed: 2.5
   length: 1
   maxItems: 4
+  shape: 0
   prevBelt: {fileID: 0}
   nextBelt: {fileID: 0}
   connectedInputSocket: {fileID: 0}
   connectedOutputSocket: {fileID: 0}
   startPoint: {fileID: 7447437371329535932}
   endPoint: {fileID: 4040830542105885817}
-  showDebug: 1
+  midPoint: {fileID: 0}
+  showDebug: 0
 --- !u!1 &2814677126519482467
 GameObject:
   m_ObjectHideFlags: 0
