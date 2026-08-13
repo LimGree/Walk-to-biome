@@ -27,58 +27,64 @@ public class BuildMenuUI : MonoBehaviour
 
     void Start()
     {
+        ApplyChrome();
+
         if (menuPanel != null)
             menuPanel.SetActive(false);
 
         IsOpen = false;
-        CreateButtons();
+        gameObject.SetActive(false);
+    }
+
+    void ApplyChrome()
+    {
+        Image panelImage = menuPanel != null ? menuPanel.GetComponent<Image>() : null;
+        UiTheme.StyleImage(panelImage, UiTheme.Panel);
+
+        if (buttonsParent != null)
+            UiTheme.EnsureGrid(buttonsParent, new Vector2(200f, 210f), new Vector2(16f, 16f), 4);
     }
 
     // Клавиша B обрабатывается в PlayerBuilder (единая точка входа Build Mode)
 
     void CreateButtons()
     {
-        if (buttonsParent == null || buttonPrefab == null) return;
+        if (buttonsParent == null) return;
 
         foreach (Transform child in buttonsParent)
             Destroy(child.gameObject);
 
-        if (availableBuildings == null) return;
+        BuildingData[] catalog = ResolveCatalog();
+        if (catalog == null) return;
 
-        for (int i = 0; i < availableBuildings.Length; i++)
+        for (int i = 0; i < catalog.Length; i++)
         {
-            BuildingData data = availableBuildings[i];
+            BuildingData data = catalog[i];
             if (data == null) continue;
 
             bool unlocked = ResearchSystem.Instance == null
                 || ResearchSystem.Instance.IsBuildingUnlocked(data);
 
-            GameObject btnObj = Instantiate(buttonPrefab, buttonsParent);
-
-            var text = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null)
-                text.text = unlocked ? data.displayName : data.displayName + " [LOCKED]";
-
-            var image = btnObj.transform.Find("Icon")?.GetComponent<Image>();
-            if (image != null && data.icon != null)
-                image.sprite = data.icon;
-
-            var button = btnObj.GetComponent<Button>();
-            if (button == null) continue;
-
-            button.interactable = unlocked;
-
-            int index = i;
-            button.onClick.AddListener(() => SelectBuilding(index));
+            BuildingData captured = data;
+            UiFactory.CreateBuildingCard(buttonsParent, data, unlocked, () => SelectBuilding(captured));
         }
     }
 
-    void SelectBuilding(int index)
+    BuildingData[] ResolveCatalog()
     {
-        if (inventory == null || availableBuildings == null || index < 0 || index >= availableBuildings.Length)
+        if (availableBuildings != null && availableBuildings.Length > 0)
+            return availableBuildings;
+        if (inventory != null && inventory.allBuildings != null && inventory.allBuildings.Length > 0)
+            return inventory.allBuildings;
+        return null;
+    }
+
+    void SelectBuilding(BuildingData building)
+    {
+        if (inventory == null || building == null)
             return;
 
-        inventory.SetHotbarSlot(0, availableBuildings[index]);
+        inventory.SetHotbarSlot(0, building);
         inventory.selectedIndex = 0;
 
         // Закрываем меню, но оставляем Build Mode (можно ставить из hotbar)
@@ -89,6 +95,7 @@ public class BuildMenuUI : MonoBehaviour
     public void OpenMenu()
     {
         IsOpen = true;
+        CreateButtons();
         if (menuPanel != null)
             menuPanel.SetActive(true);
 

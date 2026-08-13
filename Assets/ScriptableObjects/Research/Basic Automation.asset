@@ -15,7 +15,7 @@ MonoBehaviour:
   id: research_basic_automation
   displayName: Basic Automation
   description: Unlocks Assembler and Smelter
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 55b0342f62b912148b2f4271810b4032, type: 3}
   requiredItems:
   - item: {fileID: 11400000, guid: 21443c75f9e56ce45becb60f505bf5b9, type: 2}
     amount: 15

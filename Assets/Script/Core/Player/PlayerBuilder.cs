@@ -173,9 +173,7 @@ public class PlayerBuilder : MonoBehaviour
             return;
 
         if (!isBuildMode)
-            EnterBuildMode(openMenu: true);
-        else if (buildMenuUI != null && buildMenuUI.IsOpen)
-            buildMenuUI.CloseMenu(restorePlayerControl: true);
+            EnterBuildMode(openMenu: false);
         else
             ExitBuildMode();
     }
@@ -184,10 +182,10 @@ public class PlayerBuilder : MonoBehaviour
     {
         isBuildMode = true;
 
-        if (openMenu && buildMenuUI != null)
-            buildMenuUI.OpenMenu();
-        else
-            ApplyGameplayCursorAndControl(buildMenuOpen: false);
+        if (buildMenuUI != null && buildMenuUI.IsOpen)
+            buildMenuUI.CloseMenu(restorePlayerControl: false);
+
+        ApplyGameplayCursorAndControl(buildMenuOpen: false);
     }
 
     public void ExitBuildMode()

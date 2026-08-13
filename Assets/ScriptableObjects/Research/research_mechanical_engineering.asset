@@ -15,7 +15,7 @@ MonoBehaviour:
   id: research_mechanical_engineering
   displayName: Mechanical Engineering
   description: Unlocks basic components
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 25092a47e21a635409f58d0990b65914, type: 3}
   requiredItems:
   - item: {fileID: 11400000, guid: 725d7895721123d41a73f359454d1d9c, type: 2}
     amount: 20

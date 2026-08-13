@@ -36,9 +36,9 @@ public class MachineUI : MonoBehaviour
     public TextMeshProUGUI researchProgressText;
     public Slider researchProgressSlider;
 
-    // Runtime
+    public bool IsOpen { get; private set; }
+
     private BuildingBase currentBuilding;
-    private bool isOpen = false;
 
 
     [Header("All recipes in game")]
@@ -52,6 +52,8 @@ public class MachineUI : MonoBehaviour
 
     void Start()
     {
+        ApplyChrome();
+
         if (machinePanel != null)
             machinePanel.SetActive(false);
 
@@ -59,16 +61,71 @@ public class MachineUI : MonoBehaviour
             closeButton.onClick.AddListener(Close);
     }
 
+    void ApplyChrome()
+    {
+        Image panelImage = machinePanel != null ? machinePanel.GetComponent<Image>() : null;
+        if (panelImage == null && machinePanel != null)
+            panelImage = machinePanel.AddComponent<Image>();
+        UiTheme.StyleImage(panelImage, UiTheme.Panel);
+
+        if (titleText != null)
+        {
+            UiTheme.StyleText(titleText, 30f, UiTheme.Text, FontStyles.Bold);
+            titleText.alignment = TextAlignmentOptions.MidlineLeft;
+        }
+
+        if (currentRecipeText != null)
+        {
+            UiTheme.StyleText(currentRecipeText, 20f, UiTheme.Accent);
+            currentRecipeText.alignment = TextAlignmentOptions.MidlineLeft;
+        }
+
+        if (researchProgressText != null)
+        {
+            UiTheme.StyleText(researchProgressText, 20f, UiTheme.Text);
+            researchProgressText.alignment = TextAlignmentOptions.MidlineLeft;
+        }
+
+        UiTheme.StyleSlider(progressSlider);
+        UiTheme.StyleSlider(researchProgressSlider);
+
+        PrepareScrollList(recipeButtonsParent, new Vector2(880f, 128f));
+        PrepareScrollList(researchButtonsParent, new Vector2(880f, 136f));
+        PrepareScrollList(extractorButtonsParent, new Vector2(880f, 128f));
+
+        if (closeButton != null)
+        {
+            Image closeImage = closeButton.GetComponent<Image>();
+            UiTheme.StyleImage(closeImage, new Color(0.85f, 0.28f, 0.30f, 0.9f));
+            var closeText = closeButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (closeText != null)
+            {
+                closeText.text = "✕";
+                UiTheme.StyleText(closeText, 22f, Color.white, FontStyles.Bold);
+                closeText.alignment = TextAlignmentOptions.Center;
+            }
+        }
+    }
+
+    static void PrepareScrollList(Transform list, Vector2 cell)
+    {
+        if (list == null)
+            return;
+
+        UiTheme.EnsureGrid(list, cell, new Vector2(12f, 12f), 1);
+        UiTheme.EnsureVerticalScroll(list as RectTransform);
+    }
+
     void Update()
     {
         // Закрытие по Escape
-        if (isOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (IsOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             Close();
         }
 
         // Обновляем прогресс, если панель открыта
-        if (isOpen && currentBuilding != null)
+        if (IsOpen && currentBuilding != null)
         {
             UpdateProgress();
         }
@@ -81,7 +138,7 @@ public class MachineUI : MonoBehaviour
         if (building == null) return;
 
         currentBuilding = building;
-        isOpen = true;
+        IsOpen = true;
 
         // Прячем все контенты
         HideAllContents();
@@ -129,7 +186,7 @@ public class MachineUI : MonoBehaviour
 
     public void Close()
     {
-        isOpen = false;
+        IsOpen = false;
         currentBuilding = null;
 
         if (machinePanel != null)
@@ -171,19 +228,15 @@ public class MachineUI : MonoBehaviour
         foreach (Transform child in extractorButtonsParent)
             Destroy(child.gameObject);
 
-        if (resourceButtonPrefab == null) return;
+        var fake = ScriptableObject.CreateInstance<RecipeData>();
+        fake.displayName = extractor.resource != null
+            ? "Mining  " + extractor.resource.displayName
+            : "No resource node";
+        if (extractor.resource != null)
+            fake.outputs.Add(new ItemStack(extractor.resource, 1));
 
-        GameObject info = Instantiate(resourceButtonPrefab, extractorButtonsParent);
-        var text = info.GetComponentInChildren<TextMeshProUGUI>();
-        if (text != null)
-        {
-            text.text = extractor.resource != null
-                ? $"Mining: {extractor.resource.displayName}"
-                : "No resource node!";
-        }
-
-        var btn = info.GetComponent<Button>();
-        if (btn != null) btn.interactable = false;
+        UiFactory.CreateRecipeCard(extractorButtonsParent, fake, true, null);
+        Object.Destroy(fake);
     }
 
     // ================== SMELTER ==================
@@ -222,39 +275,34 @@ public class MachineUI : MonoBehaviour
 
         EnsureRecipeCatalog();
 
-        if (allRecipes == null || recipeButtonPrefab == null || building == null)
+        if (allRecipes == null || building == null)
             return;
 
         BuildingData thisBuildingData = building.data;
+        RecipeData selected = GetCurrentRecipe(building);
 
         foreach (var recipe in allRecipes)
         {
             if (recipe == null) continue;
 
-            // 1. Рецепт принадлежит этому зданию
             if (recipe.requiredBuilding != null && thisBuildingData != null
                 && recipe.requiredBuilding != thisBuildingData)
                 continue;
 
-            // 2. Рецепт открыт
             if (ResearchSystem.Instance != null
                 && !ResearchSystem.Instance.IsRecipeUnlocked(recipe))
                 continue;
 
-            GameObject btnObj = Instantiate(recipeButtonPrefab, recipeButtonsParent);
-
-            var text = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null)
-                text.text = recipe.displayName;
-
             RecipeData captured = recipe;
-            btnObj.GetComponent<Button>().onClick.AddListener(() =>
-            {
-                ApplyRecipe(building, captured);
-
-                if (currentRecipeText != null)
-                    currentRecipeText.text = captured.displayName;
-            });
+            UiFactory.CreateRecipeCard(
+                recipeButtonsParent,
+                recipe,
+                selected == recipe,
+                () =>
+                {
+                    ApplyRecipe(building, captured);
+                    RefreshRecipeList(building);
+                });
         }
 
         if (currentRecipeText != null)
@@ -271,17 +319,21 @@ public class MachineUI : MonoBehaviour
             constructor.SetRecipe(recipe);
     }
 
+    static RecipeData GetCurrentRecipe(BuildingBase building)
+    {
+        if (building is Smelter smelter)
+            return smelter.currentRecipe;
+        if (building is Assembler assembler)
+            return assembler.currentRecipe;
+        if (building is Constructor constructor)
+            return constructor.currentRecipe;
+        return null;
+    }
+
     static string GetCurrentRecipeName(BuildingBase building)
     {
-        RecipeData recipe = null;
-        if (building is Smelter smelter)
-            recipe = smelter.currentRecipe;
-        else if (building is Assembler assembler)
-            recipe = assembler.currentRecipe;
-        else if (building is Constructor constructor)
-            recipe = constructor.currentRecipe;
-
-        return recipe != null ? recipe.displayName : "No recipe";
+        RecipeData recipe = GetCurrentRecipe(building);
+        return recipe != null ? "Selected: " + recipe.displayName : "Select a recipe";
     }
 
     void EnsureRecipeCatalog()
@@ -301,35 +353,41 @@ public class MachineUI : MonoBehaviour
         foreach (Transform child in researchButtonsParent)
             Destroy(child.gameObject);
 
-        if (ResearchSystem.Instance == null || researchButtonPrefab == null) return;
+        if (ResearchSystem.Instance == null)
+            return;
 
         foreach (var node in ResearchSystem.Instance.GetAllNodes())
         {
             if (node == null) continue;
 
-            GameObject btnObj = Instantiate(researchButtonPrefab, researchButtonsParent);
-            var text = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-
-            string status = "";
+            string status = "READY";
+            bool canStart = ResearchSystem.Instance.CanStartResearch(node);
             if (ResearchSystem.Instance.IsResearchUnlocked(node))
-                status = " [DONE]";
+            {
+                status = "DONE";
+                canStart = false;
+            }
             else if (ResearchSystem.Instance.CurrentResearch == node)
-                status = " [ACTIVE]";
-            else if (!ResearchSystem.Instance.CanStartResearch(node))
-                status = " [LOCKED]";
-
-            if (text != null)
-                text.text = node.displayName + status;
+            {
+                status = "ACTIVE";
+                canStart = false;
+            }
+            else if (!canStart)
+            {
+                status = "LOCKED";
+            }
 
             ResearchNodeData captured = node;
-            btnObj.GetComponent<Button>().onClick.AddListener(() =>
-            {
-                if (ResearchSystem.Instance.SetCurrentResearch(captured))
+            UiFactory.CreateResearchCard(
+                researchButtonsParent,
+                node,
+                status,
+                canStart,
+                () =>
                 {
-                    Debug.Log($"[MachineUI] Мировое исследование: {captured.displayName}");
-                    Close();
-                }
-            });
+                    if (ResearchSystem.Instance.SetCurrentResearch(captured))
+                        Close();
+                });
         }
     }
 

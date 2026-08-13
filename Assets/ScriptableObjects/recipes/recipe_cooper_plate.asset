@@ -21,4 +21,4 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: efb9760fc57e9024e9e6618cc00128cf, type: 2}
     amount: 1
   craftTime: 1.25
-  requiredBuilding: {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
+  requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}

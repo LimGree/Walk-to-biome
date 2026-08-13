@@ -52,6 +52,8 @@ public class PlayerInventory : MonoBehaviour
     void Update()
     {
         if (Mouse.current == null) return;
+        if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return;
 
         Vector2 scroll = Mouse.current.scroll.ReadValue();
 
