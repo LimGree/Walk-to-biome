@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8200000000}
-  - component: {fileID: 8300000000}
   - component: {fileID: 8400000000}
+  - component: {fileID: 6782890966933469811}
   m_Layer: 6
   m_Name: Conveyor_Corner
   m_TagString: Untagged
@@ -27,41 +27,15 @@ Transform:
   m_GameObject: {fileID: 8100000000}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.004, y: 0, z: -0.007}
   m_LocalScale: {x: 0.8, y: 0.8, z: 0.9}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8200000001}
-  - {fileID: 8200000002}
   - {fileID: 8200000003}
   - {fileID: 543450649495261931}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8300000000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8100000000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 036e6f33e4a181744b0e967ef69be154, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 2.5
-  length: 1
-  maxItems: 4
-  shape: 1
-  buildingData: {fileID: 0}
-  prevBelt: {fileID: 0}
-  nextBelt: {fileID: 0}
-  connectedInputSocket: {fileID: 0}
-  connectedOutputSocket: {fileID: 0}
-  startPoint: {fileID: 8200000001}
-  endPoint: {fileID: 8200000003}
-  midPoint: {fileID: 8200000002}
-  showDebug: 1
 --- !u!65 &8400000000
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -83,6 +57,30 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.1, y: 0.5, z: 1.1}
   m_Center: {x: 0.15, y: 0.25, z: -0.15}
+--- !u!114 &6782890966933469811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8100000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a3c91e2b4d84f6e9c1a0528d3f7b640, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  data: {fileID: 11400000, guid: e153fbce38af1794f88cf2afdfa4b2e3, type: 2}
+  inputSockets:
+  - {fileID: 2445484805022805091}
+  outputSockets:
+  - {fileID: 3566587219498389571}
+  maxOutputBuffer: 8
+  drawFootprintGizmo: 1
+  speed: 2.5
+  maxItems: 3
+  itemHeight: 0.35
+  itemScale: 0.28
+  showDebug: 1
 --- !u!1 &8100000001
 GameObject:
   m_ObjectHideFlags: 0
@@ -92,6 +90,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8200000001}
+  - component: {fileID: 2445484805022805091}
   m_Layer: 6
   m_Name: StartPoint
   m_TagString: Untagged
@@ -114,37 +113,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8200000000}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &8100000002
-GameObject:
+--- !u!114 &2445484805022805091
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8200000002}
-  m_Layer: 6
-  m_Name: MidPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8200000002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8100000002}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.3, z: 0.179}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8200000000}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_GameObject: {fileID: 8100000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f655be442ca775b47b4ff5b7e77acd63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  socketType: 0
+  connectedSocket: {fileID: 0}
+  connectionIndicator: {fileID: 0}
+  showDebug: 0
 --- !u!1 &8100000003
 GameObject:
   m_ObjectHideFlags: 0
@@ -154,6 +138,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8200000003}
+  - component: {fileID: 3566587219498389571}
   m_Layer: 6
   m_Name: EndPoint
   m_TagString: Untagged
@@ -169,13 +154,29 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8100000003}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0.48, y: 0.3, z: 0.16}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8200000000}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &3566587219498389571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8100000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f655be442ca775b47b4ff5b7e77acd63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  socketType: 1
+  connectedSocket: {fileID: 0}
+  connectionIndicator: {fileID: 0}
+  showDebug: 0
 --- !u!1001 &8500000000
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: coal_ore
   displayName: coal ore
   description: Coal ore
-  icon: {fileID: 21300000, guid: dbd7ff7f8c0049844a4254cf591bb0e0, type: 3}
+  icon: {fileID: 1525229290, guid: dbd7ff7f8c0049844a4254cf591bb0e0, type: 3}
   worldPrefab: {fileID: 919132149155446097, guid: 7c52755ad97b09a4c90447a459aadc04, type: 3}
   maxStack: 100
   isFuel: 0

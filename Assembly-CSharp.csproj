@@ -61,41 +61,38 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.60f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Script\Core\Logistics\ConveyorPlacement.cs" />
     <Compile Include="Assets\Script\Core\Data\RecipeData.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Extractor.cs" />
     <Compile Include="Assets\Script\Core\Systems\BuildGridVisualizer.cs" />
     <Compile Include="Assets\Script\Core\Buildings\PowerGenerator.cs" />
     <Compile Include="Assets\Script\Core\Systems\SaveSystem.cs" />
-    <Compile Include="Assets\Script\Core\Logistics\ConveyorBelt.cs" />
     <Compile Include="Assets\Script\Core\Items\ItemStack.cs" />
     <Compile Include="Assets\Script\Core\Buildings\ResearchLab.cs" />
     <Compile Include="Assets\InputSystem_Actions.cs" />
     <Compile Include="Assets\Script\Core\Systems\GridOccupancy.cs" />
-    <Compile Include="Assets\Script\Core\Logistics\AutoConnector.cs" />
     <Compile Include="Assets\Script\Core\UI\MachineUI.cs" />
     <Compile Include="Assets\Script\Core\Buildings\ResourceNode.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Assembler.cs" />
-    <Compile Include="Assets\Script\Core\Logistics\ItemOnBelt.cs" />
+    <Compile Include="Assets\Script\Core\Logistics\Conveyor.cs" />
     <Compile Include="Assets\Script\Core\Buildings\BuildingSocket.cs" />
     <Compile Include="Assets\Script\Core\Data\BuildingData.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerBuilder.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Smelter.cs" />
     <Compile Include="Assets\Script\Core\Systems\ResearchSystem.cs" />
+    <Compile Include="Assets\Script\Core\Buildings\Constructor.cs" />
     <Compile Include="Assets\Script\Core\Items\ItemInstance.cs" />
-    <Compile Include="Assets\Script\Core\Logistics\ConveyorReshape.cs" />
     <Compile Include="Assets\Script\Core\GameManager.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerInventory.cs" />
     <Compile Include="Assets\Script\Core\UI\BuildMenuUI.cs" />
     <Compile Include="Assets\Script\Core\Data\ItemData.cs" />
-    <Compile Include="Assets\Script\Core\Logistics\BeltItemMover.cs" />
+    <Compile Include="Assets\Script\Core\Logistics\BuildingLinker.cs" />
     <Compile Include="Assets\Script\Core\Systems\GridSystem.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerMovement.cs" />
     <Compile Include="Assets\Script\Core\Data\ResearchNodeData.cs" />
     <Compile Include="Assets\Script\Core\UI\ResearchUI.cs" />
     <Compile Include="Assets\Script\Core\UI\InventoryUI.cs" />
     <Compile Include="Assets\Script\Core\Buildings\BuildingBase.cs" />
-    <Compile Include="Assets\Script\Core\Logistics\ConveyorNetwork.cs" />
+    <Compile Include="Assets\Script\Core\Systems\GridFootprint.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerInteractor.cs" />
   </ItemGroup>
   <ItemGroup>

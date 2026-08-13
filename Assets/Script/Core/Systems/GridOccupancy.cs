@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Словарь занятости клеток сетки. Источник истины для размещения и AutoConnector.
-/// Не требует компонента в сцене — статический сервис рядом с GridSystem.
-/// </summary>
+/// <summary>Занятость клеток сетки.</summary>
 public static class GridOccupancy
 {
     private static readonly Dictionary<Vector2Int, GameObject> occupiedCells =
@@ -18,7 +15,6 @@ public static class GridOccupancy
         if (!occupiedCells.TryGetValue(cell, out GameObject obj))
             return true;
 
-        // Мёртвые ссылки не блокируют клетку
         if (obj == null)
         {
             occupiedCells.Remove(cell);
@@ -54,7 +50,6 @@ public static class GridOccupancy
         if (obj == null)
             return;
 
-        // Перерегистрация: сначала снимаем старые клетки
         Unregister(obj);
 
         size = NormalizeSize(size);
@@ -66,7 +61,8 @@ public static class GridOccupancy
             {
                 Vector2Int cell = origin + new Vector2Int(x, y);
 
-                if (occupiedCells.TryGetValue(cell, out GameObject existing) && existing != null && existing != obj)
+                if (occupiedCells.TryGetValue(cell, out GameObject existing)
+                    && existing != null && existing != obj)
                 {
                     Debug.LogWarning(
                         $"[GridOccupancy] Cell {cell} already occupied by {existing.name}, " +
@@ -124,9 +120,6 @@ public static class GridOccupancy
         return obj;
     }
 
-    /// <summary>
-    /// Все уникальные объекты на сетке (для ReconnectAll без FindObjectsByType).
-    /// </summary>
     public static void CollectAllOccupiedObjects(List<GameObject> results, HashSet<int> seen)
     {
         if (results == null)
@@ -135,7 +128,6 @@ public static class GridOccupancy
         if (seen == null)
             seen = new HashSet<int>();
 
-        // Копия ключей: на случай clear во время итерации
         var keys = new List<GameObject>(objectCells.Keys);
         for (int i = 0; i < keys.Count; i++)
         {
@@ -148,9 +140,6 @@ public static class GridOccupancy
         }
     }
 
-    /// <summary>
-    /// Размер с учётом поворота на 90° (Y). size.x = ширина по X, size.y = глубина по Z.
-    /// </summary>
     public static Vector2Int GetRotatedSize(Vector2Int size, float rotationY)
     {
         size = NormalizeSize(size);
@@ -168,9 +157,6 @@ public static class GridOccupancy
         return new Vector2Int(Mathf.Max(1, size.x), Mathf.Max(1, size.y));
     }
 
-    /// <summary>
-    /// Для тестов / смены сцены.
-    /// </summary>
     public static void ClearAll()
     {
         occupiedCells.Clear();

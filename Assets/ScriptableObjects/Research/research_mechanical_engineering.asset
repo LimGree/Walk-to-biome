@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: research_mechanical_engineering
   displayName: Mechanical Engineering
-  description: Unlocks Constructor and basic components
+  description: Unlocks basic components
   icon: {fileID: 0}
   requiredItems:
   - item: {fileID: 11400000, guid: 725d7895721123d41a73f359454d1d9c, type: 2}
@@ -24,6 +24,10 @@ MonoBehaviour:
   requiredResearches:
   - {fileID: 11400000, guid: 246ed4fc676b61b4eb3e9df45a3e7e71, type: 2}
   unlockedBuildings:
-  - {fileID: 11400000, guid: cf0cda2cb8d44854581c3c885d2752dc, type: 2}
+  - {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
   unlockedRecipes:
-  - {fileID: 11400000, guid: f151608f38544b9469cdd3fb90000d9f, type: 2}
+  - {fileID: 11400000, guid: a716257a16aa6bd44bfc46e306bf49f4, type: 2}
+  - {fileID: 11400000, guid: 90a0fa676baa44040816a68a59580085, type: 2}
+  - {fileID: 11400000, guid: 839733da1fcbd8743b529f300933743c, type: 2}
+  - {fileID: 11400000, guid: 987c1eb2a3bb41b4da0c3ccddb9b22c7, type: 2}
+  - {fileID: 11400000, guid: e6f35c7cda8eb8f41a7b97b1bec7536d, type: 2}

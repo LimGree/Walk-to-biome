@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   socketType: 0
-  connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1 &3043121297315522496
@@ -93,7 +93,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   socketType: 0
-  connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1 &5544747489954867753
@@ -141,7 +141,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   socketType: 0
-  connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1 &8125453562236294625
@@ -170,7 +170,7 @@ Transform:
   m_GameObject: {fileID: 8125453562236294625}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 503.98, y: 0.5, z: 506.68}
+  m_LocalPosition: {x: 504.003, y: 0.5, z: 506.994}
   m_LocalScale: {x: 0.8, y: 1, z: 0.8}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -200,6 +200,8 @@ MonoBehaviour:
   - {fileID: 4764033102142764255}
   - {fileID: 8618076110828199095}
   outputSockets: []
+  maxOutputBuffer: 8
+  drawFootprintGizmo: 1
   currentResearch: {fileID: 11400000, guid: 246ed4fc676b61b4eb3e9df45a3e7e71, type: 2}
   researchProgress: 0
 --- !u!1 &8989439934212778408
@@ -247,7 +249,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   socketType: 0
-  connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1001 &6629544460216880949

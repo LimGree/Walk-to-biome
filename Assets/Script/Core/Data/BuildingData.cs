@@ -9,57 +9,28 @@ public class BuildingData : ScriptableObject
     [TextArea] public string description;
 
     [Header("Prefabs")]
-    public GameObject prefab;            // основной префаб (здания / fallback)
-    public GameObject ghostPrefab;       // ghost для предпросмотра
+    public GameObject prefab;
+    public GameObject ghostPrefab;
 
-    [Header("Conveyor variants (optional)")]
-    [Tooltip("Прямая лента. Если задан — hotbar «Conveyor» может выбирать форму.")]
-    public GameObject straightPrefab;
-    [Tooltip("Угловая лента 90°.")]
+    [Header("Conveyor")]
+    [Tooltip("Если задан — это конвейер: в хотбаре один слот, прямой/угол выбирается сам.")]
     public GameObject cornerPrefab;
-    [Tooltip("Опциональный ghost для угла. Если null — используется ghostPrefab.")]
-    public GameObject cornerGhostPrefab;
 
     [Header("Visuals")]
     public Sprite icon;
 
     [Header("Grid & Placement")]
+    [Tooltip("Клетки footprint: X = по оси X, Y = по оси Z. Pivot префаба = ЦЕНТР footprint.")]
     public Vector2Int size = Vector2Int.one;
     public bool canRotate = true;
 
     [Header("Optional")]
     public int buildCost = 0;
 
-    /// <summary>Есть ли отдельные префабы ленты (straight/corner).</summary>
-    public bool HasConveyorVariants =>
-        straightPrefab != null || cornerPrefab != null;
-
-    /// <summary>Считать ли этот BuildingData конвейером.</summary>
-    public bool IsConveyor
-    {
-        get
-        {
-            if (HasConveyorVariants)
-                return true;
-            if (prefab == null)
-                return false;
-            return prefab.GetComponent<ConveyorBelt>() != null;
-        }
-    }
-
-    public GameObject GetConveyorPrefab(bool isCorner)
-    {
-        if (isCorner && cornerPrefab != null)
-            return cornerPrefab;
-        if (straightPrefab != null)
-            return straightPrefab;
-        return prefab;
-    }
+    public bool IsConveyor => cornerPrefab != null;
 
     public GameObject GetDefaultPlacePrefab()
     {
-        if (straightPrefab != null)
-            return straightPrefab;
         return prefab;
     }
 }

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class SaveData
 {
     public List<BuildingSaveData> buildings = new List<BuildingSaveData>();
-    public List<ConveyorSaveData> conveyors = new List<ConveyorSaveData>();
+    public ResearchSaveData research = new ResearchSaveData();
 }
 
 [System.Serializable]
@@ -15,16 +15,6 @@ public class BuildingSaveData
     public string buildingId;
     public Vector3 position;
     public float rotationY;
-}
-
-[System.Serializable]
-public class ConveyorSaveData
-{
-    public string buildingId;
-    public Vector3 position;
-    public float rotationY;
-    public bool isCorner;
-    public bool mirrorX;
 }
 
 public class SaveSystem : MonoBehaviour
@@ -58,32 +48,12 @@ public class SaveSystem : MonoBehaviour
             });
         }
 
-        ConveyorBelt[] belts = FindObjectsByType<ConveyorBelt>(FindObjectsSortMode.None);
-        for (int i = 0; i < belts.Length; i++)
-        {
-            ConveyorBelt belt = belts[i];
-            if (belt == null) continue;
-            // Ghost / disabled previews
-            if (!belt.enabled || !belt.gameObject.activeInHierarchy) continue;
-
-            string id = belt.buildingData != null ? belt.buildingData.id : null;
-            if (string.IsNullOrEmpty(id))
-                continue;
-
-            data.conveyors.Add(new ConveyorSaveData
-            {
-                buildingId = id,
-                position = belt.transform.position,
-                rotationY = belt.transform.eulerAngles.y,
-                isCorner = belt.isCorner,
-                mirrorX = belt.transform.localScale.x < 0f
-            });
-        }
+        if (ResearchSystem.Instance != null)
+            data.research = ResearchSystem.Instance.CaptureSave();
 
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SavePath, json);
-
-        Debug.Log($"Game saved: {data.buildings.Count} buildings, {data.conveyors.Count} conveyors → {SavePath}");
+        Debug.Log($"Game saved: {data.buildings.Count} buildings → {SavePath}");
     }
 
     public void LoadGame()
@@ -109,46 +79,28 @@ public class SaveSystem : MonoBehaviour
             return;
         }
 
-        ClearWorldPlaceables();
+        ClearWorldBuildings();
 
-        int spawnedBuildings = 0;
+        int spawned = 0;
         if (data.buildings != null)
         {
             for (int i = 0; i < data.buildings.Count; i++)
             {
-                BuildingSaveData bsd = data.buildings[i];
-                if (SpawnBuilding(bsd, catalog))
-                    spawnedBuildings++;
+                if (SpawnBuilding(data.buildings[i], catalog))
+                    spawned++;
             }
         }
 
-        int spawnedBelts = 0;
-        if (data.conveyors != null)
-        {
-            for (int i = 0; i < data.conveyors.Count; i++)
-            {
-                ConveyorSaveData csd = data.conveyors[i];
-                if (SpawnConveyor(csd, catalog))
-                    spawnedBelts++;
-            }
-        }
+        if (ResearchSystem.Instance != null)
+            ResearchSystem.Instance.ApplySave(data.research);
 
-        // Единый reconnect после полной загрузки сети
-        AutoConnector.ReconnectAll();
-
-        Debug.Log($"Game loaded: {spawnedBuildings} buildings, {spawnedBelts} conveyors + ReconnectAll");
+        Debug.Log($"Game loaded: {spawned} buildings");
     }
 
     public void DeleteSave()
     {
         if (File.Exists(SavePath))
             File.Delete(SavePath);
-    }
-
-    /// <summary>Только пересобрать связи (после ручного спавна / отладка).</summary>
-    public void ReconnectLogistics()
-    {
-        AutoConnector.ReconnectAll();
     }
 
     static BuildingData[] ResolveBuildingCatalog()
@@ -173,23 +125,8 @@ public class SaveSystem : MonoBehaviour
         return null;
     }
 
-    static void ClearWorldPlaceables()
+    static void ClearWorldBuildings()
     {
-        // Ленты
-        ConveyorBelt[] belts = Object.FindObjectsByType<ConveyorBelt>(FindObjectsSortMode.None);
-        for (int i = 0; i < belts.Length; i++)
-        {
-            ConveyorBelt belt = belts[i];
-            if (belt == null) continue;
-            if (!belt.enabled) continue; // ghost
-
-            belt.ClearItems();
-            AutoConnector.ClearBeltLinks(belt);
-            belt.OnRemoved();
-            belt.suppressDestroyCleanup = true;
-            Object.Destroy(belt.gameObject);
-        }
-
         BuildingBase[] buildings = Object.FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
         for (int i = 0; i < buildings.Length; i++)
         {
@@ -198,9 +135,6 @@ public class SaveSystem : MonoBehaviour
             b.OnRemoved();
             Object.Destroy(b.gameObject);
         }
-
-        // На всякий случай — если остались мёртвые записи
-        // (Destroy отложен, occupancy уже снят в OnRemoved)
     }
 
     static bool SpawnBuilding(BuildingSaveData bsd, BuildingData[] catalog)
@@ -220,77 +154,12 @@ public class SaveSystem : MonoBehaviour
         if (building != null)
         {
             building.data = data;
-            // OnPlaced: register + reshape (сеть ещё не полная — reshape ок, connect в конце)
-            bool prev = ConveyorBelt.SuppressReshapeOnPlaced;
-            ConveyorBelt.SuppressReshapeOnPlaced = true;
-            try
-            {
-                building.OnPlaced();
-            }
-            finally
-            {
-                ConveyorBelt.SuppressReshapeOnPlaced = prev;
-            }
+            building.OnPlaced();
         }
-        else
+        else if (GridSystem.Instance != null)
         {
-            if (GridSystem.Instance != null)
-            {
-                Vector2Int origin = GridSystem.Instance.WorldToCell(bsd.position);
-                Vector2Int size = GridOccupancy.GetRotatedSize(
-                    data.size, bsd.rotationY);
-                GridOccupancy.Register(go, origin, size);
-            }
-        }
-
-        return true;
-    }
-
-    static bool SpawnConveyor(ConveyorSaveData csd, BuildingData[] catalog)
-    {
-        if (csd == null) return false;
-
-        BuildingData data = FindBuildingData(csd.buildingId, catalog);
-        if (data == null)
-        {
-            Debug.LogWarning($"[SaveSystem] Missing conveyor BuildingData id={csd.buildingId}");
-            return false;
-        }
-
-        GameObject prefab = data.GetConveyorPrefab(csd.isCorner);
-        if (prefab == null)
-        {
-            Debug.LogWarning($"[SaveSystem] Missing conveyor prefab id={csd.buildingId}");
-            return false;
-        }
-
-        Quaternion rot = Quaternion.Euler(0f, csd.rotationY, 0f);
-        GameObject go = Object.Instantiate(prefab, csd.position, rot);
-
-        if (csd.mirrorX)
-        {
-            Vector3 scale = go.transform.localScale;
-            scale.x = -Mathf.Abs(scale.x);
-            go.transform.localScale = scale;
-        }
-
-        ConveyorBelt belt = go.GetComponent<ConveyorBelt>();
-        if (belt != null)
-        {
-            belt.buildingData = data;
-            belt.isCorner = csd.isCorner;
-            ConveyorReshape.DefaultConveyorData = data;
-
-            bool prev = ConveyorBelt.SuppressReshapeOnPlaced;
-            ConveyorBelt.SuppressReshapeOnPlaced = true;
-            try
-            {
-                belt.OnPlaced();
-            }
-            finally
-            {
-                ConveyorBelt.SuppressReshapeOnPlaced = prev;
-            }
+            Vector2Int size = GridFootprint.GetRotatedSize(data.size, bsd.rotationY);
+            GridFootprint.Register(go, bsd.position, size);
         }
 
         return true;

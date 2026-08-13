@@ -102,6 +102,11 @@ public class MachineUI : MonoBehaviour
             titleText.text = "Assembler";
             ShowAssemblerUI(assembler);
         }
+        else if (building is Constructor constructor)
+        {
+            titleText.text = "Constructor";
+            ShowConstructorUI(constructor);
+        }
         else if (building is ResearchLab lab)
         {
             titleText.text = "Research Lab";
@@ -193,8 +198,19 @@ public class MachineUI : MonoBehaviour
 
     void ShowAssemblerUI(Assembler assembler)
     {
-        assemblerContent.SetActive(true);
+        // Список рецептов живёт в SmelterContent.
+        if (smelterContent != null)
+            smelterContent.SetActive(true);
         RefreshRecipeList(assembler);
+    }
+
+    // ================== CONSTRUCTOR ==================
+
+    void ShowConstructorUI(Constructor constructor)
+    {
+        if (smelterContent != null)
+            smelterContent.SetActive(true);
+        RefreshRecipeList(constructor);
     }
 
     void RefreshRecipeList(BuildingBase building)
@@ -203,6 +219,8 @@ public class MachineUI : MonoBehaviour
 
         foreach (Transform child in recipeButtonsParent)
             Destroy(child.gameObject);
+
+        EnsureRecipeCatalog();
 
         if (allRecipes == null || recipeButtonPrefab == null || building == null)
             return;
@@ -232,17 +250,46 @@ public class MachineUI : MonoBehaviour
             RecipeData captured = recipe;
             btnObj.GetComponent<Button>().onClick.AddListener(() =>
             {
-                if (building is Smelter smelter)
-                    smelter.SetRecipe(captured);
-                else if (building is Assembler assembler)
-                    assembler.SetRecipe(captured);
+                ApplyRecipe(building, captured);
 
                 if (currentRecipeText != null)
                     currentRecipeText.text = captured.displayName;
-
-                Debug.Log($"[MachineUI] Recipe set: {captured.displayName}");
             });
         }
+
+        if (currentRecipeText != null)
+            currentRecipeText.text = GetCurrentRecipeName(building);
+    }
+
+    static void ApplyRecipe(BuildingBase building, RecipeData recipe)
+    {
+        if (building is Smelter smelter)
+            smelter.SetRecipe(recipe);
+        else if (building is Assembler assembler)
+            assembler.SetRecipe(recipe);
+        else if (building is Constructor constructor)
+            constructor.SetRecipe(recipe);
+    }
+
+    static string GetCurrentRecipeName(BuildingBase building)
+    {
+        RecipeData recipe = null;
+        if (building is Smelter smelter)
+            recipe = smelter.currentRecipe;
+        else if (building is Assembler assembler)
+            recipe = assembler.currentRecipe;
+        else if (building is Constructor constructor)
+            recipe = constructor.currentRecipe;
+
+        return recipe != null ? recipe.displayName : "No recipe";
+    }
+
+    void EnsureRecipeCatalog()
+    {
+        if (allRecipes != null && allRecipes.Length > 0)
+            return;
+
+        allRecipes = Resources.FindObjectsOfTypeAll<RecipeData>();
     }
 
     // ================== RESEARCH LAB ==================
@@ -266,6 +313,8 @@ public class MachineUI : MonoBehaviour
             string status = "";
             if (ResearchSystem.Instance.IsResearchUnlocked(node))
                 status = " [DONE]";
+            else if (ResearchSystem.Instance.CurrentResearch == node)
+                status = " [ACTIVE]";
             else if (!ResearchSystem.Instance.CanStartResearch(node))
                 status = " [LOCKED]";
 
@@ -275,10 +324,9 @@ public class MachineUI : MonoBehaviour
             ResearchNodeData captured = node;
             btnObj.GetComponent<Button>().onClick.AddListener(() =>
             {
-                if (ResearchSystem.Instance.CanStartResearch(captured))
+                if (ResearchSystem.Instance.SetCurrentResearch(captured))
                 {
-                    lab.SetResearch(captured);
-                    Debug.Log($"[MachineUI] Начато исследование: {captured.displayName}");
+                    Debug.Log($"[MachineUI] Мировое исследование: {captured.displayName}");
                     Close();
                 }
             });
@@ -303,13 +351,27 @@ public class MachineUI : MonoBehaviour
             else
                 progressSlider.value = 0f;
         }
-        else if (currentBuilding is ResearchLab lab)
+        else if (currentBuilding is Constructor constructor && progressSlider != null)
         {
-            float progress = lab.GetProgress();
+            if (constructor.currentRecipe != null && constructor.currentRecipe.craftTime > 0f)
+                progressSlider.value = constructor.craftProgress / constructor.currentRecipe.craftTime;
+            else
+                progressSlider.value = 0f;
+        }
+        else if (currentBuilding is ResearchLab)
+        {
+            float progress = ResearchSystem.Instance != null
+                ? ResearchSystem.Instance.GetCurrentProgress01()
+                : 0f;
             if (researchProgressSlider != null)
                 researchProgressSlider.value = progress;
             if (researchProgressText != null)
-                researchProgressText.text = $"Progress: {(progress * 100f):0}%";
+            {
+                string name = ResearchSystem.Instance != null && ResearchSystem.Instance.CurrentResearch != null
+                    ? ResearchSystem.Instance.CurrentResearch.displayName
+                    : "None";
+                researchProgressText.text = $"{name}: {(progress * 100f):0}%";
+            }
         }
     }
 }

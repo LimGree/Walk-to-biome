@@ -1,110 +1,41 @@
 using UnityEngine;
-using System.Collections.Generic;
-using System;
 
 public class ResearchLab : BuildingBase, IInteractable
 {
-    [Header("Research Settings")]
-    public ResearchNodeData currentResearch;
-    public float researchProgress = 0f;
+    public bool IsWorldLab { get; private set; }
 
-    // Сколько предметов уже сдано на текущее исследование
-    private Dictionary<ItemData, int> submittedItems = new Dictionary<ItemData, int>();
+    public ResearchNodeData currentResearch
+    {
+        get
+        {
+            return ResearchSystem.Instance != null
+                ? ResearchSystem.Instance.CurrentResearch
+                : null;
+        }
+    }
 
     public override void OnPlaced()
     {
+        IsWorldLab = true;
         base.OnPlaced();
-        researchProgress = 0f;
-        submittedItems.Clear();
+    }
+
+    public override void OnRemoved()
+    {
+        IsWorldLab = false;
+        base.OnRemoved();
     }
 
     public override bool TryReceiveItem(ItemData item, BuildingSocket fromSocket)
     {
-        if (currentResearch == null) return false;
+        if (ResearchSystem.Instance == null)
+            return false;
 
-        // Проверяем, нужен ли этот предмет для текущего исследования
-        bool isNeeded = false;
-        int requiredAmount = 0;
-
-        foreach (var req in currentResearch.requiredItems)
-        {
-            if (req.item == item)
-            {
-                isNeeded = true;
-                requiredAmount = req.amount;
-                break;
-            }
-        }
-
-        if (!isNeeded) return false;
-
-        if (!submittedItems.ContainsKey(item))
-            submittedItems[item] = 0;
-
-        // Принимаем, пока не набрали нужное количество
-        if (submittedItems[item] < requiredAmount)
-        {
-            submittedItems[item]++;
-            CheckResearchCompletion();
-            return true;
-        }
-
-        return false;
+        return ResearchSystem.Instance.TrySubmitItem(item);
     }
 
-    void CheckResearchCompletion()
-    {
-        if (currentResearch == null) return;
-
-        foreach (var req in currentResearch.requiredItems)
-        {
-            if (!submittedItems.ContainsKey(req.item) || submittedItems[req.item] < req.amount)
-                return; // ещё не всё собрали
-        }
-
-        // Исследование завершено!
-        CompleteResearch();
-    }
-
-    void CompleteResearch()
-    {
-        if (currentResearch == null) return;
-
-        ResearchNodeData finished = currentResearch;
-
-        if (ResearchSystem.Instance != null)
-            ResearchSystem.Instance.CompleteResearch(finished);
-        else
-            Debug.LogError("[ResearchLab] ResearchSystem.Instance == null");
-
-        currentResearch = null;
-        submittedItems.Clear();
-        researchProgress = 0f;
-    }
-
-    public float GetProgress01()
-    {
-        if (currentResearch == null || currentResearch.requiredItems == null || currentResearch.requiredItems.Count == 0)
-            return 0f;
-
-        int totalRequired = 0;
-        int totalSubmitted = 0;
-
-        foreach (var req in currentResearch.requiredItems)
-        {
-            totalRequired += req.amount;
-            if (submittedItems.ContainsKey(req.item))
-                totalSubmitted += Mathf.Min(submittedItems[req.item], req.amount);
-        }
-
-        return totalRequired > 0 ? (float)totalSubmitted / totalRequired : 0f;
-    }
-
-    // Для взаимодействия игрока (клавиша E)
     public void Interact(GameObject interactor)
     {
-        Debug.Log($"[Extractor] Interact вызван! MachineUI.Instance = {MachineUI.Instance}");
-
         if (MachineUI.Instance != null)
             MachineUI.Instance.Open(this);
         else
@@ -113,13 +44,24 @@ public class ResearchLab : BuildingBase, IInteractable
 
     public void SetResearch(ResearchNodeData research)
     {
-        currentResearch = research;
-        submittedItems.Clear();
-        researchProgress = 0f;
+        if (ResearchSystem.Instance == null)
+        {
+            Debug.LogError("[ResearchLab] ResearchSystem.Instance == null");
+            return;
+        }
+
+        ResearchSystem.Instance.SetCurrentResearch(research);
     }
 
-    internal float GetProgress()
+    public float GetProgress01()
     {
-        return researchProgress;
+        return ResearchSystem.Instance != null
+            ? ResearchSystem.Instance.GetCurrentProgress01()
+            : 0f;
+    }
+
+    public float GetProgress()
+    {
+        return GetProgress01();
     }
 }

@@ -1,5 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Сетка + подсветка ВСЕХ клеток footprint ghost (center pivot).
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(GridSystem))]
 public class BuildGridVisualizer : MonoBehaviour
@@ -13,14 +17,27 @@ public class BuildGridVisualizer : MonoBehaviour
     public Color gridLineColor = new Color(1f, 1f, 1f, 0.22f);
     public Color validCellColor = new Color(0.25f, 1f, 0.4f, 0.32f);
     public Color invalidCellColor = new Color(1f, 0.3f, 0.25f, 0.32f);
+    public Color footprintBorderColor = new Color(1f, 1f, 1f, 0.55f);
+
+    [Header("Footprint cells")]
+    [Tooltip("Макс. клеток footprint для отдельных подсветок (например 8×8).")]
+    public int maxFootprintCells = 64;
 
     private GridSystem grid;
     private Transform gridPlane;
-    private Transform cellHighlight;
     private Material gridMaterial;
-    private Material highlightMaterial;
     private Texture2D gridTexture;
     private int lastDiameter = -1;
+
+    // Отдельные клетки footprint
+    private readonly List<Transform> cellHighlights = new List<Transform>();
+    private readonly List<MeshRenderer> cellRenderers = new List<MeshRenderer>();
+    private Material validCellMat;
+    private Material invalidCellMat;
+
+    // Общая рамка footprint
+    private Transform footprintBorder;
+    private Material borderMaterial;
 
     void Awake()
     {
@@ -41,7 +58,7 @@ public class BuildGridVisualizer : MonoBehaviour
             return;
         }
 
-        if (!playerBuilder.IsBuildModeActive)
+        if (!playerBuilder.IsBuildModeActive || !playerBuilder.HasPlacementTarget)
         {
             SetVisible(false);
             return;
@@ -50,6 +67,7 @@ public class BuildGridVisualizer : MonoBehaviour
         SetVisible(true);
         UpdateVisuals(
             playerBuilder.CurrentPlacementPosition,
+            playerBuilder.CurrentFootprintSize,
             playerBuilder.CanPlaceCurrent
         );
     }
@@ -57,16 +75,40 @@ public class BuildGridVisualizer : MonoBehaviour
     void CreateVisuals()
     {
         gridPlane = CreatePlaneChild("BuildGridPlane", gridLineColor, out gridMaterial);
-        cellHighlight = CreatePlaneChild("BuildGridHighlight", validCellColor, out highlightMaterial);
 
         gridTexture = CreateCellBorderTexture(64);
         gridMaterial.mainTexture = gridTexture;
         gridMaterial.color = Color.white;
 
-        highlightMaterial.mainTexture = null;
+        validCellMat = CreateTransparentMaterial(validCellColor);
+        validCellMat.renderQueue = 3100;
+        invalidCellMat = CreateTransparentMaterial(invalidCellColor);
+        invalidCellMat.renderQueue = 3100;
+        borderMaterial = CreateTransparentMaterial(footprintBorderColor);
+        borderMaterial.renderQueue = 3110;
+
+        footprintBorder = CreatePlaneChild("FootprintBorder", borderMaterial);
+        footprintBorder.gameObject.SetActive(false);
+
+        // Пул клеток footprint
+        int pool = Mathf.Clamp(maxFootprintCells, 1, 256);
+        for (int i = 0; i < pool; i++)
+        {
+            Transform t = CreatePlaneChild($"FootprintCell_{i}", validCellMat);
+            cellHighlights.Add(t);
+            cellRenderers.Add(t.GetComponent<MeshRenderer>());
+            t.gameObject.SetActive(false);
+        }
     }
 
     Transform CreatePlaneChild(string objectName, Color color, out Material material)
+    {
+        material = CreateTransparentMaterial(color);
+        material.renderQueue = 3100;
+        return CreatePlaneChild(objectName, material);
+    }
+
+    Transform CreatePlaneChild(string objectName, Material material)
     {
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Plane);
         go.name = objectName;
@@ -79,9 +121,6 @@ public class BuildGridVisualizer : MonoBehaviour
         renderer.receiveShadows = false;
         renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
         renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-
-        material = CreateTransparentMaterial(color);
-        material.renderQueue = 3100;
         renderer.sharedMaterial = material;
 
         return go.transform;
@@ -92,6 +131,8 @@ public class BuildGridVisualizer : MonoBehaviour
         Shader shader = Shader.Find("Sprites/Diffuse");
         if (shader == null)
             shader = Shader.Find("Unlit/Transparent");
+        if (shader == null)
+            shader = Shader.Find("Universal Render Pipeline/Unlit");
 
         Material material = new Material(shader);
         material.color = color;
@@ -126,12 +167,16 @@ public class BuildGridVisualizer : MonoBehaviour
         return texture;
     }
 
-    void UpdateVisuals(Vector3 placementPosition, bool canPlace)
+    void UpdateVisuals(Vector3 placementCenter, Vector2Int footprintSize, bool canPlace)
     {
-        Vector2Int cell = grid.WorldToCell(placementPosition);
-        float surfaceY = placementPosition.y + yOffset;
+        footprintSize = GridFootprint.NormalizeSize(footprintSize);
+        float surfaceY = placementCenter.y + yOffset;
+        float cell = grid.cellSize;
+
+        // --- Фоновая сетка вокруг центра placement ---
+        Vector2Int centerCell = GridFootprint.GetMinCell(placementCenter, Vector2Int.one);
         int diameter = radiusInCells * 2 + 1;
-        float worldSize = diameter * grid.cellSize;
+        float worldSize = diameter * cell;
         float planeScale = worldSize / 10f;
 
         if (diameter != lastDiameter)
@@ -140,18 +185,48 @@ public class BuildGridVisualizer : MonoBehaviour
             lastDiameter = diameter;
         }
 
-        Vector3 gridCenter = grid.GetCellCenter(cell, surfaceY);
+        Vector3 gridCenter = grid.GetCellCenter(centerCell, surfaceY);
         gridPlane.position = gridCenter;
         gridPlane.localScale = new Vector3(planeScale, 1f, planeScale);
 
-        cellHighlight.position = grid.GetCellCenter(cell, surfaceY + 0.001f);
-        cellHighlight.localScale = new Vector3(
-            grid.cellSize / 10f * 0.96f,
+        // --- Рамка всего footprint (center pivot) ---
+        Vector3 fpWorld = GridFootprint.GetWorldSize(footprintSize);
+        footprintBorder.position = new Vector3(placementCenter.x, surfaceY + 0.002f, placementCenter.z);
+        footprintBorder.localScale = new Vector3(
+            fpWorld.x / 10f * 1.02f,
             1f,
-            grid.cellSize / 10f * 0.96f
+            fpWorld.z / 10f * 1.02f
         );
+        borderMaterial.color = canPlace
+            ? new Color(0.4f, 1f, 0.5f, 0.35f)
+            : new Color(1f, 0.35f, 0.3f, 0.4f);
+        footprintBorder.gameObject.SetActive(true);
 
-        highlightMaterial.color = canPlace ? validCellColor : invalidCellColor;
+        // --- Каждая клетка footprint ---
+        Vector2Int min = GridFootprint.GetMinCell(placementCenter, footprintSize);
+        Material cellMat = canPlace ? validCellMat : invalidCellMat;
+        int needed = footprintSize.x * footprintSize.y;
+        int idx = 0;
+
+        for (int x = 0; x < footprintSize.x; x++)
+        {
+            for (int z = 0; z < footprintSize.y; z++)
+            {
+                if (idx >= cellHighlights.Count)
+                    break;
+
+                Vector2Int cellCoord = min + new Vector2Int(x, z);
+                Transform t = cellHighlights[idx];
+                t.gameObject.SetActive(true);
+                t.position = grid.GetCellCenter(cellCoord, surfaceY + 0.001f);
+                t.localScale = new Vector3(cell / 10f * 0.92f, 1f, cell / 10f * 0.92f);
+                cellRenderers[idx].sharedMaterial = cellMat;
+                idx++;
+            }
+        }
+
+        for (; idx < cellHighlights.Count; idx++)
+            cellHighlights[idx].gameObject.SetActive(false);
     }
 
     void SetVisible(bool visible)
@@ -159,19 +234,25 @@ public class BuildGridVisualizer : MonoBehaviour
         if (gridPlane != null)
             gridPlane.gameObject.SetActive(visible);
 
-        if (cellHighlight != null)
-            cellHighlight.gameObject.SetActive(visible);
+        if (footprintBorder != null)
+            footprintBorder.gameObject.SetActive(visible);
+
+        if (!visible)
+        {
+            for (int i = 0; i < cellHighlights.Count; i++)
+            {
+                if (cellHighlights[i] != null)
+                    cellHighlights[i].gameObject.SetActive(false);
+            }
+        }
     }
 
     void OnDestroy()
     {
-        if (gridMaterial != null)
-            Destroy(gridMaterial);
-
-        if (highlightMaterial != null)
-            Destroy(highlightMaterial);
-
-        if (gridTexture != null)
-            Destroy(gridTexture);
+        if (gridMaterial != null) Destroy(gridMaterial);
+        if (validCellMat != null) Destroy(validCellMat);
+        if (invalidCellMat != null) Destroy(invalidCellMat);
+        if (borderMaterial != null) Destroy(borderMaterial);
+        if (gridTexture != null) Destroy(gridTexture);
     }
 }

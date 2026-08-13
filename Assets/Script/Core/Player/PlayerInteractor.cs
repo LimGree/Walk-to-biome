@@ -42,25 +42,13 @@ public class PlayerInteractor : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactLayer))
         {
             currentInteractable = hit.collider.GetComponentInParent<IInteractable>();
-
-            // временный дебаг
-            if (currentInteractable != null)
-                Debug.Log($"[Interactor] Смотрю на: {hit.collider.name} → {currentInteractable.GetType().Name}");
         }
     }
 
     void OnInteract(InputAction.CallbackContext ctx)
     {
-        Debug.Log($"[Interactor] Interact pressed. currentInteractable = {(currentInteractable != null ? currentInteractable.ToString() : "NULL")}");
-
         if (currentInteractable != null)
-        {
             currentInteractable.Interact(gameObject);
-        }
-        else
-        {
-            Debug.LogWarning("[Interactor] Не нашёл IInteractable под прицелом");
-        }
     }
 }
 

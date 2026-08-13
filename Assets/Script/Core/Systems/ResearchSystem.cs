@@ -8,16 +8,31 @@ public class ResearchSystem : MonoBehaviour
     [Header("All Research Nodes")]
     public List<ResearchNodeData> allResearchNodes = new List<ResearchNodeData>();
 
-    [Header("Level 0 ó ‰ÓÒÚÛÔÌÓ Ò Ì‡˜‡Î‡")]
+    [Header("Level 0 ‚Äî —Å—Ç–∞—Ä—Ç")]
     public List<BuildingData> startingBuildings = new List<BuildingData>();
     public List<RecipeData> startingRecipes = new List<RecipeData>();
 
-    private HashSet<ResearchNodeData> unlockedResearch = new HashSet<ResearchNodeData>();
-    private HashSet<BuildingData> unlockedBuildings = new HashSet<BuildingData>();
-    private HashSet<RecipeData> unlockedRecipes = new HashSet<RecipeData>();
+    [Header("–õ–∏–º–∏—Ç –ª–∞–±–æ—Ä–∞—Ç–æ—Ä–∏–π")]
+    [Tooltip("–°–µ–π—á–∞—Å –Ω–∞ –∫–∞—Ä—Ç–µ –º–æ–∂–Ω–æ –ø–æ—Å—Ç–∞–≤–∏—Ç—å —Å—Ç–æ–ª—å–∫–æ –ª–∞–±–æ—Ä–∞—Ç–æ—Ä–∏–π.")]
+    public int baseLabLimit = 1;
+    [Tooltip("–ü–æ—Ç–æ–ª–æ–∫ –ø–æ—Å–ª–µ –∞–ø–≥—Ä–µ–π–¥–æ–≤ 4‚Äì5 —É—Ä–æ–≤–Ω—è.")]
+    public int maxLabLimit = 3;
+    [Tooltip("id –∏—Å—Å–ª–µ–¥–æ–≤–∞–Ω–∏–π, –∫–∞–∂–¥–æ–µ –∏–∑ –∫–æ—Ç–æ—Ä—ã—Ö –¥–∞—ë—Ç +1 —Å–ª–æ—Ç –ª–∞–±–æ—Ä–∞—Ç–æ—Ä–∏–∏ (—É—Ä–æ–≤–Ω–∏ 4 –∏ 5).")]
+    public string[] extraLabSlotResearchIds =
+    {
+        "research_advanced_automation",
+        "research_petrochemistry"
+    };
 
-    /// <summary> UI / hotbar ÔÓ‰ÔËÒ˚‚‡˛ÚÒˇ Ì‡ ˝ÚÓ </summary>
+    private readonly HashSet<ResearchNodeData> unlockedResearch = new HashSet<ResearchNodeData>();
+    private readonly HashSet<BuildingData> unlockedBuildings = new HashSet<BuildingData>();
+    private readonly HashSet<RecipeData> unlockedRecipes = new HashSet<RecipeData>();
+    private readonly Dictionary<ItemData, int> submittedItems = new Dictionary<ItemData, int>();
+
+    public ResearchNodeData CurrentResearch { get; private set; }
+
     public event System.Action OnUnlocksChanged;
+    public event System.Action OnResearchProgressChanged;
 
     void Awake()
     {
@@ -42,22 +57,40 @@ public class ResearchSystem : MonoBehaviour
 
         if (startingBuildings != null)
         {
-            foreach (var b in startingBuildings)
-                if (b != null) unlockedBuildings.Add(b);
+            for (int i = 0; i < startingBuildings.Count; i++)
+            {
+                if (startingBuildings[i] != null)
+                    unlockedBuildings.Add(startingBuildings[i]);
+            }
         }
 
         if (startingRecipes != null)
         {
-            foreach (var r in startingRecipes)
-                if (r != null) unlockedRecipes.Add(r);
+            for (int i = 0; i < startingRecipes.Count; i++)
+            {
+                if (startingRecipes[i] != null)
+                    unlockedRecipes.Add(startingRecipes[i]);
+            }
         }
-
-        Debug.Log($"[ResearchSystem] —Ú‡ÚÓ‚˚Â Á‰‡ÌËˇ: {unlockedBuildings.Count}, ÂˆÂÔÚ˚: {unlockedRecipes.Count}");
     }
 
     public bool IsResearchUnlocked(ResearchNodeData node)
     {
         return node != null && unlockedResearch.Contains(node);
+    }
+
+    public bool IsResearchIdUnlocked(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return false;
+
+        foreach (var node in unlockedResearch)
+        {
+            if (node != null && IdsEqual(node.id, id))
+                return true;
+        }
+
+        return false;
     }
 
     public bool CanStartResearch(ResearchNodeData node)
@@ -67,57 +100,323 @@ public class ResearchSystem : MonoBehaviour
 
         if (node.requiredResearches != null)
         {
-            foreach (var req in node.requiredResearches)
+            for (int i = 0; i < node.requiredResearches.Count; i++)
             {
+                ResearchNodeData req = node.requiredResearches[i];
                 if (req != null && !IsResearchUnlocked(req))
                     return false;
             }
         }
+
         return true;
+    }
+
+    public bool SetCurrentResearch(ResearchNodeData node)
+    {
+        if (node == null)
+            return false;
+        if (!CanStartResearch(node))
+            return false;
+        if (CurrentResearch != null && CurrentResearch != node)
+            return false;
+
+        if (CurrentResearch == node)
+            return true;
+
+        CurrentResearch = node;
+        submittedItems.Clear();
+        OnResearchProgressChanged?.Invoke();
+        return true;
+    }
+
+    public bool TrySubmitItem(ItemData item)
+    {
+        if (CurrentResearch == null || item == null || CurrentResearch.requiredItems == null)
+            return false;
+
+        int requiredAmount = 0;
+        bool needed = false;
+        for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
+        {
+            ItemStack req = CurrentResearch.requiredItems[i];
+            if (req.item == item)
+            {
+                needed = true;
+                requiredAmount = req.amount;
+                break;
+            }
+        }
+
+        if (!needed)
+            return false;
+
+        submittedItems.TryGetValue(item, out int have);
+        if (have >= requiredAmount)
+            return false;
+
+        submittedItems[item] = have + 1;
+        OnResearchProgressChanged?.Invoke();
+        TryCompleteCurrentResearch();
+        return true;
+    }
+
+    void TryCompleteCurrentResearch()
+    {
+        if (CurrentResearch == null || CurrentResearch.requiredItems == null)
+            return;
+
+        for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
+        {
+            ItemStack req = CurrentResearch.requiredItems[i];
+            if (req.item == null)
+                continue;
+            submittedItems.TryGetValue(req.item, out int have);
+            if (have < req.amount)
+                return;
+        }
+
+        CompleteResearch(CurrentResearch);
     }
 
     public void CompleteResearch(ResearchNodeData node)
     {
-        if (node == null || IsResearchUnlocked(node)) return;
+        if (node == null || IsResearchUnlocked(node))
+            return;
 
         unlockedResearch.Add(node);
 
         if (node.unlockedBuildings != null)
         {
-            foreach (var building in node.unlockedBuildings)
-                if (building != null) unlockedBuildings.Add(building);
+            for (int i = 0; i < node.unlockedBuildings.Count; i++)
+            {
+                if (node.unlockedBuildings[i] != null)
+                    unlockedBuildings.Add(node.unlockedBuildings[i]);
+            }
         }
 
         if (node.unlockedRecipes != null)
         {
-            foreach (var recipe in node.unlockedRecipes)
-                if (recipe != null) unlockedRecipes.Add(recipe);
+            for (int i = 0; i < node.unlockedRecipes.Count; i++)
+            {
+                if (node.unlockedRecipes[i] != null)
+                    unlockedRecipes.Add(node.unlockedRecipes[i]);
+            }
+        }
+
+        if (CurrentResearch == node)
+        {
+            CurrentResearch = null;
+            submittedItems.Clear();
         }
 
         Debug.Log($"[Research] Completed: {node.displayName}");
         OnUnlocksChanged?.Invoke();
+        OnResearchProgressChanged?.Invoke();
     }
 
     public bool IsBuildingUnlocked(BuildingData building)
     {
-        if (building == null) return false;
-        return unlockedBuildings.Contains(building); // ·ÓÎ¸¯Â ÌËÍ‡ÍËı "ÔÛÒÚÓÈ = ‚Ò∏"
+        return building != null && unlockedBuildings.Contains(building);
     }
 
     public bool IsRecipeUnlocked(RecipeData recipe)
     {
-        if (recipe == null) return false;
-        return unlockedRecipes.Contains(recipe);
+        return recipe != null && unlockedRecipes.Contains(recipe);
+    }
+
+    public float GetCurrentProgress01()
+    {
+        if (CurrentResearch == null || CurrentResearch.requiredItems == null || CurrentResearch.requiredItems.Count == 0)
+            return 0f;
+
+        int totalRequired = 0;
+        int totalSubmitted = 0;
+        for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
+        {
+            ItemStack req = CurrentResearch.requiredItems[i];
+            if (req.item == null)
+                continue;
+            totalRequired += Mathf.Max(0, req.amount);
+            submittedItems.TryGetValue(req.item, out int have);
+            totalSubmitted += Mathf.Min(have, Mathf.Max(0, req.amount));
+        }
+
+        return totalRequired > 0 ? (float)totalSubmitted / totalRequired : 0f;
+    }
+
+    public int GetSubmitted(ItemData item)
+    {
+        if (item == null)
+            return 0;
+        submittedItems.TryGetValue(item, out int have);
+        return have;
+    }
+
+    public int GetMaxResearchLabs()
+    {
+        int extra = 0;
+        if (extraLabSlotResearchIds != null)
+        {
+            for (int i = 0; i < extraLabSlotResearchIds.Length; i++)
+            {
+                if (IsResearchIdUnlocked(extraLabSlotResearchIds[i]))
+                    extra++;
+            }
+        }
+
+        return Mathf.Clamp(baseLabLimit + extra, 1, Mathf.Max(1, maxLabLimit));
+    }
+
+    public int CountPlacedLabs()
+    {
+        ResearchLab[] labs = FindObjectsByType<ResearchLab>(FindObjectsSortMode.None);
+        int count = 0;
+        for (int i = 0; i < labs.Length; i++)
+        {
+            if (labs[i] != null && labs[i].IsWorldLab)
+                count++;
+        }
+
+        return count;
+    }
+
+    public bool CanPlaceAnotherLab()
+    {
+        return CountPlacedLabs() < GetMaxResearchLabs();
     }
 
     public List<ResearchNodeData> GetAvailableResearch()
     {
         var list = new List<ResearchNodeData>();
-        foreach (var node in allResearchNodes)
-            if (CanStartResearch(node))
-                list.Add(node);
+        if (allResearchNodes == null)
+            return list;
+
+        for (int i = 0; i < allResearchNodes.Count; i++)
+        {
+            if (CanStartResearch(allResearchNodes[i]))
+                list.Add(allResearchNodes[i]);
+        }
+
         return list;
     }
 
     public List<ResearchNodeData> GetAllNodes() => allResearchNodes;
+
+    public ResearchSaveData CaptureSave()
+    {
+        var save = new ResearchSaveData();
+        foreach (var node in unlockedResearch)
+        {
+            if (node != null && !string.IsNullOrEmpty(node.id))
+                save.unlockedResearchIds.Add(node.id);
+        }
+
+        if (CurrentResearch != null)
+            save.currentResearchId = CurrentResearch.id;
+
+        foreach (var pair in submittedItems)
+        {
+            if (pair.Key == null || string.IsNullOrEmpty(pair.Key.id))
+                continue;
+            save.submittedItems.Add(new ItemAmountSave
+            {
+                itemId = pair.Key.id,
+                amount = pair.Value
+            });
+        }
+
+        return save;
+    }
+
+    public void ApplySave(ResearchSaveData save)
+    {
+        GrantStartingUnlocks();
+        unlockedResearch.Clear();
+        CurrentResearch = null;
+        submittedItems.Clear();
+
+        if (save == null)
+            return;
+
+        if (save.unlockedResearchIds != null)
+        {
+            for (int i = 0; i < save.unlockedResearchIds.Count; i++)
+            {
+                ResearchNodeData node = FindNode(save.unlockedResearchIds[i]);
+                if (node != null)
+                    CompleteResearch(node);
+            }
+        }
+
+        ResearchNodeData current = FindNode(save.currentResearchId);
+        if (current != null && CanStartResearch(current))
+        {
+            CurrentResearch = current;
+            if (save.submittedItems != null)
+            {
+                for (int i = 0; i < save.submittedItems.Count; i++)
+                {
+                    ItemAmountSave entry = save.submittedItems[i];
+                    ItemData item = FindItem(entry.itemId);
+                    if (item != null && entry.amount > 0)
+                        submittedItems[item] = entry.amount;
+                }
+            }
+        }
+
+        OnUnlocksChanged?.Invoke();
+        OnResearchProgressChanged?.Invoke();
+    }
+
+    ResearchNodeData FindNode(string id)
+    {
+        if (string.IsNullOrEmpty(id) || allResearchNodes == null)
+            return null;
+
+        for (int i = 0; i < allResearchNodes.Count; i++)
+        {
+            ResearchNodeData node = allResearchNodes[i];
+            if (node != null && IdsEqual(node.id, id))
+                return node;
+        }
+
+        return null;
+    }
+
+    static bool IdsEqual(string a, string b)
+    {
+        if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b))
+            return false;
+        return a.Trim() == b.Trim();
+    }
+
+    static ItemData FindItem(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+
+        ItemData[] items = Resources.FindObjectsOfTypeAll<ItemData>();
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] != null && items[i].id == id)
+                return items[i];
+        }
+
+        return null;
+    }
+}
+
+[System.Serializable]
+public class ResearchSaveData
+{
+    public List<string> unlockedResearchIds = new List<string>();
+    public string currentResearchId;
+    public List<ItemAmountSave> submittedItems = new List<ItemAmountSave>();
+}
+
+[System.Serializable]
+public class ItemAmountSave
+{
+    public string itemId;
+    public int amount;
 }

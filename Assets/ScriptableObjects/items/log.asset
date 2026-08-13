@@ -15,7 +15,7 @@ MonoBehaviour:
   id: log
   displayName: log
   description: log
-  icon: {fileID: 21300000, guid: 53a9fde157471084595a8e58395e57b5, type: 3}
+  icon: {fileID: -167506460, guid: 53a9fde157471084595a8e58395e57b5, type: 3}
   worldPrefab: {fileID: 919132149155446097, guid: 54663ccc1f2f79540b22cc1920d159b1, type: 3}
   maxStack: 100
   isFuel: 0
