@@ -102,6 +102,11 @@ public class Conveyor : BuildingBase
         return BuildingLinker.OccupiesCell(source, sourceCell);
     }
 
+    public override bool CanAcceptFrom(BuildingBase source)
+    {
+        return IsFedBy(source);
+    }
+
     public override bool TryReceiveItem(ItemData item, BuildingSocket fromSocket)
     {
         if (!isLive || item == null || !CanAccept())
@@ -188,9 +193,21 @@ public class Conveyor : BuildingBase
         if (nextBelt != null)
             return nextBelt.TryAcceptTransfer(item.item, item.visual);
 
-        if (!dest.TryReceiveItem(item.item, dest.inputSockets != null && dest.inputSockets.Length > 0
-                ? dest.inputSockets[0]
-                : null))
+        Splitter nextSplit = dest as Splitter;
+        if (nextSplit != null)
+        {
+            if (!nextSplit.CanAcceptFrom(this))
+                return false;
+            return nextSplit.TryAcceptTransfer(item.item, item.visual);
+        }
+
+        if (!dest.CanAcceptFrom(this))
+            return false;
+
+        BuildingSocket destInput = dest.inputSockets != null && dest.inputSockets.Length > 0
+            ? dest.inputSockets[0]
+            : null;
+        if (!dest.TryReceiveItem(item.item, destInput))
             return false;
 
         DestroyVisual(item.visual);

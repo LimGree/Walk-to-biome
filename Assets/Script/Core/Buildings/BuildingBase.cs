@@ -96,6 +96,14 @@ public abstract class BuildingBase : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Можно ли принять предмет от этого соседа: только со стороны входного сокета.
+    /// </summary>
+    public virtual bool CanAcceptFrom(BuildingBase source)
+    {
+        return BuildingLinker.HasInputFrom(this, source);
+    }
+
     public bool HasOutputSpace(int count = 1)
     {
         return count <= 0 || outputBuffer.Count + count <= maxOutputBuffer;
@@ -117,7 +125,7 @@ public abstract class BuildingBase : MonoBehaviour
         return false;
     }
 
-    protected bool TryPushToConnections(ItemData item)
+    protected virtual bool TryPushToConnections(ItemData item)
     {
         if (item == null || outputSockets == null)
             return false;
@@ -131,12 +139,17 @@ public abstract class BuildingBase : MonoBehaviour
             if (socket.connectedSocket != null)
             {
                 BuildingBase linked = socket.connectedSocket.GetComponentInParent<BuildingBase>();
-                if (linked != null && linked.TryReceiveItem(item, socket.connectedSocket))
+                if (linked != null
+                    && linked.CanAcceptFrom(this)
+                    && linked.TryReceiveItem(item, socket.connectedSocket))
                     return true;
             }
 
             BuildingBase front = BuildingLinker.GetBuildingAt(BuildingLinker.GetSocketFrontCell(socket));
-            if (front != null && front != this && front.TryReceiveItem(item, socket))
+            if (front != null
+                && front != this
+                && front.CanAcceptFrom(this)
+                && front.TryReceiveItem(item, socket))
                 return true;
         }
 

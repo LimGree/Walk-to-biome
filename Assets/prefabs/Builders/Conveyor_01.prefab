@@ -107,7 +107,7 @@ MonoBehaviour:
   maxItems: 3
   itemHeight: 0.35
   itemScale: 0.28
-  showDebug: 1
+  showDebug: 0
 --- !u!65 &6749133337902591949
 BoxCollider:
   m_ObjectHideFlags: 0

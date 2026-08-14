@@ -61,13 +61,16 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.60f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Script\Core\UI\UiFactory.cs" />
     <Compile Include="Assets\Script\Core\Data\RecipeData.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Extractor.cs" />
     <Compile Include="Assets\Script\Core\Systems\BuildGridVisualizer.cs" />
     <Compile Include="Assets\Script\Core\Buildings\PowerGenerator.cs" />
     <Compile Include="Assets\Script\Core\Systems\SaveSystem.cs" />
     <Compile Include="Assets\Script\Core\Items\ItemStack.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiTheme.cs" />
     <Compile Include="Assets\Script\Core\Buildings\ResearchLab.cs" />
+    <Compile Include="Assets\Script\Core\Logistics\BeltItemView.cs" />
     <Compile Include="Assets\InputSystem_Actions.cs" />
     <Compile Include="Assets\Script\Core\Systems\GridOccupancy.cs" />
     <Compile Include="Assets\Script\Core\UI\MachineUI.cs" />
@@ -80,9 +83,11 @@
     <Compile Include="Assets\Script\Core\Buildings\Smelter.cs" />
     <Compile Include="Assets\Script\Core\Systems\ResearchSystem.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Constructor.cs" />
+    <Compile Include="Assets\Script\Core\Buildings\splitter.cs" />
     <Compile Include="Assets\Script\Core\Items\ItemInstance.cs" />
     <Compile Include="Assets\Script\Core\GameManager.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerInventory.cs" />
+    <Compile Include="Assets\Script\Core\Buildings\StorageContainer.cs" />
     <Compile Include="Assets\Script\Core\UI\BuildMenuUI.cs" />
     <Compile Include="Assets\Script\Core\Data\ItemData.cs" />
     <Compile Include="Assets\Script\Core\Logistics\BuildingLinker.cs" />

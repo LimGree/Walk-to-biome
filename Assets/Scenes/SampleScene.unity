@@ -2230,9 +2230,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e153fbce38af1794f88cf2afdfa4b2e3, type: 2}
   - {fileID: 11400000, guid: cf0cda2cb8d44854581c3c885d2752dc, type: 2}
   - {fileID: 11400000, guid: 420d6311d2dbd034086710d3dc619d7d, type: 2}
+  - {fileID: 11400000, guid: 8f4c2a91d6e74b3a9c1e05f28a7d4b60, type: 2}
   startingRecipes:
   - {fileID: 11400000, guid: f151608f38544b9469cdd3fb90000d9f, type: 2}
   - {fileID: 11400000, guid: ba9f47351aacd3649a369fbf937f6f61, type: 2}
+  baseLabLimit: 1
+  maxLabLimit: 3
+  extraLabSlotResearchIds:
+  - research_advanced_automation
+  - research_petrochemistry
 --- !u!1 &1123801439
 GameObject:
   m_ObjectHideFlags: 0
@@ -3378,6 +3384,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 420d6311d2dbd034086710d3dc619d7d, type: 2}
   - {fileID: 11400000, guid: fb3560e85bd56c349aa3d7327bd69798, type: 2}
   - {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
+  - {fileID: 11400000, guid: 8f4c2a91d6e74b3a9c1e05f28a7d4b60, type: 2}
+  - {fileID: 11400000, guid: 7e4d8c2b91a64f0e9c3b5a7d1e8f2406, type: 2}
 --- !u!114 &1896659842
 MonoBehaviour:
   m_ObjectHideFlags: 0

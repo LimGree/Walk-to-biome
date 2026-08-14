@@ -123,6 +123,50 @@ public static class UiFactory
         return card;
     }
 
+    public static GameObject CreateStorageSlot(Transform parent)
+    {
+        GameObject slot = new GameObject("StorageSlot", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        slot.transform.SetParent(parent, false);
+        UiTheme.StyleImage(slot.GetComponent<Image>(), UiTheme.Card);
+
+        Image icon = CreateIcon(slot.transform, "Icon", new Vector2(0f, 8f), new Vector2(72f, 72f));
+        icon.enabled = false;
+
+        TextMeshProUGUI count = UiTheme.AddText(slot.transform, "Count", "", 16f, UiTheme.Text);
+        count.alignment = TextAlignmentOptions.BottomRight;
+        count.fontStyle = FontStyles.Bold;
+        RectTransform countRt = count.rectTransform;
+        countRt.anchorMin = new Vector2(0f, 0f);
+        countRt.anchorMax = new Vector2(1f, 0f);
+        countRt.pivot = new Vector2(1f, 0f);
+        countRt.offsetMin = new Vector2(6f, 4f);
+        countRt.offsetMax = new Vector2(-8f, 26f);
+
+        return slot;
+    }
+
+    public static void BindStorageSlot(GameObject slot, ItemStack stack)
+    {
+        if (slot == null)
+            return;
+
+        Transform iconTf = slot.transform.Find("Icon");
+        Transform countTf = slot.transform.Find("Count");
+        Image icon = iconTf != null ? iconTf.GetComponent<Image>() : null;
+        TextMeshProUGUI count = countTf != null ? countTf.GetComponent<TextMeshProUGUI>() : null;
+
+        bool hasItem = stack != null && !stack.IsEmpty && stack.item != null;
+        if (icon != null)
+        {
+            icon.sprite = hasItem ? stack.item.icon : null;
+            icon.enabled = hasItem && stack.item.icon != null;
+            icon.color = Color.white;
+        }
+
+        if (count != null)
+            count.text = hasItem ? stack.amount.ToString() : "";
+    }
+
     public static GameObject CreateHotbarSlot(Transform parent, int index)
     {
         GameObject slot = new GameObject("Slot_" + index, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));

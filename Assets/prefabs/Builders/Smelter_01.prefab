@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   socketType: 0
-  connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1 &3572825848129775802
@@ -93,7 +93,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   socketType: 1
-  connectedBelt: {fileID: 0}
+  connectedSocket: {fileID: 0}
   connectionIndicator: {fileID: 0}
   showDebug: 1
 --- !u!1 &6741060039196963641
@@ -148,9 +148,12 @@ MonoBehaviour:
   - {fileID: 3383672137108855257}
   outputSockets:
   - {fileID: 3983384620826718107}
+  maxOutputBuffer: 8
+  drawFootprintGizmo: 1
   currentRecipe: {fileID: 11400000, guid: b020d37925269d7479c9b83b0c017fbf, type: 2}
   craftProgress: 0
-  showDebug: 1
+  inputBufferMultiplier: 2
+  showDebug: 0
 --- !u!1001 &8903586326642387972
 PrefabInstance:
   m_ObjectHideFlags: 0

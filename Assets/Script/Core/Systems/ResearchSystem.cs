@@ -302,6 +302,64 @@ public class ResearchSystem : MonoBehaviour
 
     public List<ResearchNodeData> GetAllNodes() => allResearchNodes;
 
+    [ContextMenu("Debug/Complete Current Research")]
+    void DebugCompleteCurrentResearch()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("[Research] Skip research only works in Play Mode.");
+            return;
+        }
+
+        ResearchNodeData node = CurrentResearch;
+        if (node == null)
+        {
+            List<ResearchNodeData> available = GetAvailableResearch();
+            if (available.Count == 0)
+            {
+                Debug.LogWarning("[Research] Nothing to complete.");
+                return;
+            }
+
+            node = available[0];
+            Debug.Log($"[Research] No active research, completing next available: {node.displayName}");
+        }
+
+        CompleteResearch(node);
+    }
+
+    [ContextMenu("Debug/Complete All Research")]
+    void DebugCompleteAllResearch()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("[Research] Skip research only works in Play Mode.");
+            return;
+        }
+
+        if (allResearchNodes == null)
+            return;
+
+        int completed = 0;
+        bool progressed = true;
+        while (progressed)
+        {
+            progressed = false;
+            for (int i = 0; i < allResearchNodes.Count; i++)
+            {
+                ResearchNodeData node = allResearchNodes[i];
+                if (node == null || IsResearchUnlocked(node) || !CanStartResearch(node))
+                    continue;
+
+                CompleteResearch(node);
+                completed++;
+                progressed = true;
+            }
+        }
+
+        Debug.Log($"[Research] Debug completed {completed} node(s).");
+    }
+
     public ResearchSaveData CaptureSave()
     {
         var save = new ResearchSaveData();

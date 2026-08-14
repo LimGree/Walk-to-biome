@@ -145,9 +145,6 @@ public static class BuildingLinker
 
     static BuildingBase FindOutputTarget(BuildingBase building, BuildingSocket output)
     {
-        if (output.IsNearOwnerCenter())
-            return FindAnyNeighbor(building);
-
         BuildingBase front = GetBuildingAt(GetSocketFrontCell(output));
         if (front != null && front != building)
             return front;
@@ -164,22 +161,6 @@ public static class BuildingLinker
         return null;
     }
 
-    static BuildingBase FindAnyNeighbor(BuildingBase building)
-    {
-        GridFootprint.CollectCells(building.transform.position, building.FootprintSize, CellBuffer);
-        for (int i = 0; i < CellBuffer.Count; i++)
-        {
-            for (int d = 0; d < Cardinals.Length; d++)
-            {
-                BuildingBase other = GetBuildingAt(CellBuffer[i] + Cardinals[d]);
-                if (other != null && other != building)
-                    return other;
-            }
-        }
-
-        return null;
-    }
-
     static BuildingSocket FindAcceptingInput(BuildingBase target, BuildingBase from, BuildingSocket fromOutput)
     {
         Conveyor belt = target as Conveyor;
@@ -190,10 +171,17 @@ public static class BuildingLinker
             return belt.InputSocket;
         }
 
+        Splitter splitter = target as Splitter;
+        if (splitter != null)
+        {
+            if (!splitter.IsFedBy(from))
+                return null;
+            return splitter.InputSocket;
+        }
+
         if (target.inputSockets == null)
             return null;
 
-        BuildingSocket fallback = null;
         for (int i = 0; i < target.inputSockets.Length; i++)
         {
             BuildingSocket input = target.inputSockets[i];
@@ -202,19 +190,41 @@ public static class BuildingLinker
             if (input.connectedSocket != null && input.connectedSocket != fromOutput)
                 continue;
 
-            if (input.IsNearOwnerCenter())
-            {
-                if (fallback == null)
-                    fallback = input;
-                continue;
-            }
-
             Vector2Int inputFront = GetSocketFrontCell(input);
             if (OccupiesCell(from, inputFront))
                 return input;
         }
 
-        return fallback;
+        return null;
+    }
+
+    public static bool HasInputFrom(BuildingBase target, BuildingBase source)
+    {
+        if (target == null || source == null || target == source)
+            return false;
+
+        Conveyor belt = target as Conveyor;
+        if (belt != null)
+            return belt.IsFedBy(source);
+
+        Splitter splitter = target as Splitter;
+        if (splitter != null)
+            return splitter.IsFedBy(source);
+
+        if (target.inputSockets == null || target.inputSockets.Length == 0)
+            return false;
+
+        for (int i = 0; i < target.inputSockets.Length; i++)
+        {
+            BuildingSocket input = target.inputSockets[i];
+            if (input == null)
+                continue;
+
+            if (OccupiesCell(source, GetSocketFrontCell(input)))
+                return true;
+        }
+
+        return false;
     }
 
     public static bool OccupiesCell(BuildingBase building, Vector2Int cell)
@@ -250,13 +260,6 @@ public static class BuildingLinker
             BuildingSocket output = building.outputSockets[i];
             if (output == null)
                 continue;
-
-            if (output.IsNearOwnerCenter())
-            {
-                if (IsAdjacentTo(building, targetCell))
-                    return true;
-                continue;
-            }
 
             if (GetSocketFrontCell(output) == targetCell)
                 return true;

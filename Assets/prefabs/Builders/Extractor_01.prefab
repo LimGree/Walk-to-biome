@@ -59,7 +59,7 @@ MonoBehaviour:
   resourceNodeLayer:
     serializedVersion: 2
     m_Bits: 128
-  showDebug: 1
+  showDebug: 0
 --- !u!1 &5096740911041764262
 GameObject:
   m_ObjectHideFlags: 0

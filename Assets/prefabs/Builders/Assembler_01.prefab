@@ -153,7 +153,7 @@ MonoBehaviour:
   currentRecipe: {fileID: 11400000, guid: f151608f38544b9469cdd3fb90000d9f, type: 2}
   craftProgress: 0
   inputBufferMultiplier: 2
-  showDebug: 1
+  showDebug: 0
 --- !u!1001 &2678004133648580217
 PrefabInstance:
   m_ObjectHideFlags: 0

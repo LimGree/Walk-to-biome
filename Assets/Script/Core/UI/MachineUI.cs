@@ -36,6 +36,10 @@ public class MachineUI : MonoBehaviour
     public TextMeshProUGUI researchProgressText;
     public Slider researchProgressSlider;
 
+    GameObject storageContent;
+    Transform storageSlotsParent;
+    TextMeshProUGUI storageSummaryText;
+
     public bool IsOpen { get; private set; }
 
     private BuildingBase currentBuilding;
@@ -169,6 +173,11 @@ public class MachineUI : MonoBehaviour
             titleText.text = "Research Lab";
             ShowResearchLabUI(lab);
         }
+        else if (building is StorageContainer storage)
+        {
+            titleText.text = building.data != null ? building.data.displayName : "Склад";
+            ShowStorageUI(storage);
+        }
         else
         {
             titleText.text = building.data != null ? building.data.displayName : "Building";
@@ -217,6 +226,7 @@ public class MachineUI : MonoBehaviour
         if (smelterContent) smelterContent.SetActive(false);
         if (assemblerContent) assemblerContent.SetActive(false);
         if (researchLabContent) researchLabContent.SetActive(false);
+        if (storageContent) storageContent.SetActive(false);
     }
 
     // ================== EXTRACTOR ==================
@@ -344,6 +354,83 @@ public class MachineUI : MonoBehaviour
         allRecipes = Resources.FindObjectsOfTypeAll<RecipeData>();
     }
 
+    // ================== STORAGE ==================
+
+    void ShowStorageUI(StorageContainer storage)
+    {
+        EnsureStorageUi();
+        if (storageContent != null)
+            storageContent.SetActive(true);
+        RefreshStorageSlots(storage);
+    }
+
+    void EnsureStorageUi()
+    {
+        if (storageContent != null)
+            return;
+
+        Transform host = null;
+        if (extractorContent != null)
+            host = extractorContent.transform.parent;
+        if (host == null && machinePanel != null)
+            host = machinePanel.transform;
+        if (host == null)
+            return;
+
+        storageContent = new GameObject("StorageContent", typeof(RectTransform));
+        storageContent.transform.SetParent(host, false);
+        RectTransform root = storageContent.GetComponent<RectTransform>();
+        root.anchorMin = Vector2.zero;
+        root.anchorMax = Vector2.one;
+        root.offsetMin = Vector2.zero;
+        root.offsetMax = Vector2.zero;
+
+        storageSummaryText = UiTheme.AddText(root, "Summary", "", 20f, UiTheme.Text);
+        RectTransform summaryRt = storageSummaryText.rectTransform;
+        summaryRt.anchorMin = new Vector2(0f, 1f);
+        summaryRt.anchorMax = new Vector2(1f, 1f);
+        summaryRt.pivot = new Vector2(0.5f, 1f);
+        summaryRt.anchoredPosition = new Vector2(0f, -8f);
+        summaryRt.sizeDelta = new Vector2(-32f, 32f);
+
+        GameObject gridGo = new GameObject("Slots", typeof(RectTransform));
+        gridGo.transform.SetParent(root, false);
+        RectTransform gridRt = gridGo.GetComponent<RectTransform>();
+        gridRt.anchorMin = new Vector2(0f, 0f);
+        gridRt.anchorMax = new Vector2(1f, 1f);
+        gridRt.offsetMin = new Vector2(16f, 16f);
+        gridRt.offsetMax = new Vector2(-16f, -48f);
+        storageSlotsParent = gridRt;
+
+        UiTheme.EnsureGrid(storageSlotsParent, new Vector2(220f, 220f), new Vector2(16f, 16f), 2);
+        UiTheme.EnsureVerticalScroll(gridRt);
+    }
+
+    void RefreshStorageSlots(StorageContainer storage)
+    {
+        EnsureStorageUi();
+        if (storage == null || storageSlotsParent == null)
+            return;
+
+        int count = storage.SlotCount;
+        while (storageSlotsParent.childCount < count)
+            UiFactory.CreateStorageSlot(storageSlotsParent);
+
+        for (int i = 0; i < storageSlotsParent.childCount; i++)
+        {
+            GameObject slot = storageSlotsParent.GetChild(i).gameObject;
+            slot.SetActive(i < count);
+            if (i < count)
+                UiFactory.BindStorageSlot(slot, storage.GetSlot(i));
+        }
+
+        if (storageSummaryText != null)
+        {
+            string typeName = storage.StoredType != null ? storage.StoredType.displayName : "пусто";
+            storageSummaryText.text = $"{typeName}  ·  стеки {storage.UsedSlotCount} / {count}";
+        }
+    }
+
     // ================== RESEARCH LAB ==================
 
     void ShowResearchLabUI(ResearchLab lab)
@@ -415,6 +502,10 @@ public class MachineUI : MonoBehaviour
                 progressSlider.value = constructor.craftProgress / constructor.currentRecipe.craftTime;
             else
                 progressSlider.value = 0f;
+        }
+        else if (currentBuilding is StorageContainer storage)
+        {
+            RefreshStorageSlots(storage);
         }
         else if (currentBuilding is ResearchLab)
         {
