@@ -199,6 +199,69 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SelectMode"",
+                    ""type"": ""Button"",
+                    ""id"": ""f1a2b3c4-5d6e-4f70-8192-a3b4c5d6e7f8"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ClearSelection"",
+                    ""type"": ""Button"",
+                    ""id"": ""0a1b2c3d-4e5f-4678-8901-23456789abcd"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Copy"",
+                    ""type"": ""Button"",
+                    ""id"": ""1b2c3d4e-5f60-4789-9012-3456789abcde"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Paste"",
+                    ""type"": ""Button"",
+                    ""id"": ""2c3d4e5f-6071-489a-a123-456789abcdef"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""MoveSelection"",
+                    ""type"": ""Button"",
+                    ""id"": ""3d4e5f60-7182-49ab-b234-56789abcdef0"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Modifier"",
+                    ""type"": ""Button"",
+                    ""id"": ""4e5f6071-8293-4abc-c345-6789abcdef01"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Delete"",
+                    ""type"": ""Button"",
+                    ""id"": ""59a01b8c-3d4e-4567-c567-829abcdef012"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -425,7 +488,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""f2e9ba44-c423-42a7-ad56-f20975884794"",
-                    ""path"": ""<Keyboard>/leftShift"",
+                    ""path"": ""<Keyboard>/leftCtrl"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard&Mouse"",
@@ -507,6 +570,105 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""Keyboard&Mouse"",
                     ""action"": ""Research"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e1829304-b5c6-4def-a789-0abcdef12345"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""SelectMode"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f293a415-c6d7-4ef0-b890-1bcdef234567"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""ClearSelection"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""03a4b526-d7e8-4f01-c901-2cdef3456789"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Copy"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""14b5c637-e8f9-4012-d012-3def456789ab"",
+                    ""path"": ""<Keyboard>/v"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Paste"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""25c6d748-f90a-4123-e123-4ef56789abcd"",
+                    ""path"": ""<Keyboard>/m"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""MoveSelection"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""36d7e859-0a1b-4234-f234-5f6789abcdef"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Modifier"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""47e8f96a-1b2c-4345-a345-60789abcdef0"",
+                    ""path"": ""<Keyboard>/rightShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Modifier"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""58f90a7b-2c3d-4456-b456-7189abcdef01"",
+                    ""path"": ""<Keyboard>/rightCtrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Sprint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6ab12c9d-4e5f-4678-d678-93abcdef0123"",
+                    ""path"": ""<Keyboard>/backspace"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Delete"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -903,6 +1065,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_BuildMode = m_Player.FindAction("BuildMode", throwIfNotFound: true);
         m_Player_HotbarScroll = m_Player.FindAction("HotbarScroll", throwIfNotFound: true);
         m_Player_Research = m_Player.FindAction("Research", throwIfNotFound: true);
+        m_Player_SelectMode = m_Player.FindAction("SelectMode", throwIfNotFound: true);
+        m_Player_ClearSelection = m_Player.FindAction("ClearSelection", throwIfNotFound: true);
+        m_Player_Copy = m_Player.FindAction("Copy", throwIfNotFound: true);
+        m_Player_Paste = m_Player.FindAction("Paste", throwIfNotFound: true);
+        m_Player_MoveSelection = m_Player.FindAction("MoveSelection", throwIfNotFound: true);
+        m_Player_Modifier = m_Player.FindAction("Modifier", throwIfNotFound: true);
+        m_Player_Delete = m_Player.FindAction("Delete", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1005,6 +1174,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_BuildMode;
     private readonly InputAction m_Player_HotbarScroll;
     private readonly InputAction m_Player_Research;
+    private readonly InputAction m_Player_SelectMode;
+    private readonly InputAction m_Player_ClearSelection;
+    private readonly InputAction m_Player_Copy;
+    private readonly InputAction m_Player_Paste;
+    private readonly InputAction m_Player_MoveSelection;
+    private readonly InputAction m_Player_Modifier;
+    private readonly InputAction m_Player_Delete;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1064,6 +1240,34 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Research".
         /// </summary>
         public InputAction @Research => m_Wrapper.m_Player_Research;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SelectMode".
+        /// </summary>
+        public InputAction @SelectMode => m_Wrapper.m_Player_SelectMode;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ClearSelection".
+        /// </summary>
+        public InputAction @ClearSelection => m_Wrapper.m_Player_ClearSelection;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Copy".
+        /// </summary>
+        public InputAction @Copy => m_Wrapper.m_Player_Copy;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Paste".
+        /// </summary>
+        public InputAction @Paste => m_Wrapper.m_Player_Paste;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/MoveSelection".
+        /// </summary>
+        public InputAction @MoveSelection => m_Wrapper.m_Player_MoveSelection;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Modifier".
+        /// </summary>
+        public InputAction @Modifier => m_Wrapper.m_Player_Modifier;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Delete".
+        /// </summary>
+        public InputAction @Delete => m_Wrapper.m_Player_Delete;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1126,6 +1330,27 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Research.started += instance.OnResearch;
             @Research.performed += instance.OnResearch;
             @Research.canceled += instance.OnResearch;
+            @SelectMode.started += instance.OnSelectMode;
+            @SelectMode.performed += instance.OnSelectMode;
+            @SelectMode.canceled += instance.OnSelectMode;
+            @ClearSelection.started += instance.OnClearSelection;
+            @ClearSelection.performed += instance.OnClearSelection;
+            @ClearSelection.canceled += instance.OnClearSelection;
+            @Copy.started += instance.OnCopy;
+            @Copy.performed += instance.OnCopy;
+            @Copy.canceled += instance.OnCopy;
+            @Paste.started += instance.OnPaste;
+            @Paste.performed += instance.OnPaste;
+            @Paste.canceled += instance.OnPaste;
+            @MoveSelection.started += instance.OnMoveSelection;
+            @MoveSelection.performed += instance.OnMoveSelection;
+            @MoveSelection.canceled += instance.OnMoveSelection;
+            @Modifier.started += instance.OnModifier;
+            @Modifier.performed += instance.OnModifier;
+            @Modifier.canceled += instance.OnModifier;
+            @Delete.started += instance.OnDelete;
+            @Delete.performed += instance.OnDelete;
+            @Delete.canceled += instance.OnDelete;
         }
 
         /// <summary>
@@ -1173,6 +1398,27 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Research.started -= instance.OnResearch;
             @Research.performed -= instance.OnResearch;
             @Research.canceled -= instance.OnResearch;
+            @SelectMode.started -= instance.OnSelectMode;
+            @SelectMode.performed -= instance.OnSelectMode;
+            @SelectMode.canceled -= instance.OnSelectMode;
+            @ClearSelection.started -= instance.OnClearSelection;
+            @ClearSelection.performed -= instance.OnClearSelection;
+            @ClearSelection.canceled -= instance.OnClearSelection;
+            @Copy.started -= instance.OnCopy;
+            @Copy.performed -= instance.OnCopy;
+            @Copy.canceled -= instance.OnCopy;
+            @Paste.started -= instance.OnPaste;
+            @Paste.performed -= instance.OnPaste;
+            @Paste.canceled -= instance.OnPaste;
+            @MoveSelection.started -= instance.OnMoveSelection;
+            @MoveSelection.performed -= instance.OnMoveSelection;
+            @MoveSelection.canceled -= instance.OnMoveSelection;
+            @Modifier.started -= instance.OnModifier;
+            @Modifier.performed -= instance.OnModifier;
+            @Modifier.canceled -= instance.OnModifier;
+            @Delete.started -= instance.OnDelete;
+            @Delete.performed -= instance.OnDelete;
+            @Delete.canceled -= instance.OnDelete;
         }
 
         /// <summary>
@@ -1485,6 +1731,55 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnResearch(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SelectMode" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSelectMode(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ClearSelection" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnClearSelection(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Copy" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCopy(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Paste" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPaste(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "MoveSelection" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMoveSelection(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Modifier" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnModifier(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Delete" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDelete(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

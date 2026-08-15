@@ -90,11 +90,12 @@ public class PlayerInventory : MonoBehaviour
             return;
 
         int slot = 0;
+        int maxFill = Mathf.Max(0, hotbarSize - 1);
         foreach (var b in allBuildings)
         {
             if (b == null) continue;
             if (!ResearchSystem.Instance.IsBuildingUnlocked(b)) continue;
-            if (slot >= hotbarSize) break;
+            if (slot >= maxFill) break;
 
             hotbar[slot++] = b;
         }
@@ -119,6 +120,24 @@ public class PlayerInventory : MonoBehaviour
         return b;
     }
 
+    public bool HasEmptySlotSelected()
+    {
+        return GetSelectedBuilding() == null;
+    }
+
+    public int CountOccupiedSlots()
+    {
+        int n = 0;
+        if (hotbar == null)
+            return 0;
+        for (int i = 0; i < hotbar.Length; i++)
+        {
+            if (hotbar[i] != null)
+                n++;
+        }
+        return n;
+    }
+
     public void SetHotbarSlot(int index, BuildingData building)
     {
         if (index < 0 || index >= hotbarSize) return;
@@ -127,6 +146,12 @@ public class PlayerInventory : MonoBehaviour
             && !ResearchSystem.Instance.IsBuildingUnlocked(building))
         {
             Debug.LogWarning($"[Inventory] {building.displayName} ещё не открыто");
+            return;
+        }
+
+        if (building != null && hotbar[index] == null && CountOccupiedSlots() >= hotbarSize - 1)
+        {
+            Debug.LogWarning("[Inventory] Нужен минимум один свободный слот");
             return;
         }
 
