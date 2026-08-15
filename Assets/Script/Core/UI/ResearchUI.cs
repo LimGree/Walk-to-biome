@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
@@ -12,6 +13,12 @@ public class ResearchUI : MonoBehaviour
     public GameObject nodeButtonPrefab;
 
     private bool isOpen = false;
+    private InputSystem_Actions inputActions;
+
+    void Awake()
+    {
+        inputActions = new InputSystem_Actions();
+    }
 
     void Start()
     {
@@ -19,13 +26,25 @@ public class ResearchUI : MonoBehaviour
             menuPanel.SetActive(false);
     }
 
-    void Update()
+    void OnEnable()
     {
-        // Открытие по клавише T (пример)
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            ToggleMenu();
-        }
+        inputActions.Enable();
+        inputActions.Player.Research.performed += OnResearchToggle;
+    }
+
+    void OnDisable()
+    {
+        inputActions.Player.Research.performed -= OnResearchToggle;
+        inputActions.Disable();
+    }
+
+    void OnResearchToggle(InputAction.CallbackContext ctx)
+    {
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+        if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return;
+        ToggleMenu();
     }
 
     public void ToggleMenu()

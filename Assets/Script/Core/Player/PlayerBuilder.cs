@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -17,8 +18,6 @@ public class PlayerBuilder : MonoBehaviour
     public float maxBuildDistance = 12f;
     public Material ghostValidMaterial;
     public Material ghostInvalidMaterial;
-    public Key rotateKey = Key.R;
-    public Key buildMenuKey = Key.B;
 
     public bool IsBuildModeActive => isBuildMode && currentBuildingData != null;
     public bool HasPlacementTarget { get; private set; }
@@ -35,6 +34,15 @@ public class PlayerBuilder : MonoBehaviour
     private float currentRotationY = 0f;
     private bool canPlace = false;
     private int indexBuilding = 0;
+
+    bool strokeActive;
+    BuildingData strokeBuilding;
+    float strokeYaw;
+    Vector2Int strokeSize = Vector2Int.one;
+    Vector2Int strokeStartMin;
+    Vector2Int? strokeAxis;
+    readonly HashSet<Vector2Int> strokePlacedMins = new HashSet<Vector2Int>();
+    const int MaxLineBuildings = 64;
 
     void Awake()
     {
@@ -56,13 +64,22 @@ public class PlayerBuilder : MonoBehaviour
     void OnEnable()
     {
         inputActions.Enable();
-        inputActions.Player.Attack.performed += OnPlace;
+        inputActions.Player.Place.started += OnPlaceStarted;
+        inputActions.Player.Place.canceled += OnPlaceCanceled;
+        inputActions.Player.Demolish.performed += OnDemolish;
+        inputActions.Player.Rotate.performed += OnRotate;
+        inputActions.Player.BuildMode.performed += OnBuildModeToggle;
     }
 
     void OnDisable()
     {
-        inputActions.Player.Attack.performed -= OnPlace;
+        inputActions.Player.Place.started -= OnPlaceStarted;
+        inputActions.Player.Place.canceled -= OnPlaceCanceled;
+        inputActions.Player.Demolish.performed -= OnDemolish;
+        inputActions.Player.Rotate.performed -= OnRotate;
+        inputActions.Player.BuildMode.performed -= OnBuildModeToggle;
         inputActions.Disable();
+        EndStroke();
         DestroyGhost();
         ClearPlacementTarget();
     }
@@ -70,13 +87,15 @@ public class PlayerBuilder : MonoBehaviour
     void Update()
     {
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+        {
+            EndStroke();
             return;
-
-        HandleBuildModeToggle();
+        }
 
         BuildingData selected = inventory != null ? inventory.GetSelectedBuilding() : null;
         if (selected != currentBuildingData)
         {
+            EndStroke();
             currentBuildingData = selected;
             RecreateGhost();
         }
@@ -85,36 +104,52 @@ public class PlayerBuilder : MonoBehaviour
         {
             if (buildMenuUI != null && buildMenuUI.IsOpen)
             {
+                EndStroke();
                 if (currentGhost != null)
                     currentGhost.SetActive(false);
                 ClearPlacementTarget();
             }
             else
             {
+                if (strokeActive)
+                    currentRotationY = strokeYaw;
+
                 UpdateGhost();
+                TickLineStroke();
             }
         }
         else
         {
+            EndStroke();
             DestroyGhost();
             ClearPlacementTarget();
         }
+    }
 
-        if (isBuildMode
-            && (buildMenuUI == null || !buildMenuUI.IsOpen)
-            && Keyboard.current != null
-            && Keyboard.current[rotateKey].wasPressedThisFrame)
-        {
-            HandleRotateKey();
-        }
+    bool IsGameplayBuildInputBlocked()
+    {
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return true;
+        if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return true;
+        if (buildMenuUI != null && buildMenuUI.IsOpen)
+            return true;
+        return false;
+    }
 
-        if (isBuildMode
-            && (buildMenuUI == null || !buildMenuUI.IsOpen)
-            && Mouse.current != null
-            && Mouse.current.rightButton.wasPressedThisFrame)
-        {
-            TryDemolish();
-        }
+    void OnRotate(InputAction.CallbackContext ctx)
+    {
+        if (!isBuildMode || strokeActive || IsGameplayBuildInputBlocked())
+            return;
+        HandleRotateKey();
+    }
+
+    void OnDemolish(InputAction.CallbackContext ctx)
+    {
+        if (!isBuildMode || IsGameplayBuildInputBlocked())
+            return;
+        EndStroke();
+        TryDemolish();
     }
 
     void HandleRotateKey()
@@ -172,9 +207,11 @@ public class PlayerBuilder : MonoBehaviour
         return true;
     }
 
-    void HandleBuildModeToggle()
+    void OnBuildModeToggle(InputAction.CallbackContext ctx)
     {
-        if (Keyboard.current == null || !Keyboard.current[buildMenuKey].wasPressedThisFrame)
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+        if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return;
 
         if (!isBuildMode)
@@ -197,6 +234,7 @@ public class PlayerBuilder : MonoBehaviour
     public void ExitBuildMode()
     {
         isBuildMode = false;
+        EndStroke();
         DestroyGhost();
         ClearPlacementTarget();
 
@@ -458,16 +496,12 @@ public class PlayerBuilder : MonoBehaviour
         return false;
     }
 
-    void OnPlace(InputAction.CallbackContext ctx)
+    void OnPlaceStarted(InputAction.CallbackContext ctx)
     {
-        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+        if (IsGameplayBuildInputBlocked() || !IsBuildModeActive || !HasPlacementTarget)
             return;
-        if (!IsBuildModeActive || currentGhost == null || !canPlace)
+        if (currentBuildingData == null || currentBuildingData.prefab == null)
             return;
-
-        if (buildMenuUI != null && buildMenuUI.IsOpen)
-            return;
-
         if (ResearchSystem.Instance != null
             && !ResearchSystem.Instance.IsBuildingUnlocked(currentBuildingData))
         {
@@ -475,26 +509,157 @@ public class PlayerBuilder : MonoBehaviour
             return;
         }
 
+        BeginStroke();
+        TrySpawnAt(CurrentPlacementPosition);
+    }
+
+    void OnPlaceCanceled(InputAction.CallbackContext ctx)
+    {
+        EndStroke();
+    }
+
+    void BeginStroke()
+    {
+        Quaternion rot = Quaternion.Euler(0f, currentRotationY, 0f);
+        strokeActive = true;
+        strokeBuilding = currentBuildingData;
+        strokeYaw = currentRotationY;
+        strokeSize = GetPlacementSize(rot);
+        strokeStartMin = GridFootprint.GetMinCell(CurrentPlacementPosition, strokeSize);
+        strokeAxis = null;
+        strokePlacedMins.Clear();
+    }
+
+    void EndStroke()
+    {
+        strokeActive = false;
+        strokeBuilding = null;
+        strokeAxis = null;
+        strokePlacedMins.Clear();
+    }
+
+    void TickLineStroke()
+    {
+        if (!strokeActive)
+            return;
+
+        if (!inputActions.Player.Place.IsPressed
+            || IsGameplayBuildInputBlocked()
+            || !IsBuildModeActive
+            || currentBuildingData != strokeBuilding)
+        {
+            EndStroke();
+            return;
+        }
+
+        currentRotationY = strokeYaw;
+        if (!HasPlacementTarget)
+            return;
+
+        Vector2Int currentMin = GridFootprint.GetMinCell(CurrentPlacementPosition, strokeSize);
+        Vector2Int delta = currentMin - strokeStartMin;
+
+        if (!strokeAxis.HasValue)
+        {
+            if (Mathf.Abs(delta.x) < strokeSize.x && Mathf.Abs(delta.y) < strokeSize.y)
+                return;
+
+            strokeAxis = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y)
+                ? new Vector2Int(1, 0)
+                : new Vector2Int(0, 1);
+        }
+
+        int axisDelta = strokeAxis.Value.x != 0 ? delta.x : delta.y;
+        int step = strokeAxis.Value.x != 0 ? strokeSize.x : strokeSize.y;
+        int dir = axisDelta >= 0 ? 1 : -1;
+        int extra = Mathf.Abs(axisDelta) / step;
+        extra = Mathf.Min(extra, MaxLineBuildings - 1);
+
+        SnapGhostToLineSlot(extra, dir);
+
+        for (int i = 0; i <= extra; i++)
+        {
+            Vector2Int min = LineMinAt(i, dir, step);
+            if (strokePlacedMins.Contains(min))
+                continue;
+
+            Vector3 pos = GridFootprint.MinCellToCenter(min, strokeSize, CurrentPlacementPosition.y);
+            if (!TrySpawnAt(pos)
+                && IsResearchLabData(strokeBuilding)
+                && ResearchSystem.Instance != null
+                && !ResearchSystem.Instance.CanPlaceAnotherLab())
+            {
+                EndStroke();
+                return;
+            }
+        }
+    }
+
+    Vector2Int LineMinAt(int index, int dir, int step)
+    {
+        return strokeStartMin + new Vector2Int(
+            strokeAxis.Value.x * index * step * dir,
+            strokeAxis.Value.y * index * step * dir);
+    }
+
+    void SnapGhostToLineSlot(int extra, int dir)
+    {
+        if (currentGhost == null || !strokeAxis.HasValue)
+            return;
+
+        int step = strokeAxis.Value.x != 0 ? strokeSize.x : strokeSize.y;
+        Vector2Int min = LineMinAt(extra, dir, step);
+        Vector3 pos = GridFootprint.MinCellToCenter(min, strokeSize, currentGhost.transform.position.y);
+        Quaternion rot = Quaternion.Euler(0f, strokeYaw, 0f);
+        currentGhost.transform.SetPositionAndRotation(pos, rot);
+
+        Conveyor ghostBelt = currentGhost.GetComponent<Conveyor>();
+        if (ghostBelt != null)
+            ghostBelt.Preview(pos, rot);
+
+        canPlace = IsPlacementValid(pos, rot);
+        Material mat = canPlace ? ghostValidMaterial : ghostInvalidMaterial;
+        if (mat != null)
+        {
+            foreach (var r in currentGhost.GetComponentsInChildren<Renderer>())
+                r.material = mat;
+        }
+
+        CurrentPlacementPosition = pos;
+        CurrentFootprintSize = strokeSize;
+        HasPlacementTarget = true;
+        CanPlaceCurrent = canPlace;
+    }
+
+    bool TrySpawnAt(Vector3 placePos)
+    {
+        if (currentBuildingData == null || currentBuildingData.prefab == null)
+            return false;
+
+        Quaternion placeRot = Quaternion.Euler(0f, strokeActive ? strokeYaw : currentRotationY, 0f);
+        Vector2Int size = GetPlacementSize(placeRot);
+        Vector2Int min = GridFootprint.GetMinCell(placePos, size);
+
+        if (strokeActive && strokePlacedMins.Contains(min))
+            return false;
+
         if (IsResearchLabData(currentBuildingData)
             && ResearchSystem.Instance != null
             && !ResearchSystem.Instance.CanPlaceAnotherLab())
         {
-            Debug.LogWarning(
-                $"[Builder] Research Lab limit: {ResearchSystem.Instance.CountPlacedLabs()}/" +
-                $"{ResearchSystem.Instance.GetMaxResearchLabs()}");
-            return;
+            if (strokePlacedMins.Count == 0)
+            {
+                Debug.LogWarning(
+                    $"[Builder] Research Lab limit: {ResearchSystem.Instance.CountPlacedLabs()}/" +
+                    $"{ResearchSystem.Instance.GetMaxResearchLabs()}");
+            }
+            return false;
         }
 
-        if (!IsPlacementValid(currentGhost.transform.position, currentGhost.transform.rotation))
-            return;
+        if (!IsPlacementValid(placePos, placeRot))
+            return false;
 
-        Vector3 placePos = currentGhost.transform.position;
-        Quaternion placeRot = currentGhost.transform.rotation;
-        GameObject prefabToSpawn = currentBuildingData.prefab;
-        if (prefabToSpawn == null)
-            return;
-
-        GameObject go = Instantiate(prefabToSpawn, placePos, placeRot);
+        GameObject go = Instantiate(currentBuildingData.prefab, placePos, placeRot);
         go.name = go.name + $"{indexBuilding}";
         indexBuilding += 1;
 
@@ -508,6 +673,11 @@ public class PlayerBuilder : MonoBehaviour
         {
             RegisterGenericOnGrid(go);
         }
+
+        if (strokeActive)
+            strokePlacedMins.Add(min);
+
+        return true;
     }
 
     void RegisterGenericOnGrid(GameObject obj)

@@ -42,16 +42,19 @@ public class PlayerInventory : MonoBehaviour
     void OnEnable()
     {
         inputActions?.Enable();
+        if (inputActions != null)
+            inputActions.Player.HotbarScroll.performed += OnHotbarScroll;
     }
 
     void OnDisable()
     {
+        if (inputActions != null)
+            inputActions.Player.HotbarScroll.performed -= OnHotbarScroll;
         inputActions?.Disable();
     }
 
-    void Update()
+    void OnHotbarScroll(InputAction.CallbackContext ctx)
     {
-        if (Mouse.current == null) return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
@@ -63,7 +66,7 @@ public class PlayerInventory : MonoBehaviour
         if (builder == null || !builder.isBuildMode)
             return;
 
-        Vector2 scroll = Mouse.current.scroll.ReadValue();
+        Vector2 scroll = ctx.ReadValue<Vector2>();
 
         if (scroll.y > 0.1f)
         {
