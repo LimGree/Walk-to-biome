@@ -4,18 +4,25 @@ using UnityEngine.UI;
 
 public static class UiTheme
 {
-    public static readonly Color Overlay = new Color(0.02f, 0.03f, 0.04f, 0.55f);
-    public static readonly Color Panel = new Color(0.10f, 0.12f, 0.15f, 0.96f);
-    public static readonly Color PanelEdge = new Color(0.22f, 0.26f, 0.32f, 1f);
-    public static readonly Color Card = new Color(0.16f, 0.18f, 0.22f, 1f);
-    public static readonly Color CardAlt = new Color(0.19f, 0.22f, 0.27f, 1f);
-    public static readonly Color Accent = new Color(0.35f, 0.82f, 0.93f, 1f);
-    public static readonly Color AccentDim = new Color(0.35f, 0.82f, 0.93f, 0.22f);
-    public static readonly Color Text = new Color(0.94f, 0.96f, 0.98f, 1f);
-    public static readonly Color TextDim = new Color(0.64f, 0.68f, 0.74f, 1f);
-    public static readonly Color Ok = new Color(0.45f, 0.84f, 0.56f, 1f);
-    public static readonly Color Warn = new Color(0.95f, 0.72f, 0.32f, 1f);
-    public static readonly Color Locked = new Color(0.28f, 0.29f, 0.32f, 1f);
+    public static readonly Color Primary = Rgb(170, 255, 195);
+    public static readonly Color Secondary = Rgb(152, 255, 152);
+    public static readonly Color Accent = Rgb(127, 255, 212);
+    public static readonly Color Highlight = Rgb(102, 205, 170);
+    public static readonly Color Muted = Rgb(60, 179, 113);
+
+    public static readonly Color Overlay = new Color(0.05f, 0.11f, 0.08f, 0.48f);
+    public static readonly Color Panel = new Color(0.09f, 0.18f, 0.13f, 0.96f);
+    public static readonly Color PanelEdge = Muted;
+    public static readonly Color Card = new Color(0.13f, 0.27f, 0.19f, 1f);
+    public static readonly Color CardAlt = new Color(0.16f, 0.33f, 0.23f, 1f);
+    public static readonly Color Chip = new Color(0.08f, 0.20f, 0.14f, 1f);
+    public static readonly Color AccentDim = new Color(Highlight.r, Highlight.g, Highlight.b, 0.32f);
+    public static readonly Color Text = Primary;
+    public static readonly Color TextDim = Highlight;
+    public static readonly Color Ok = Secondary;
+    public static readonly Color Warn = new Color(0.95f, 0.78f, 0.38f, 1f);
+    public static readonly Color Locked = new Color(0.18f, 0.28f, 0.21f, 1f);
+    public static readonly Color Danger = new Color(0.78f, 0.28f, 0.30f, 0.92f);
 
     static Sprite roundSprite;
 
@@ -79,7 +86,7 @@ public static class UiTheme
 
         Image bg = slider.GetComponent<Image>();
         if (bg != null)
-            StyleImage(bg, Card);
+            StyleImage(bg, Chip);
 
         if (slider.fillRect != null)
         {
@@ -213,6 +220,11 @@ public static class UiTheme
         text.alignment = TextAlignmentOptions.MidlineLeft;
         text.raycastTarget = false;
         return text;
+    }
+
+    static Color Rgb(int r, int g, int b)
+    {
+        return new Color(r / 255f, g / 255f, b / 255f, 1f);
     }
 
     static Sprite CreateRoundSprite(int size, int radius)

@@ -47,6 +47,10 @@ public class PlayerInteractor : MonoBehaviour
 
     void OnInteract(InputAction.CallbackContext ctx)
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+        if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return;
         if (currentInteractable != null)
             currentInteractable.Interact(gameObject);
     }

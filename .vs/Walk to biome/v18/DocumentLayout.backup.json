@@ -1,12 +1,71 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\step2\\Desktop\\Walk to biome\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\logistics\\conveyor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\logistics\\conveyor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|c:\\users\\step2\\desktop\\walk to biome\\assets\\script\\core\\buildings\\splitter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\core\\buildings\\splitter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Player\\PlayerBuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0B0DE0F-160A-9EBF-0F02-AC5B46FB6AEB}|Assembly-CSharp.csproj|solutionrelative:Assets\\Script\\Core\\Player\\PlayerBuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "splitter.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\splitter.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Buildings\\splitter.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Buildings\\splitter.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Buildings\\splitter.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-14T13:02:43.071Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Conveyor.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\Conveyor.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Logistics\\Conveyor.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Logistics\\Conveyor.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Logistics\\Conveyor.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-14T13:02:39.138Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PlayerBuilder.cs",
+              "DocumentMoniker": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "ToolTip": "C:\\Users\\step2\\Desktop\\Walk to biome\\Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "RelativeToolTip": "Assets\\Script\\Core\\Player\\PlayerBuilder.cs",
+              "ViewState": "AgIAAOUAAAAAAAAAAAAIwP4AAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-14T11:27:58.147Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

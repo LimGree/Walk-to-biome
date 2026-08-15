@@ -31,7 +31,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8100000031}
+  - {fileID: 543450649903322869}
   - {fileID: 8100000011}
   - {fileID: 8100000021}
   m_Father: {fileID: 0}
@@ -182,6 +182,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8100000002}
     m_Modifications:
+    - target: {fileID: -8961359253771211100, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -222,16 +226,44 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7029948723529949830, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: -5568371526223589888, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
       propertyPath: m_Name
       value: storage_container_model
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4767400413853537203, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5148817236446094103, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6507901977716847365, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 9013638940889411661, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
---- !u!4 &8100000031 stripped
+--- !u!4 &543450649903322869 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 25ef558aad03591419aa9fea0bab9e79, type: 3}
   m_PrefabInstance: {fileID: 8100000030}

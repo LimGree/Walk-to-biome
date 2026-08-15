@@ -125,6 +125,46 @@ public class Conveyor : BuildingBase
         return true;
     }
 
+    public bool HasRoomForItem()
+    {
+        return isLive && CanAccept();
+    }
+
+    public bool TryStealMatching(ItemData filter, out ItemData item, out Transform visual)
+    {
+        item = null;
+        visual = null;
+        if (!isLive)
+            return false;
+
+        int best = -1;
+        float bestProgress = -1f;
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            BeltCargo entry = cargo[i];
+            if (entry == null || entry.item == null)
+                continue;
+            if (filter != null && entry.item != filter)
+                continue;
+            if (entry.progress > bestProgress)
+            {
+                best = i;
+                bestProgress = entry.progress;
+            }
+        }
+
+        if (best < 0)
+            return false;
+
+        BeltCargo stolen = cargo[best];
+        item = stolen.item;
+        visual = stolen.visual;
+        cargo.RemoveAt(best);
+        if (visual != null)
+            visual.SetParent(null, true);
+        return true;
+    }
+
     float ItemGap => 1f / Mathf.Max(1, maxItems);
 
     bool CanAccept()

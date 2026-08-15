@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -8,9 +8,20 @@ public class InventoryUI : MonoBehaviour
     public PlayerInventory inventory;
     public Transform hotbarParent;
     public GameObject slotPrefab;
+    public PlayerBuilder playerBuilder;
 
-    private Image[] slotIcons;
-    private Image[] slotHighlights;
+    [Header("Show / hide")]
+    public float slideDistance = 140f;
+    public float slideSpeed = 7.5f;
+    public float bounce = 1.15f;
+
+    Image[] slotIcons;
+    Image[] slotHighlights;
+    RectTransform barRt;
+    Vector2 shownPos;
+    Vector2 hiddenPos;
+    float anim;
+    bool wantVisible;
 
     void Start()
     {
@@ -20,9 +31,19 @@ public class InventoryUI : MonoBehaviour
             inventory.OnHotbarChanged += RefreshHotbar;
         }
 
+        if (playerBuilder == null)
+            playerBuilder = FindFirstObjectByType<PlayerBuilder>();
+        if (playerBuilder != null)
+            playerBuilder.OnBuildModeChanged += OnBuildModeChanged;
+
         StyleHotbar();
         CreateHotbar();
         UpdateSelection(inventory != null ? inventory.selectedIndex : 0);
+
+        CacheSlide();
+        wantVisible = playerBuilder != null && playerBuilder.isBuildMode;
+        anim = wantVisible ? 1f : 0f;
+        ApplySlide(anim);
     }
 
     void OnDestroy()
@@ -32,6 +53,56 @@ public class InventoryUI : MonoBehaviour
             inventory.OnSelectionChanged -= UpdateSelection;
             inventory.OnHotbarChanged -= RefreshHotbar;
         }
+
+        if (playerBuilder != null)
+            playerBuilder.OnBuildModeChanged -= OnBuildModeChanged;
+    }
+
+    void Update()
+    {
+        if (barRt == null)
+            return;
+
+        float target = wantVisible ? 1f : 0f;
+        if (Mathf.Approximately(anim, target))
+            return;
+
+        anim = Mathf.MoveTowards(anim, target, Time.unscaledDeltaTime * slideSpeed);
+        ApplySlide(anim);
+    }
+
+    void OnBuildModeChanged(bool enabled)
+    {
+        wantVisible = enabled;
+    }
+
+    void CacheSlide()
+    {
+        barRt = hotbarParent as RectTransform;
+        if (barRt == null)
+            return;
+
+        shownPos = barRt.anchoredPosition;
+        hiddenPos = shownPos + new Vector2(0f, -Mathf.Abs(slideDistance));
+    }
+
+    void ApplySlide(float t)
+    {
+        if (barRt == null)
+            return;
+
+        float e = wantVisible ? EaseOutBack(t) : 1f - EaseOutBack(1f - t);
+        barRt.anchoredPosition = Vector2.LerpUnclamped(hiddenPos, shownPos, e);
+    }
+
+    float EaseOutBack(float t)
+    {
+        t = Mathf.Clamp01(t);
+        if (t <= 0f || t >= 1f)
+            return t;
+
+        float overshoot = 1f + bounce;
+        return 1f + overshoot * Mathf.Pow(t - 1f, 3f) + bounce * Mathf.Pow(t - 1f, 2f);
     }
 
     void StyleHotbar()
@@ -41,7 +112,7 @@ public class InventoryUI : MonoBehaviour
 
         Image bar = hotbarParent.GetComponent<Image>();
         if (bar != null)
-            UiTheme.StyleImage(bar, new Color(0.08f, 0.09f, 0.11f, 0.88f));
+            UiTheme.StyleImage(bar, UiTheme.Panel);
 
         HorizontalLayoutGroup row = hotbarParent.GetComponent<HorizontalLayoutGroup>();
         if (row == null)
@@ -111,7 +182,6 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    // Можно вызывать, когда меняется содержимое hotbar'а
     [ContextMenu("Refresh Hotbar")]
     public void RefreshHotbar()
     {

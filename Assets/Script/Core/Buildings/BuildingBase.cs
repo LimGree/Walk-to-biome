@@ -109,6 +109,28 @@ public abstract class BuildingBase : MonoBehaviour
         return count <= 0 || outputBuffer.Count + count <= maxOutputBuffer;
     }
 
+    public bool TryStealFromOutput(ItemData filter, out ItemData item)
+    {
+        item = null;
+        if (outputBuffer.Count == 0)
+            return false;
+
+        ItemData front = outputBuffer.Peek();
+        if (filter != null && front != filter)
+            return false;
+
+        item = outputBuffer.Dequeue();
+        return true;
+    }
+
+    public bool TryReturnToOutput(ItemData item)
+    {
+        if (item == null || outputBuffer.Count >= maxOutputBuffer)
+            return false;
+        outputBuffer.Enqueue(item);
+        return true;
+    }
+
     protected bool TryOutputToAny(ItemData item)
     {
         if (item == null) return false;

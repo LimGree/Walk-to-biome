@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -26,6 +27,7 @@ public class PlayerBuilder : MonoBehaviour
     public Vector2Int CurrentFootprintSize { get; private set; } = Vector2Int.one;
 
     public bool isBuildMode = false;
+    public event Action<bool> OnBuildModeChanged;
 
     private InputSystem_Actions inputActions;
     private GameObject currentGhost;
@@ -67,6 +69,9 @@ public class PlayerBuilder : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+
         HandleBuildModeToggle();
 
         BuildingData selected = inventory != null ? inventory.GetSelectedBuilding() : null;
@@ -186,6 +191,7 @@ public class PlayerBuilder : MonoBehaviour
             buildMenuUI.CloseMenu(restorePlayerControl: false);
 
         ApplyGameplayCursorAndControl(buildMenuOpen: false);
+        OnBuildModeChanged?.Invoke(true);
     }
 
     public void ExitBuildMode()
@@ -198,6 +204,7 @@ public class PlayerBuilder : MonoBehaviour
             buildMenuUI.CloseMenu(restorePlayerControl: false);
 
         ApplyGameplayCursorAndControl(buildMenuOpen: false);
+        OnBuildModeChanged?.Invoke(false);
     }
 
     public void OnBuildMenuClosedAfterSelection()
@@ -244,20 +251,20 @@ public class PlayerBuilder : MonoBehaviour
         if (!isBuildMode || currentBuildingData == null)
             return;
 
-        GameObject ghostSource = currentBuildingData.prefab;
-        if (!currentBuildingData.IsConveyor && currentBuildingData.ghostPrefab != null)
-            ghostSource = currentBuildingData.ghostPrefab;
-        if (ghostSource == null)
-            ghostSource = currentBuildingData.prefab;
+        GameObject ghostSource = currentBuildingData.ghostPrefab != null
+            ? currentBuildingData.ghostPrefab
+            : currentBuildingData.prefab;
         if (ghostSource == null)
             return;
 
         currentGhost = Instantiate(ghostSource);
 
-        foreach (var col in currentGhost.GetComponentsInChildren<Collider>())
+        foreach (var col in currentGhost.GetComponentsInChildren<Collider>(true))
             col.enabled = false;
 
         Conveyor belt = currentGhost.GetComponent<Conveyor>();
+        if (belt == null && currentBuildingData.IsConveyor)
+            belt = currentGhost.AddComponent<Conveyor>();
         if (belt != null)
             belt.PreparePreview(currentBuildingData);
     }
@@ -453,6 +460,8 @@ public class PlayerBuilder : MonoBehaviour
 
     void OnPlace(InputAction.CallbackContext ctx)
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
         if (!IsBuildModeActive || currentGhost == null || !canPlace)
             return;
 

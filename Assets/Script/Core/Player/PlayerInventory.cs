@@ -54,6 +54,14 @@ public class PlayerInventory : MonoBehaviour
         if (Mouse.current == null) return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return;
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+
+        PlayerBuilder builder = GameManager.Instance != null
+            ? GameManager.Instance.playerBuilder
+            : FindFirstObjectByType<PlayerBuilder>();
+        if (builder == null || !builder.isBuildMode)
+            return;
 
         Vector2 scroll = Mouse.current.scroll.ReadValue();
 

@@ -40,6 +40,11 @@ public class MachineUI : MonoBehaviour
     Transform storageSlotsParent;
     TextMeshProUGUI storageSummaryText;
 
+    GameObject armFilterContent;
+    Transform armFilterParent;
+    TextMeshProUGUI armFilterSummary;
+    Image headerIcon;
+
     public bool IsOpen { get; private set; }
 
     private BuildingBase currentBuilding;
@@ -93,14 +98,16 @@ public class MachineUI : MonoBehaviour
         UiTheme.StyleSlider(progressSlider);
         UiTheme.StyleSlider(researchProgressSlider);
 
-        PrepareScrollList(recipeButtonsParent, new Vector2(880f, 128f));
-        PrepareScrollList(researchButtonsParent, new Vector2(880f, 136f));
-        PrepareScrollList(extractorButtonsParent, new Vector2(880f, 128f));
+        PrepareScrollList(recipeButtonsParent, new Vector2(880f, 156f));
+        PrepareScrollList(researchButtonsParent, new Vector2(880f, 176f));
+        PrepareScrollList(extractorButtonsParent, new Vector2(880f, 156f));
+
+        EnsureHeaderIcon();
 
         if (closeButton != null)
         {
             Image closeImage = closeButton.GetComponent<Image>();
-            UiTheme.StyleImage(closeImage, new Color(0.85f, 0.28f, 0.30f, 0.9f));
+            UiTheme.StyleImage(closeImage, UiTheme.Danger);
             var closeText = closeButton.GetComponentInChildren<TextMeshProUGUI>();
             if (closeText != null)
             {
@@ -109,6 +116,48 @@ public class MachineUI : MonoBehaviour
                 closeText.alignment = TextAlignmentOptions.Center;
             }
         }
+    }
+
+    void EnsureHeaderIcon()
+    {
+        if (headerIcon != null || titleText == null)
+            return;
+
+        Transform parent = titleText.transform.parent;
+        if (parent == null)
+            return;
+
+        GameObject go = new GameObject("HeaderIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        go.transform.SetParent(parent, false);
+        headerIcon = go.GetComponent<Image>();
+        headerIcon.preserveAspect = true;
+        headerIcon.raycastTarget = false;
+        headerIcon.color = Color.white;
+
+        RectTransform iconRt = headerIcon.rectTransform;
+        RectTransform titleRt = titleText.rectTransform;
+        iconRt.anchorMin = titleRt.anchorMin;
+        iconRt.anchorMax = new Vector2(titleRt.anchorMin.x, titleRt.anchorMax.y);
+        iconRt.pivot = new Vector2(0f, 0.5f);
+        iconRt.anchoredPosition = titleRt.anchoredPosition;
+        iconRt.sizeDelta = new Vector2(48f, 48f);
+
+        titleRt.offsetMin = new Vector2(titleRt.offsetMin.x + 58f, titleRt.offsetMin.y);
+    }
+
+    void SetHeader(string title, BuildingBase building)
+    {
+        if (titleText != null)
+            titleText.text = title;
+
+        EnsureHeaderIcon();
+        if (headerIcon == null)
+            return;
+
+        Sprite icon = building != null && building.data != null ? building.data.icon : null;
+        headerIcon.sprite = icon;
+        headerIcon.enabled = icon != null;
+        headerIcon.color = Color.white;
     }
 
     static void PrepareScrollList(Transform list, Vector2 cell)
@@ -122,12 +171,6 @@ public class MachineUI : MonoBehaviour
 
     void Update()
     {
-        // Закрытие по Escape
-        if (IsOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            Close();
-        }
-
         // Обновляем прогресс, если панель открыта
         if (IsOpen && currentBuilding != null)
         {
@@ -140,6 +183,8 @@ public class MachineUI : MonoBehaviour
     public void Open(BuildingBase building)
     {
         if (building == null) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
 
         currentBuilding = building;
         IsOpen = true;
@@ -147,40 +192,44 @@ public class MachineUI : MonoBehaviour
         // Прячем все контенты
         HideAllContents();
 
-        // Показываем нужный
         if (building is Extractor extractor)
         {
-            titleText.text = "Extractor";
+            SetHeader("Extractor  ·  ур. " + extractor.level, building);
             ShowExtractorUI(extractor);
         }
         else if (building is Smelter smelter)
         {
-            titleText.text = "Smelter";
+            SetHeader("Smelter", building);
             ShowSmelterUI(smelter);
         }
         else if (building is Assembler assembler)
         {
-            titleText.text = "Assembler";
+            SetHeader("Assembler  ·  ур. " + assembler.level, building);
             ShowAssemblerUI(assembler);
         }
         else if (building is Constructor constructor)
         {
-            titleText.text = "Constructor";
+            SetHeader("Constructor", building);
             ShowConstructorUI(constructor);
         }
         else if (building is ResearchLab lab)
         {
-            titleText.text = "Research Lab";
+            SetHeader("Research Lab", building);
             ShowResearchLabUI(lab);
         }
         else if (building is StorageContainer storage)
         {
-            titleText.text = building.data != null ? building.data.displayName : "Склад";
+            SetHeader(building.data != null ? building.data.displayName : "Склад", building);
             ShowStorageUI(storage);
+        }
+        else if (building is RoboticArm arm)
+        {
+            SetHeader("Роборука", building);
+            ShowRoboticArmUI(arm);
         }
         else
         {
-            titleText.text = building.data != null ? building.data.displayName : "Building";
+            SetHeader(building.data != null ? building.data.displayName : "Building", building);
         }
 
         machinePanel.SetActive(true);
@@ -201,10 +250,14 @@ public class MachineUI : MonoBehaviour
         if (machinePanel != null)
             machinePanel.SetActive(false);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-        SetPlayerControl(true);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            SetPlayerControl(true);
+        }
     }
     void SetPlayerControl(bool enabled)
     {
@@ -227,6 +280,7 @@ public class MachineUI : MonoBehaviour
         if (assemblerContent) assemblerContent.SetActive(false);
         if (researchLabContent) researchLabContent.SetActive(false);
         if (storageContent) storageContent.SetActive(false);
+        if (armFilterContent) armFilterContent.SetActive(false);
     }
 
     // ================== EXTRACTOR ==================
@@ -243,10 +297,38 @@ public class MachineUI : MonoBehaviour
             ? "Mining  " + extractor.resource.displayName
             : "No resource node";
         if (extractor.resource != null)
-            fake.outputs.Add(new ItemStack(extractor.resource, 1));
+            fake.outputs.Add(new ItemStack(extractor.resource, extractor.CurrentItemsPerCycle));
 
         UiFactory.CreateRecipeCard(extractorButtonsParent, fake, true, null);
         Object.Destroy(fake);
+
+        string stats = $"{extractor.CurrentInterval:0.##} с / цикл  ·  {extractor.CurrentItemsPerCycle} шт";
+        if (extractor.CanUpgrade)
+        {
+            string next = $"{extractor.upgradedExtractInterval:0.##} с / цикл  ·  {Mathf.Max(1, extractor.upgradedItemsPerCycle)} шт";
+            UiFactory.CreateActionButton(
+                extractorButtonsParent,
+                "Прокачать  →  ур. 2",
+                "Сейчас: " + stats + "   |   После: " + next,
+                true,
+                () =>
+                {
+                    if (extractor.TryUpgrade())
+                    {
+                        SetHeader("Extractor  ·  ур. " + extractor.level, extractor);
+                        ShowExtractorUI(extractor);
+                    }
+                });
+        }
+        else
+        {
+            UiFactory.CreateActionButton(
+                extractorButtonsParent,
+                "Улучшено до ур. 2",
+                stats,
+                false,
+                null);
+        }
     }
 
     // ================== SMELTER ==================
@@ -317,6 +399,42 @@ public class MachineUI : MonoBehaviour
 
         if (currentRecipeText != null)
             currentRecipeText.text = GetCurrentRecipeName(building);
+
+        if (building is Assembler assembler)
+            AddAssemblerUpgradeButton(assembler);
+    }
+
+    void AddAssemblerUpgradeButton(Assembler assembler)
+    {
+        if (recipeButtonsParent == null || assembler == null)
+            return;
+
+        string speed = "×" + assembler.CraftSpeed.ToString("0.##");
+        if (assembler.CanUpgrade)
+        {
+            UiFactory.CreateActionButton(
+                recipeButtonsParent,
+                "Прокачать  →  ур. 2",
+                "Скорость крафта " + speed + "  →  ×" + Mathf.Max(1f, assembler.upgradedCraftSpeed).ToString("0.##"),
+                true,
+                () =>
+                {
+                    if (assembler.TryUpgrade())
+                    {
+                        SetHeader("Assembler  ·  ур. " + assembler.level, assembler);
+                        RefreshRecipeList(assembler);
+                    }
+                });
+        }
+        else
+        {
+            UiFactory.CreateActionButton(
+                recipeButtonsParent,
+                "Улучшено до ур. 2",
+                "Скорость крафта " + speed,
+                false,
+                null);
+        }
     }
 
     static void ApplyRecipe(BuildingBase building, RecipeData recipe)
@@ -431,6 +549,110 @@ public class MachineUI : MonoBehaviour
         }
     }
 
+    // ================== ROBOTIC ARM ==================
+
+    void ShowRoboticArmUI(RoboticArm arm)
+    {
+        EnsureArmFilterUi();
+        if (armFilterContent != null)
+            armFilterContent.SetActive(true);
+        RefreshArmFilter(arm);
+    }
+
+    void EnsureArmFilterUi()
+    {
+        if (armFilterContent != null)
+            return;
+
+        Transform host = null;
+        if (extractorContent != null)
+            host = extractorContent.transform.parent;
+        if (host == null && machinePanel != null)
+            host = machinePanel.transform;
+        if (host == null)
+            return;
+
+        armFilterContent = new GameObject("ArmFilterContent", typeof(RectTransform));
+        armFilterContent.transform.SetParent(host, false);
+        RectTransform root = armFilterContent.GetComponent<RectTransform>();
+        root.anchorMin = Vector2.zero;
+        root.anchorMax = Vector2.one;
+        root.offsetMin = Vector2.zero;
+        root.offsetMax = Vector2.zero;
+
+        armFilterSummary = UiTheme.AddText(root, "Summary", "", 20f, UiTheme.Text);
+        RectTransform summaryRt = armFilterSummary.rectTransform;
+        summaryRt.anchorMin = new Vector2(0f, 1f);
+        summaryRt.anchorMax = new Vector2(1f, 1f);
+        summaryRt.pivot = new Vector2(0.5f, 1f);
+        summaryRt.anchoredPosition = new Vector2(0f, -8f);
+        summaryRt.sizeDelta = new Vector2(-32f, 32f);
+
+        GameObject gridGo = new GameObject("Filters", typeof(RectTransform));
+        gridGo.transform.SetParent(root, false);
+        RectTransform gridRt = gridGo.GetComponent<RectTransform>();
+        gridRt.anchorMin = new Vector2(0f, 0f);
+        gridRt.anchorMax = new Vector2(1f, 1f);
+        gridRt.offsetMin = new Vector2(16f, 16f);
+        gridRt.offsetMax = new Vector2(-16f, -48f);
+        armFilterParent = gridRt;
+
+        UiTheme.EnsureGrid(armFilterParent, new Vector2(280f, 80f), new Vector2(10f, 10f), 2);
+        UiTheme.EnsureVerticalScroll(gridRt);
+    }
+
+    void RefreshArmFilter(RoboticArm arm)
+    {
+        EnsureArmFilterUi();
+        if (arm == null || armFilterParent == null)
+            return;
+
+        foreach (Transform child in armFilterParent)
+            Destroy(child.gameObject);
+
+        UiFactory.CreateFilterCard(
+            armFilterParent,
+            null,
+            "Любые предметы",
+            arm.filter == null ? "выбрано" : "без фильтра",
+            arm.filter == null,
+            () =>
+            {
+                arm.SetFilter(null);
+                RefreshArmFilter(arm);
+            });
+
+        var seen = new HashSet<string>();
+        ItemData[] items = Resources.FindObjectsOfTypeAll<ItemData>();
+        for (int i = 0; i < items.Length; i++)
+        {
+            ItemData item = items[i];
+            if (item == null || string.IsNullOrEmpty(item.id) || !seen.Add(item.id))
+                continue;
+
+            ItemData captured = item;
+            bool selected = arm.filter == item;
+            UiFactory.CreateFilterCard(
+                armFilterParent,
+                item.icon,
+                item.displayName,
+                selected ? "фильтр" : "брать только это",
+                selected,
+                () =>
+                {
+                    arm.SetFilter(captured);
+                    RefreshArmFilter(arm);
+                });
+        }
+
+        if (armFilterSummary != null)
+        {
+            string name = arm.filter != null ? arm.filter.displayName : "любые";
+            string held = arm.HeldItem != null ? arm.HeldItem.displayName : "пусто";
+            armFilterSummary.text = $"Фильтр: {name}   ·   в руке: {held}";
+        }
+    }
+
     // ================== RESEARCH LAB ==================
 
     void ShowResearchLabUI(ResearchLab lab)
@@ -506,6 +728,12 @@ public class MachineUI : MonoBehaviour
         else if (currentBuilding is StorageContainer storage)
         {
             RefreshStorageSlots(storage);
+        }
+        else if (currentBuilding is RoboticArm arm && armFilterSummary != null)
+        {
+            string name = arm.filter != null ? arm.filter.displayName : "любые";
+            string held = arm.HeldItem != null ? arm.HeldItem.displayName : "пусто";
+            armFilterSummary.text = $"Фильтр: {name}   ·   в руке: {held}";
         }
         else if (currentBuilding is ResearchLab)
         {

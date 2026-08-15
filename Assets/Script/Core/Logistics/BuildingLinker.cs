@@ -146,7 +146,7 @@ public static class BuildingLinker
     static BuildingBase FindOutputTarget(BuildingBase building, BuildingSocket output)
     {
         BuildingBase front = GetBuildingAt(GetSocketFrontCell(output));
-        if (front != null && front != building)
+        if (front != null && front != building && !(front is RoboticArm))
             return front;
 
         Vector2Int outward = ToCardinal(output.GetOutward());
@@ -154,7 +154,7 @@ public static class BuildingLinker
         for (int i = 0; i < CellBuffer.Count; i++)
         {
             BuildingBase other = GetBuildingAt(CellBuffer[i] + outward);
-            if (other != null && other != building)
+            if (other != null && other != building && !(other is RoboticArm))
                 return other;
         }
 

@@ -138,6 +138,17 @@ public class StorageContainer : BuildingBase, IInteractable
         return null;
     }
 
+    public bool TrySteal(ItemData filter, out ItemData item)
+    {
+        item = null;
+        ItemData take = filter != null ? filter : PeekFirstItem();
+        if (take == null || !TryRemoveOne(take))
+            return false;
+
+        item = take;
+        return true;
+    }
+
     public bool TryRemoveOne(ItemData item)
     {
         if (item == null)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,29 +11,103 @@ public static class UiFactory
         Button button = card.GetComponent<Button>();
         button.onClick.AddListener(() => onClick?.Invoke());
 
-        Image output = CreateIcon(card.transform, "Output", Vector2.zero, new Vector2(88f, 88f));
+        Image output = CreateIcon(card.transform, "Output", Vector2.zero, new Vector2(72f, 72f));
         RectTransform iconRt = output.rectTransform;
         iconRt.anchorMin = new Vector2(0f, 0.5f);
         iconRt.anchorMax = new Vector2(0f, 0.5f);
         iconRt.pivot = new Vector2(0f, 0.5f);
-        iconRt.anchoredPosition = new Vector2(18f, 0f);
+        iconRt.anchoredPosition = new Vector2(16f, 6f);
         ItemData outItem = FirstItem(recipe != null ? recipe.outputs : null);
         SetIcon(output, outItem != null ? outItem.icon : null);
 
-        TextMeshProUGUI title = UiTheme.AddText(card.transform, "Title", recipe != null ? recipe.displayName : "Recipe", 24f, UiTheme.Text);
+        TextMeshProUGUI title = UiTheme.AddText(card.transform, "Title", recipe != null ? recipe.displayName : "Recipe", 22f, UiTheme.Text);
         title.fontStyle = FontStyles.Bold;
         RectTransform titleRt = title.rectTransform;
-        titleRt.anchorMin = new Vector2(0f, 0.52f);
+        titleRt.anchorMin = new Vector2(0f, 1f);
         titleRt.anchorMax = new Vector2(1f, 1f);
-        titleRt.offsetMin = new Vector2(124f, 4f);
-        titleRt.offsetMax = new Vector2(-18f, -10f);
+        titleRt.pivot = new Vector2(0f, 1f);
+        titleRt.anchoredPosition = new Vector2(104f, -10f);
+        titleRt.sizeDelta = new Vector2(-122f, 28f);
 
-        TextMeshProUGUI io = UiTheme.AddText(card.transform, "IO", FormatRecipeIO(recipe), 18f, UiTheme.TextDim);
-        RectTransform ioRt = io.rectTransform;
-        ioRt.anchorMin = new Vector2(0f, 0f);
-        ioRt.anchorMax = new Vector2(1f, 0.52f);
-        ioRt.offsetMin = new Vector2(124f, 12f);
-        ioRt.offsetMax = new Vector2(-18f, -4f);
+        RectTransform row = CreateChipRow(card.transform, "IO", 104f, 12f, -16f, 52f);
+        AppendStacks(row, recipe != null ? recipe.inputs : null);
+        CreateArrow(row);
+        AppendStacks(row, recipe != null ? recipe.outputs : null);
+
+        return card;
+    }
+
+    public static GameObject CreateFilterCard(Transform parent, Sprite icon, string title, string subtitle, bool selected, System.Action onClick)
+    {
+        GameObject card = CreateCard(parent, "FilterCard", selected);
+        Button button = card.GetComponent<Button>();
+        button.onClick.AddListener(() => onClick?.Invoke());
+
+        Image image = CreateIcon(card.transform, "Icon", Vector2.zero, new Vector2(56f, 56f));
+        RectTransform iconRt = image.rectTransform;
+        iconRt.anchorMin = new Vector2(0f, 0.5f);
+        iconRt.anchorMax = new Vector2(0f, 0.5f);
+        iconRt.pivot = new Vector2(0f, 0.5f);
+        iconRt.anchoredPosition = new Vector2(12f, 0f);
+        SetIcon(image, icon);
+
+        TextMeshProUGUI titleText = UiTheme.AddText(card.transform, "Title", title, 20f, selected ? UiTheme.Accent : UiTheme.Text);
+        titleText.fontStyle = FontStyles.Bold;
+        RectTransform titleRt = titleText.rectTransform;
+        titleRt.anchorMin = new Vector2(0f, 0.48f);
+        titleRt.anchorMax = new Vector2(1f, 1f);
+        titleRt.offsetMin = new Vector2(80f, 2f);
+        titleRt.offsetMax = new Vector2(-12f, -8f);
+
+        TextMeshProUGUI sub = UiTheme.AddText(card.transform, "Subtitle", subtitle ?? "", 15f, UiTheme.TextDim);
+        RectTransform subRt = sub.rectTransform;
+        subRt.anchorMin = new Vector2(0f, 0f);
+        subRt.anchorMax = new Vector2(1f, 0.52f);
+        subRt.offsetMin = new Vector2(80f, 8f);
+        subRt.offsetMax = new Vector2(-12f, -2f);
+
+        return card;
+    }
+
+    public static GameObject CreateActionButton(Transform parent, string title, string subtitle, bool enabled, System.Action onClick)
+    {
+        GameObject card = CreateCard(parent, "ActionButton", enabled);
+        Button button = card.GetComponent<Button>();
+        button.interactable = enabled;
+        button.onClick.AddListener(() => onClick?.Invoke());
+
+        if (!enabled)
+        {
+            Image bg = card.GetComponent<Image>();
+            if (bg != null)
+                bg.color = UiTheme.Locked;
+        }
+
+        TextMeshProUGUI titleText = UiTheme.AddText(
+            card.transform,
+            "Title",
+            title,
+            24f,
+            enabled ? UiTheme.Accent : UiTheme.TextDim);
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.alignment = TextAlignmentOptions.MidlineLeft;
+        RectTransform titleRt = titleText.rectTransform;
+        titleRt.anchorMin = new Vector2(0f, 0.48f);
+        titleRt.anchorMax = new Vector2(1f, 1f);
+        titleRt.offsetMin = new Vector2(22f, 4f);
+        titleRt.offsetMax = new Vector2(-22f, -10f);
+
+        TextMeshProUGUI sub = UiTheme.AddText(
+            card.transform,
+            "Subtitle",
+            subtitle ?? "",
+            18f,
+            UiTheme.TextDim);
+        RectTransform subRt = sub.rectTransform;
+        subRt.anchorMin = new Vector2(0f, 0f);
+        subRt.anchorMax = new Vector2(1f, 0.52f);
+        subRt.offsetMin = new Vector2(22f, 12f);
+        subRt.offsetMax = new Vector2(-22f, -4f);
 
         return card;
     }
@@ -86,39 +161,45 @@ public static class UiFactory
         button.interactable = canStart;
         button.onClick.AddListener(() => onClick?.Invoke());
 
-        Image icon = CreateIcon(card.transform, "Icon", Vector2.zero, new Vector2(92f, 92f));
+        Image icon = CreateIcon(card.transform, "Icon", Vector2.zero, new Vector2(72f, 72f));
         RectTransform iconRt = icon.rectTransform;
         iconRt.anchorMin = new Vector2(0f, 0.5f);
         iconRt.anchorMax = new Vector2(0f, 0.5f);
         iconRt.pivot = new Vector2(0f, 0.5f);
-        iconRt.anchoredPosition = new Vector2(16f, 0f);
+        iconRt.anchoredPosition = new Vector2(16f, 4f);
         SetIcon(icon, node != null ? node.icon : null);
 
-        TextMeshProUGUI title = UiTheme.AddText(card.transform, "Title", node != null ? node.displayName : "Research", 24f, UiTheme.Text);
+        TextMeshProUGUI title = UiTheme.AddText(card.transform, "Title", node != null ? node.displayName : "Research", 22f, UiTheme.Text);
         title.fontStyle = FontStyles.Bold;
         RectTransform titleRt = title.rectTransform;
-        titleRt.anchorMin = new Vector2(0f, 0.48f);
+        titleRt.anchorMin = new Vector2(0f, 1f);
         titleRt.anchorMax = new Vector2(1f, 1f);
-        titleRt.offsetMin = new Vector2(128f, 2f);
-        titleRt.offsetMax = new Vector2(-120f, -10f);
-
-        TextMeshProUGUI cost = UiTheme.AddText(card.transform, "Cost", FormatResearchCost(node), 18f, UiTheme.TextDim);
-        RectTransform costRt = cost.rectTransform;
-        costRt.anchorMin = new Vector2(0f, 0f);
-        costRt.anchorMax = new Vector2(1f, 0.52f);
-        costRt.offsetMin = new Vector2(128f, 12f);
-        costRt.offsetMax = new Vector2(-18f, -4f);
+        titleRt.pivot = new Vector2(0f, 1f);
+        titleRt.anchoredPosition = new Vector2(104f, -8f);
+        titleRt.sizeDelta = new Vector2(-200f, 26f);
 
         Color badgeColor = status == "DONE" ? UiTheme.Ok : status == "ACTIVE" ? UiTheme.Accent : status == "LOCKED" ? UiTheme.Warn : UiTheme.TextDim;
-        TextMeshProUGUI badge = UiTheme.AddText(card.transform, "Status", status, 16f, badgeColor);
+        TextMeshProUGUI badge = UiTheme.AddText(card.transform, "Status", status, 15f, badgeColor);
         badge.alignment = TextAlignmentOptions.MidlineRight;
         badge.fontStyle = FontStyles.Bold;
         RectTransform badgeRt = badge.rectTransform;
-        badgeRt.anchorMin = new Vector2(1f, 0.55f);
+        badgeRt.anchorMin = new Vector2(1f, 1f);
         badgeRt.anchorMax = new Vector2(1f, 1f);
         badgeRt.pivot = new Vector2(1f, 1f);
-        badgeRt.anchoredPosition = new Vector2(-12f, -8f);
-        badgeRt.sizeDelta = new Vector2(80f, 22f);
+        badgeRt.anchoredPosition = new Vector2(-14f, -10f);
+        badgeRt.sizeDelta = new Vector2(88f, 22f);
+
+        RectTransform need = CreateChipRow(card.transform, "Need", 104f, 78f, -16f, 44f);
+        AppendLabel(need, "нужно");
+        AppendStacks(need, node != null ? node.requiredItems : null);
+
+        RectTransform reward = CreateChipRow(card.transform, "Reward", 104f, 14f, -16f, 44f);
+        AppendLabel(reward, "даст");
+        if (node != null)
+        {
+            AppendBuildings(reward, node.unlockedBuildings);
+            AppendRecipes(reward, node.unlockedRecipes);
+        }
 
         return card;
     }
@@ -127,7 +208,7 @@ public static class UiFactory
     {
         GameObject slot = new GameObject("StorageSlot", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         slot.transform.SetParent(parent, false);
-        UiTheme.StyleImage(slot.GetComponent<Image>(), UiTheme.Card);
+        UiTheme.StyleImage(slot.GetComponent<Image>(), UiTheme.Chip);
 
         Image icon = CreateIcon(slot.transform, "Icon", new Vector2(0f, 8f), new Vector2(72f, 72f));
         icon.enabled = false;
@@ -205,13 +286,123 @@ public static class UiFactory
 
         ColorBlock colors = ColorBlock.defaultColorBlock;
         colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
-        colors.pressedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+        colors.highlightedColor = new Color(1.08f, 1.08f, 1.08f, 1f);
+        colors.pressedColor = new Color(0.88f, 0.88f, 0.88f, 1f);
         colors.disabledColor = new Color(0.6f, 0.6f, 0.6f, 0.7f);
         colors.colorMultiplier = 1f;
         card.GetComponent<Button>().colors = colors;
         card.GetComponent<Button>().targetGraphic = bg;
         return card;
+    }
+
+    static RectTransform CreateChipRow(Transform parent, string name, float left, float bottom, float right, float height)
+    {
+        GameObject row = new GameObject(name, typeof(RectTransform));
+        row.transform.SetParent(parent, false);
+        RectTransform rt = row.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(1f, 0f);
+        rt.pivot = new Vector2(0f, 0f);
+        rt.offsetMin = new Vector2(left, bottom);
+        rt.offsetMax = new Vector2(right, bottom + height);
+
+        HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
+        layout.childAlignment = TextAnchor.MiddleLeft;
+        layout.spacing = 6f;
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+        layout.padding = new RectOffset(0, 0, 0, 0);
+        return rt;
+    }
+
+    static void AppendStacks(Transform row, List<ItemStack> stacks)
+    {
+        if (stacks == null || stacks.Count == 0)
+        {
+            AppendLabel(row, "—");
+            return;
+        }
+
+        int added = 0;
+        for (int i = 0; i < stacks.Count; i++)
+        {
+            ItemStack stack = stacks[i];
+            if (stack == null || stack.item == null)
+                continue;
+            CreateStackChip(row, stack.item.icon, stack.amount);
+            added++;
+        }
+
+        if (added == 0)
+            AppendLabel(row, "—");
+    }
+
+    static void AppendBuildings(Transform row, List<BuildingData> buildings)
+    {
+        if (buildings == null)
+            return;
+
+        for (int i = 0; i < buildings.Count; i++)
+        {
+            if (buildings[i] != null)
+                CreateStackChip(row, buildings[i].icon, 0);
+        }
+    }
+
+    static void AppendRecipes(Transform row, List<RecipeData> recipes)
+    {
+        if (recipes == null)
+            return;
+
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            ItemData output = FirstItem(recipes[i] != null ? recipes[i].outputs : null);
+            if (output != null)
+                CreateStackChip(row, output.icon, 0);
+        }
+    }
+
+    static void AppendLabel(Transform row, string text)
+    {
+        TextMeshProUGUI label = UiTheme.AddText(row, "Label", text, 14f, UiTheme.TextDim);
+        label.alignment = TextAlignmentOptions.MidlineLeft;
+        RectTransform rt = label.rectTransform;
+        rt.sizeDelta = new Vector2(58f, 36f);
+    }
+
+    static void CreateArrow(Transform row)
+    {
+        TextMeshProUGUI arrow = UiTheme.AddText(row, "Arrow", "→", 22f, UiTheme.Accent);
+        arrow.alignment = TextAlignmentOptions.Center;
+        arrow.fontStyle = FontStyles.Bold;
+        arrow.rectTransform.sizeDelta = new Vector2(28f, 40f);
+    }
+
+    static void CreateStackChip(Transform parent, Sprite sprite, int amount)
+    {
+        GameObject chip = new GameObject("Chip", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        chip.transform.SetParent(parent, false);
+        RectTransform rt = chip.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(48f, 48f);
+        UiTheme.StyleImage(chip.GetComponent<Image>(), UiTheme.Chip);
+
+        Image icon = CreateIcon(chip.transform, "Icon", Vector2.zero, new Vector2(36f, 36f));
+        SetIcon(icon, sprite);
+
+        if (amount > 0)
+        {
+            TextMeshProUGUI count = UiTheme.AddText(chip.transform, "Count", amount.ToString(), 13f, UiTheme.Text);
+            count.alignment = TextAlignmentOptions.BottomRight;
+            count.fontStyle = FontStyles.Bold;
+            RectTransform countRt = count.rectTransform;
+            countRt.anchorMin = new Vector2(0f, 0f);
+            countRt.anchorMax = new Vector2(1f, 0f);
+            countRt.pivot = new Vector2(1f, 0f);
+            countRt.offsetMin = new Vector2(0f, 1f);
+            countRt.offsetMax = new Vector2(-3f, 16f);
+        }
     }
 
     static Image CreateIcon(Transform parent, string name, Vector2 pos, Vector2 size)
@@ -220,6 +411,7 @@ public static class UiFactory
         image.type = Image.Type.Simple;
         image.preserveAspect = true;
         image.color = Color.white;
+        image.sprite = null;
         RectTransform rt = image.rectTransform;
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -244,7 +436,7 @@ public static class UiFactory
         rt.offsetMax = new Vector2(-inset, -inset);
     }
 
-    static ItemData FirstItem(System.Collections.Generic.List<ItemStack> stacks)
+    static ItemData FirstItem(List<ItemStack> stacks)
     {
         if (stacks == null)
             return null;
@@ -254,41 +446,5 @@ public static class UiFactory
                 return stacks[i].item;
         }
         return null;
-    }
-
-    static string FormatRecipeIO(RecipeData recipe)
-    {
-        if (recipe == null)
-            return "";
-
-        string inputs = FormatStacks(recipe.inputs);
-        string outputs = FormatStacks(recipe.outputs);
-        return inputs + "  →  " + outputs;
-    }
-
-    static string FormatStacks(System.Collections.Generic.List<ItemStack> stacks)
-    {
-        if (stacks == null || stacks.Count == 0)
-            return "—";
-
-        var parts = new System.Text.StringBuilder();
-        for (int i = 0; i < stacks.Count; i++)
-        {
-            ItemStack stack = stacks[i];
-            if (stack == null || stack.item == null)
-                continue;
-            if (parts.Length > 0)
-                parts.Append(" + ");
-            parts.Append(stack.amount).Append('×').Append(stack.item.displayName);
-        }
-
-        return parts.Length > 0 ? parts.ToString() : "—";
-    }
-
-    static string FormatResearchCost(ResearchNodeData node)
-    {
-        if (node == null || node.requiredItems == null || node.requiredItems.Count == 0)
-            return "No cost";
-        return FormatStacks(node.requiredItems);
     }
 }

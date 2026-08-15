@@ -289,6 +289,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: splitter_model
       objectReference: {fileID: 0}
+    - target: {fileID: 2874449771901523667, guid: 9fae606d9c5050c4fbb0bacdaa3dd24c, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 3220012685178752105, guid: 9fae606d9c5050c4fbb0bacdaa3dd24c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

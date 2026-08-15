@@ -87,6 +87,7 @@
     <Compile Include="Assets\Script\Core\Items\ItemInstance.cs" />
     <Compile Include="Assets\Script\Core\GameManager.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerInventory.cs" />
+    <Compile Include="Assets\Script\Core\Buildings\RoboticArm.cs" />
     <Compile Include="Assets\Script\Core\Buildings\StorageContainer.cs" />
     <Compile Include="Assets\Script\Core\UI\BuildMenuUI.cs" />
     <Compile Include="Assets\Script\Core\Data\ItemData.cs" />
