@@ -7,26 +7,37 @@ public class PlayerInteractor : MonoBehaviour
     public float interactDistance = 4f;
     public LayerMask interactLayer = ~0; // всё по умолчанию
 
+    public bool HasInteractableTarget => currentInteractable != null;
+
+    public string InteractableHint
+    {
+        get
+        {
+            if (currentInteractable is BuildingBase building && building.data != null
+                && !string.IsNullOrEmpty(building.data.displayName))
+                return building.data.displayName;
+            return "взаимодействие";
+        }
+    }
+
     private InputSystem_Actions inputActions;
     private Camera cam;
     private IInteractable currentInteractable;
 
     void Awake()
     {
-        inputActions = new InputSystem_Actions();
+        inputActions = KeybindStore.Shared;
         cam = Camera.main;
     }
 
     void OnEnable()
     {
-        inputActions.Enable();
         inputActions.Player.Interact.performed += OnInteract;
     }
 
     void OnDisable()
     {
         inputActions.Player.Interact.performed -= OnInteract;
-        inputActions.Disable();
     }
 
     void Update()

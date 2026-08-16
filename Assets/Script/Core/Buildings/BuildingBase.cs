@@ -34,7 +34,8 @@ public abstract class BuildingBase : MonoBehaviour
     public virtual void OnPlaced()
     {
         RegisterOnGrid();
-        BuildingLinker.RelinkAround(this);
+        if (!BuildingLinker.SuppressRelink)
+            BuildingLinker.RelinkAround(this);
     }
 
     public virtual void OnRemoved()
@@ -43,7 +44,8 @@ public abstract class BuildingBase : MonoBehaviour
         BuildingLinker.CollectNeighbors(this, neighbors);
         DisconnectAllSockets();
         GridOccupancy.Unregister(gameObject);
-        BuildingLinker.Relink(neighbors);
+        if (!BuildingLinker.SuppressRelink)
+            BuildingLinker.Relink(neighbors);
     }
 
     public virtual void OnRotated()
@@ -187,6 +189,29 @@ public abstract class BuildingBase : MonoBehaviour
                 break;
             outputBuffer.Dequeue();
         }
+    }
+
+    public virtual int ReadLevel()
+    {
+        return 1;
+    }
+
+    public virtual void ApplyLevel(int level)
+    {
+    }
+
+    public virtual void WriteSave(BuildingSaveData save)
+    {
+        if (save == null)
+            return;
+        save.outputBuffer = SaveItems.FromQueue(outputBuffer);
+    }
+
+    public virtual void ReadSave(BuildingSaveData save)
+    {
+        if (save == null)
+            return;
+        SaveItems.ToQueue(save.outputBuffer, outputBuffer);
     }
 
     protected virtual void LateUpdate()

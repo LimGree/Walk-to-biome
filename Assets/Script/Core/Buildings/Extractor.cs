@@ -47,6 +47,12 @@ public class Extractor : BuildingBase, IInteractable
         BindToNearbyNode();
     }
 
+    public override void OnRotated()
+    {
+        base.OnRotated();
+        BindToNearbyNode();
+    }
+
     public bool TryUpgrade()
     {
         if (!CanUpgrade)
@@ -55,6 +61,19 @@ public class Extractor : BuildingBase, IInteractable
         level = 2;
         ApplyLevel(true);
         return true;
+    }
+
+    public override int ReadLevel()
+    {
+        return level;
+    }
+
+    public override void ApplyLevel(int savedLevel)
+    {
+        if (savedLevel < 2)
+            return;
+        level = 2;
+        ApplyLevel(false);
     }
 
     void ApplyLevel(bool resetTimer)
@@ -132,28 +151,19 @@ public class Extractor : BuildingBase, IInteractable
         boundNode = null;
         resource = null;
 
-        Collider[] hits = Physics.OverlapSphere(
-            transform.position,
-            nodeSearchRadius,
-            resourceNodeLayer
-        );
-
-        foreach (var hit in hits)
+        Vector2Int cell = BuildingLinker.WorldToCell(transform.position);
+        ResourceNode node = ResourceNode.GetAt(cell);
+        if (node != null && node.resource != null)
         {
-            var node = hit.GetComponentInParent<ResourceNode>();
-            if (node != null && node.resource != null)
-            {
-                boundNode = node;
-                resource = node.resource;
-
-                if (showDebug)
-                    Debug.Log($"[Extractor] Bound to {resource.displayName}");
-                return;
-            }
+            boundNode = node;
+            resource = node.resource;
+            if (showDebug)
+                Debug.Log($"[Extractor] Bound to {resource.displayName} at {cell}");
+            return;
         }
 
         if (showDebug)
-            Debug.LogWarning("[Extractor] Нет ResourceNode рядом");
+            Debug.LogWarning($"[Extractor] Нет ResourceNode в клетке {cell}");
     }
 
     void Update()

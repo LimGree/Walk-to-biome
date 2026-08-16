@@ -77,9 +77,14 @@ public class StorageContainer : BuildingBase, IInteractable
             Debug.Log($"[Storage] out {item.displayName}");
     }
 
+    public virtual bool AcceptsCargo(ItemData item)
+    {
+        return item != null && !item.isFluid;
+    }
+
     public override bool TryReceiveItem(ItemData item, BuildingSocket fromSocket)
     {
-        if (item == null)
+        if (!AcceptsCargo(item))
             return false;
 
         if (!TryAddOne(item))
@@ -92,7 +97,7 @@ public class StorageContainer : BuildingBase, IInteractable
 
     public bool TryAddOne(ItemData item)
     {
-        if (item == null)
+        if (!AcceptsCargo(item))
             return false;
 
         EnsureSlots();
@@ -180,6 +185,49 @@ public class StorageContainer : BuildingBase, IInteractable
         if (index < 0 || index >= slots.Count)
             return null;
         return slots[index];
+    }
+
+    public override void WriteSave(BuildingSaveData save)
+    {
+        base.WriteSave(save);
+        if (save == null)
+            return;
+
+        EnsureSlots();
+        save.storage = new List<ItemAmountSave>(slots.Count);
+        for (int i = 0; i < slots.Count; i++)
+        {
+            ItemStack stack = slots[i];
+            if (stack == null || stack.IsEmpty || stack.item == null || string.IsNullOrEmpty(stack.item.id))
+                save.storage.Add(new ItemAmountSave());
+            else
+                save.storage.Add(new ItemAmountSave { itemId = stack.item.id, amount = stack.amount });
+        }
+    }
+
+    public override void ReadSave(BuildingSaveData save)
+    {
+        base.ReadSave(save);
+        EnsureSlots();
+        for (int i = 0; i < slots.Count; i++)
+        {
+            slots[i].item = null;
+            slots[i].amount = 0;
+        }
+
+        if (save == null || save.storage == null)
+            return;
+
+        int n = Mathf.Min(slots.Count, save.storage.Count);
+        for (int i = 0; i < n; i++)
+        {
+            ItemData item = GameDatabase.FindItem(save.storage[i].itemId);
+            int amount = save.storage[i].amount;
+            if (item == null || amount <= 0)
+                continue;
+            slots[i].item = item;
+            slots[i].amount = amount;
+        }
     }
 
     public void Interact(GameObject interactor)

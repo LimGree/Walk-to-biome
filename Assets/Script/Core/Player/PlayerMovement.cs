@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
 {
     public bool canMove = true;
     public bool canLook = true;
+    public float Pitch => pitch;
 
     [Header("Camera")]
     public Transform cameraTransform; // дочерняя камера
@@ -35,7 +36,22 @@ public class PlayerMovement : MonoBehaviour
 
     void Awake()
     {
-        inputActions = new InputSystem_Actions();
+        inputActions = KeybindStore.Shared;
+    }
+
+    public void ApplySavedPose(Vector3 position, float yaw, float savedPitch)
+    {
+        if (controller == null)
+            controller = GetComponent<CharacterController>();
+        bool was = controller != null && controller.enabled;
+        if (controller != null)
+            controller.enabled = false;
+        transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+        pitch = Mathf.Clamp(savedPitch, minPitch, maxPitch);
+        if (cameraTransform != null)
+            cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        if (controller != null)
+            controller.enabled = was;
     }
 
     void Start()
@@ -56,16 +72,6 @@ public class PlayerMovement : MonoBehaviour
 
         inputActions.Player.Jump.performed += ctx => jumpPressed = true;
         inputActions.Player.Jump.canceled += ctx => jumpPressed = false;
-    }
-
-    void OnEnable()
-    {
-        inputActions?.Enable();
-    }
-
-    void OnDisable()
-    {
-        inputActions?.Disable();
     }
 
     void Update()

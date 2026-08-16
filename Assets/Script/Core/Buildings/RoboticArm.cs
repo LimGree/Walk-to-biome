@@ -59,6 +59,30 @@ public class RoboticArm : BuildingBase, IInteractable
         filter = item;
     }
 
+    public override void WriteSave(BuildingSaveData save)
+    {
+        base.WriteSave(save);
+        if (save == null)
+            return;
+        save.filterItemId = filter != null ? filter.id : "";
+        save.heldItemId = heldItem != null ? heldItem.id : "";
+        save.stateFloat = cooldown;
+    }
+
+    public override void ReadSave(BuildingSaveData save)
+    {
+        base.ReadSave(save);
+        ClearHeld(true);
+        if (save == null)
+            return;
+
+        filter = GameDatabase.FindItem(save.filterItemId);
+        cooldown = Mathf.Max(0f, save.stateFloat);
+        ItemData held = GameDatabase.FindItem(save.heldItemId);
+        if (held != null)
+            Hold(held, null);
+    }
+
     void Update()
     {
         if (!isLive)
@@ -121,6 +145,8 @@ public class RoboticArm : BuildingBase, IInteractable
         StorageContainer storage = dest as StorageContainer;
         if (storage != null)
         {
+            if (!storage.AcceptsCargo(item))
+                return false;
             ItemData locked = storage.StoredType;
             return locked == null || locked == item;
         }

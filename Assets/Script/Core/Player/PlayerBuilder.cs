@@ -29,6 +29,9 @@ public class PlayerBuilder : MonoBehaviour
     public event Action<bool> OnBuildModeChanged;
 
     public bool BlocksBuildInput => selection != null && selection.BlocksBuildInput;
+    public bool IsLineStrokeActive => strokeActive;
+    public bool HasHeldBuilding => currentBuildingData != null;
+    public BuildSelectionController Selection => selection;
 
     BuildSelectionController selection;
     private InputSystem_Actions inputActions;
@@ -57,7 +60,7 @@ public class PlayerBuilder : MonoBehaviour
 
     void Awake()
     {
-        inputActions = new InputSystem_Actions();
+        inputActions = KeybindStore.Shared;
 
         if (inventory == null)
             inventory = GetComponent<PlayerInventory>();
@@ -78,7 +81,6 @@ public class PlayerBuilder : MonoBehaviour
 
     void OnEnable()
     {
-        inputActions.Enable();
         inputActions.Player.Place.started += OnPlaceStarted;
         inputActions.Player.Place.canceled += OnPlaceCanceled;
         inputActions.Player.Demolish.performed += OnDemolish;
@@ -93,7 +95,6 @@ public class PlayerBuilder : MonoBehaviour
         inputActions.Player.Demolish.performed -= OnDemolish;
         inputActions.Player.Rotate.performed -= OnRotate;
         inputActions.Player.BuildMode.performed -= OnBuildModeToggle;
-        inputActions.Disable();
         EndStroke();
         DestroyGhost();
         ClearPlacementTarget();
@@ -462,6 +463,10 @@ public class PlayerBuilder : MonoBehaviour
             Vector2Int minCell = GridFootprint.GetMinCell(position, size);
             if (!GridOccupancy.IsAreaFree(minCell, size))
                 return false;
+            bool allowWater = currentBuildingData != null && currentBuildingData.allowOnWater;
+            bool requireWater = currentBuildingData != null && currentBuildingData.requiresWater;
+            if (!WorldBiomeMap.CanBuild(minCell, size, allowWater, requireWater))
+                return false;
         }
 
         if (checkLabLimit
@@ -470,6 +475,13 @@ public class PlayerBuilder : MonoBehaviour
             && !ResearchSystem.Instance.CanPlaceAnotherLab())
         {
             return false;
+        }
+
+        if (NeedsResourceNode(currentBuildingData))
+        {
+            Vector2Int minCell = GridFootprint.GetMinCell(position, size);
+            if (!ResourceNode.HasNodeInArea(minCell, size))
+                return false;
         }
 
         float cell = GridFootprint.CellSize;
@@ -545,6 +557,18 @@ public class PlayerBuilder : MonoBehaviour
     static bool IsResearchLabData(BuildingData data)
     {
         return data != null && data.id == "research_lab";
+    }
+
+    public static bool IsExtractorData(BuildingData data)
+    {
+        return data != null && data.id == "extractor";
+    }
+
+    public static bool NeedsResourceNode(BuildingData data)
+    {
+        if (data == null)
+            return false;
+        return data.requiresResourceNode || IsExtractorData(data);
     }
 
     static bool IsNonBlockingCollider(Collider col)

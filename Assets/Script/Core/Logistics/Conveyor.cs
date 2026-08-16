@@ -98,8 +98,11 @@ public class Conveyor : BuildingBase
         if (source == null)
             return false;
 
-        Vector2Int sourceCell = Cell - EntryDir;
-        return BuildingLinker.OccupiesCell(source, sourceCell);
+        if (BuildingLinker.OccupiesCell(source, Cell - EntryDir))
+            return true;
+
+        return BuildingLinker.IsAdjacentTo(source, Cell)
+            && BuildingLinker.HasOutputToward(source, Cell);
     }
 
     public override bool CanAcceptFrom(BuildingBase source)
@@ -107,9 +110,16 @@ public class Conveyor : BuildingBase
         return IsFedBy(source);
     }
 
+    protected virtual bool AcceptsItem(ItemData item)
+    {
+        return item != null && !item.isFluid;
+    }
+
+    protected virtual bool ShowCargoVisual => true;
+
     public override bool TryReceiveItem(ItemData item, BuildingSocket fromSocket)
     {
-        if (!isLive || item == null || !CanAccept())
+        if (!isLive || !AcceptsItem(item) || !CanAccept())
             return false;
 
         SpawnCargo(item, 0f, null);
@@ -118,7 +128,7 @@ public class Conveyor : BuildingBase
 
     public bool TryAcceptTransfer(ItemData item, Transform visual)
     {
-        if (!isLive || item == null || !CanAccept())
+        if (!isLive || !AcceptsItem(item) || !CanAccept())
             return false;
 
         SpawnCargo(item, 0f, visual);
@@ -264,10 +274,18 @@ public class Conveyor : BuildingBase
             visual = existingVisual
         };
 
-        if (cargoItem.visual == null)
-            cargoItem.visual = CreateItemVisual(item);
-        else
-            PrepareExistingVisual(cargoItem.visual);
+        if (ShowCargoVisual)
+        {
+            if (cargoItem.visual == null)
+                cargoItem.visual = CreateItemVisual(item);
+            else
+                PrepareExistingVisual(cargoItem.visual);
+        }
+        else if (cargoItem.visual != null)
+        {
+            DestroyVisual(cargoItem.visual);
+            cargoItem.visual = null;
+        }
 
         cargo.Add(cargoItem);
         UpdateCargoVisual(cargoItem);
@@ -634,7 +652,14 @@ public class Conveyor : BuildingBase
 
     void CreateCornerVisual()
     {
-        GameObject src = data != null ? data.cornerPrefab : null;
+        GameObject src = null;
+        if (data != null)
+        {
+            if (!isLive && data.cornerGhostPrefab != null)
+                src = data.cornerGhostPrefab;
+            else
+                src = data.cornerPrefab;
+        }
         if (src == null)
             return;
 
@@ -658,6 +683,42 @@ public class Conveyor : BuildingBase
         {
             if (behaviours[i] != null)
                 Destroy(behaviours[i]);
+        }
+    }
+
+    public override void WriteSave(BuildingSaveData save)
+    {
+        base.WriteSave(save);
+        if (save == null)
+            return;
+        save.cargo = new List<BeltItemSave>(cargo.Count);
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            BeltCargo entry = cargo[i];
+            if (entry == null || entry.item == null || string.IsNullOrEmpty(entry.item.id))
+                continue;
+            save.cargo.Add(new BeltItemSave
+            {
+                itemId = entry.item.id,
+                progress = entry.progress
+            });
+        }
+    }
+
+    public override void ReadSave(BuildingSaveData save)
+    {
+        base.ReadSave(save);
+        ClearCargo();
+        if (save == null || save.cargo == null)
+            return;
+
+        for (int i = 0; i < save.cargo.Count; i++)
+        {
+            BeltItemSave entry = save.cargo[i];
+            ItemData item = GameDatabase.FindItem(entry.itemId);
+            if (item == null)
+                continue;
+            SpawnCargo(item, Mathf.Clamp01(entry.progress), null);
         }
     }
 

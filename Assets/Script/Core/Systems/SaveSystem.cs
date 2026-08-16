@@ -2,113 +2,179 @@ using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
 
-[System.Serializable]
-public class SaveData
-{
-    public List<BuildingSaveData> buildings = new List<BuildingSaveData>();
-    public ResearchSaveData research = new ResearchSaveData();
-}
-
-[System.Serializable]
-public class BuildingSaveData
-{
-    public string buildingId;
-    public Vector3 position;
-    public float rotationY;
-}
-
 public class SaveSystem : MonoBehaviour
 {
     public static SaveSystem Instance { get; private set; }
 
-    private string SavePath => Path.Combine(Application.persistentDataPath, "save.json");
+    [Header("Autosave")]
+    public float autoSaveInterval = 120f;
+
+    float nextAutoSave;
 
     void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+        nextAutoSave = Time.unscaledTime + Mathf.Max(30f, autoSaveInterval);
+    }
+
+    void Update()
+    {
+        if (!WorldCatalog.HasActive)
+            return;
+        if (autoSaveInterval <= 0f)
+            return;
+        if (Time.unscaledTime < nextAutoSave)
+            return;
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+
+        SaveGame();
+        nextAutoSave = Time.unscaledTime + autoSaveInterval;
+    }
+
+    void OnApplicationQuit()
+    {
+        if (WorldCatalog.HasActive)
+            SaveGame();
+    }
+
+    void OnApplicationPause(bool paused)
+    {
+        if (paused && WorldCatalog.HasActive)
+            SaveGame();
     }
 
     public void SaveGame()
     {
-        SaveData data = new SaveData();
+        if (!WorldCatalog.HasActive)
+        {
+            Debug.LogWarning("[Save] Нет активного мира");
+            return;
+        }
+
+        SaveData data = new SaveData
+        {
+            version = SaveData.CurrentVersion,
+            worldName = WorldCatalog.Active.name,
+            seed = WorldCatalog.Active.seed
+        };
+
+        PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
+        if (player != null)
+        {
+            data.hasPlayer = true;
+            data.playerPos = player.transform.position;
+            data.playerYaw = player.transform.eulerAngles.y;
+            data.playerPitch = player.Pitch;
+        }
 
         BuildingBase[] buildings = FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
         for (int i = 0; i < buildings.Length; i++)
         {
             BuildingBase building = buildings[i];
-            if (building == null || building.data == null) continue;
-            if (string.IsNullOrEmpty(building.data.id)) continue;
+            if (building == null || building.data == null)
+                continue;
+            if (string.IsNullOrEmpty(building.data.id))
+                continue;
 
-            data.buildings.Add(new BuildingSaveData
+            BuildingSaveData row = new BuildingSaveData
             {
                 buildingId = building.data.id,
                 position = building.transform.position,
-                rotationY = building.transform.eulerAngles.y
-            });
+                rotationY = building.transform.eulerAngles.y,
+                level = building.ReadLevel()
+            };
+            building.WriteSave(row);
+            data.buildings.Add(row);
         }
 
         if (ResearchSystem.Instance != null)
             data.research = ResearchSystem.Instance.CaptureSave();
 
-        string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SavePath, json);
-        Debug.Log($"Game saved: {data.buildings.Count} buildings → {SavePath}");
+        PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
+        if (inv != null)
+        {
+            data.hotbarBuildingIds = inv.CaptureHotbarIds();
+            data.hotbarSelectedIndex = inv.selectedIndex;
+        }
+
+        string path = WorldCatalog.ActiveSavePath;
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        File.WriteAllText(path, JsonUtility.ToJson(data, true));
+        WorldCatalog.SetActive(WorldCatalog.Active);
+        Debug.Log($"[Save] v{data.version}  {data.buildings.Count} зданий → {path}");
     }
 
     public void LoadGame()
     {
-        if (!File.Exists(SavePath))
+        if (!WorldCatalog.HasActive)
         {
-            Debug.Log("No save file found");
+            Debug.Log("[Save] Нет активного мира — новая сессия сцены");
             return;
         }
 
-        string json = File.ReadAllText(SavePath);
-        SaveData data = JsonUtility.FromJson<SaveData>(json);
+        string path = WorldCatalog.ActiveSavePath;
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            return;
+
+        SaveData data = SaveData.Normalize(JsonUtility.FromJson<SaveData>(File.ReadAllText(path)));
         if (data == null)
         {
-            Debug.LogError("[SaveSystem] Failed to parse save file");
+            Debug.LogError("[Save] Не удалось прочитать сохранение");
             return;
         }
 
-        BuildingData[] catalog = ResolveBuildingCatalog();
-        if (catalog == null || catalog.Length == 0)
-        {
-            Debug.LogError("[SaveSystem] No BuildingData catalog (PlayerInventory.allBuildings)");
-            return;
-        }
-
+        BuildingData[] catalog = GameDatabase.AllBuildings();
+        BuildingLinker.SuppressRelink = true;
         ClearWorldBuildings();
 
-        int spawned = 0;
+        var spawned = new List<BuildingBase>();
+        var states = new List<BuildingSaveData>();
+        int count = 0;
         if (data.buildings != null)
         {
             for (int i = 0; i < data.buildings.Count; i++)
             {
-                if (SpawnBuilding(data.buildings[i], catalog))
-                    spawned++;
+                BuildingBase building = SpawnBuilding(data.buildings[i], catalog);
+                if (building == null)
+                    continue;
+                spawned.Add(building);
+                states.Add(data.buildings[i]);
+                count++;
             }
+        }
+
+        BuildingLinker.SuppressRelink = false;
+        BuildingLinker.RelinkAll();
+
+        for (int i = 0; i < spawned.Count; i++)
+        {
+            if (spawned[i] == null)
+                continue;
+            spawned[i].ApplyLevel(states[i].level);
+            spawned[i].ReadSave(states[i]);
         }
 
         if (ResearchSystem.Instance != null)
             ResearchSystem.Instance.ApplySave(data.research);
 
-        Debug.Log($"Game loaded: {spawned} buildings");
-    }
-
-    public void DeleteSave()
-    {
-        if (File.Exists(SavePath))
-            File.Delete(SavePath);
-    }
-
-    static BuildingData[] ResolveBuildingCatalog()
-    {
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
-        if (inv != null && inv.allBuildings != null && inv.allBuildings.Length > 0)
-            return inv.allBuildings;
-        return null;
+        if (inv != null)
+        {
+            inv.ApplyHotbarIds(data.hotbarBuildingIds);
+            inv.SelectSlot(data.hotbarSelectedIndex);
+        }
+
+        if (data.hasPlayer)
+        {
+            PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
+            if (player != null)
+                player.ApplySavedPose(data.playerPos, data.playerYaw, data.playerPitch);
+        }
+
+        nextAutoSave = Time.unscaledTime + Mathf.Max(30f, autoSaveInterval);
+        Debug.Log($"[Save] Загружено зданий: {count}  (файл v{data.version})");
     }
 
     static BuildingData FindBuildingData(string id, BuildingData[] catalog)
@@ -116,13 +182,15 @@ public class SaveSystem : MonoBehaviour
         if (string.IsNullOrEmpty(id) || catalog == null)
             return null;
 
+        string key = GameDatabase.Normalize(id);
         for (int i = 0; i < catalog.Length; i++)
         {
             BuildingData d = catalog[i];
-            if (d != null && d.id == id)
+            if (d != null && GameDatabase.Normalize(d.id) == key)
                 return d;
         }
-        return null;
+
+        return GameDatabase.FindBuilding(id);
     }
 
     static void ClearWorldBuildings()
@@ -131,21 +199,23 @@ public class SaveSystem : MonoBehaviour
         for (int i = 0; i < buildings.Length; i++)
         {
             BuildingBase b = buildings[i];
-            if (b == null) continue;
+            if (b == null)
+                continue;
             b.OnRemoved();
             Object.Destroy(b.gameObject);
         }
     }
 
-    static bool SpawnBuilding(BuildingSaveData bsd, BuildingData[] catalog)
+    static BuildingBase SpawnBuilding(BuildingSaveData bsd, BuildingData[] catalog)
     {
-        if (bsd == null) return false;
+        if (bsd == null)
+            return null;
 
         BuildingData data = FindBuildingData(bsd.buildingId, catalog);
         if (data == null || data.prefab == null)
         {
-            Debug.LogWarning($"[SaveSystem] Missing building prefab for id={bsd.buildingId}");
-            return false;
+            Debug.LogWarning("[SaveSystem] Нет префаба для id=" + bsd.buildingId);
+            return null;
         }
 
         Quaternion rot = Quaternion.Euler(0f, bsd.rotationY, 0f);
@@ -155,13 +225,15 @@ public class SaveSystem : MonoBehaviour
         {
             building.data = data;
             building.OnPlaced();
+            return building;
         }
-        else if (GridSystem.Instance != null)
+
+        if (GridSystem.Instance != null)
         {
             Vector2Int size = GridFootprint.GetRotatedSize(data.size, bsd.rotationY);
             GridFootprint.Register(go, bsd.position, size);
         }
 
-        return true;
+        return null;
     }
 }

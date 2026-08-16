@@ -7,6 +7,12 @@ public class BuildSelectionController : MonoBehaviour
     public bool BlocksBuildInput =>
         selectionMode || pasteActive || moveActive;
 
+    public bool IsSelectionMode => selectionMode;
+    public bool IsPasteActive => pasteActive;
+    public bool IsMoveActive => moveActive;
+    public bool HasClipboard => clipboard.Count > 0;
+    public bool HasSelectedBuildings => selectedBuildings.Count > 0;
+
     PlayerBuilder builder;
     PlayerInventory inventory;
     InputSystem_Actions input;
@@ -70,12 +76,11 @@ public class BuildSelectionController : MonoBehaviour
         inventory = GetComponent<PlayerInventory>();
         if (inventory == null)
             inventory = FindFirstObjectByType<PlayerInventory>();
-        input = new InputSystem_Actions();
+        input = KeybindStore.Shared;
     }
 
     void OnEnable()
     {
-        input.Enable();
         input.Player.SelectMode.performed += OnSelectMode;
         input.Player.ClearSelection.performed += OnClearSelection;
         input.Player.Copy.performed += OnCopy;
@@ -99,7 +104,6 @@ public class BuildSelectionController : MonoBehaviour
         input.Player.Place.canceled -= OnPlaceCanceled;
         input.Player.Rotate.performed -= OnRotate;
         CancelPreview();
-        input.Disable();
     }
 
     void Update()
@@ -146,9 +150,10 @@ public class BuildSelectionController : MonoBehaviour
     {
         if (builder == null || !builder.isBuildMode || IsBlocked())
             return;
-        if (inventory == null || !inventory.HasEmptySlotSelected())
+        if (inventory == null)
             return;
 
+        inventory.SelectEmptyTool();
         if (selectionMode)
             ExitAll();
         else
@@ -463,13 +468,17 @@ public class BuildSelectionController : MonoBehaviour
             Vector2Int size = GridFootprint.GetRotatedSize(item.data.size, item.yaw);
             Vector2Int min = origin + item.minOffset;
             Vector3 pos = GridFootprint.MinCellToCenter(min, size, y);
-            bool valid = GridOccupancy.IsAreaFree(min, size, reserveToken, moveActive ? moveIgnore : null);
+            bool valid = GridOccupancy.IsAreaFree(min, size, reserveToken, moveActive ? moveIgnore : null)
+                && WorldBiomeMap.CanBuild(min, size, item.data.allowOnWater, item.data.requiresWater);
             if (valid && pasteActive && item.data.id == "research_lab")
             {
                 valid = labUsed < labCap;
                 if (valid)
                     labUsed++;
             }
+            if (valid && PlayerBuilder.NeedsResourceNode(item.data)
+                && !ResourceNode.HasNodeInArea(min, size))
+                valid = false;
 
             item.valid = valid;
             preview[i] = item;
@@ -669,7 +678,13 @@ public class BuildSelectionController : MonoBehaviour
 
         for (int i = 0; i < planned.Count; i++)
         {
-            if (!GridOccupancy.IsAreaFree(planned[i].min, planned[i].size, null, ignore))
+            Planned p = planned[i];
+            bool allowWater = p.building.data != null && p.building.data.allowOnWater;
+            bool requireWater = p.building.data != null && p.building.data.requiresWater;
+            if (!GridOccupancy.IsAreaFree(p.min, p.size, null, ignore)
+                || !WorldBiomeMap.CanBuild(p.min, p.size, allowWater, requireWater))
+                return false;
+            if (PlayerBuilder.NeedsResourceNode(p.building.data) && !ResourceNode.HasNodeInArea(p.min, p.size))
                 return false;
         }
         return true;

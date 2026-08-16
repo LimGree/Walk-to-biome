@@ -149,6 +149,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 9004383054352979639}
     m_Modifications:
+    - target: {fileID: 231005725330259065, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 512513405804344630, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -189,9 +193,45 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 799963752360878265, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 889180098847551372, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
       propertyPath: m_Name
       value: robotic_arm_model
+      objectReference: {fileID: 0}
+    - target: {fileID: 889180098847551372, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4809664278365782382, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5179751692076167626, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5190866167879289869, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6541160807671357912, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8190032371641792641, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8384281437250540344, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8664955102223520461, guid: cc6c5386787c2c14b903aa6fc5b7ad71, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

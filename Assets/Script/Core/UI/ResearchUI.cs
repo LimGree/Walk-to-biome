@@ -17,7 +17,7 @@ public class ResearchUI : MonoBehaviour
 
     void Awake()
     {
-        inputActions = new InputSystem_Actions();
+        inputActions = KeybindStore.Shared;
     }
 
     void Start()
@@ -28,18 +28,18 @@ public class ResearchUI : MonoBehaviour
 
     void OnEnable()
     {
-        inputActions.Enable();
         inputActions.Player.Research.performed += OnResearchToggle;
     }
 
     void OnDisable()
     {
         inputActions.Player.Research.performed -= OnResearchToggle;
-        inputActions.Disable();
     }
 
     void OnResearchToggle(InputAction.CallbackContext ctx)
     {
+        if (KeybindStore.BlocksGameplayInput)
+            return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)

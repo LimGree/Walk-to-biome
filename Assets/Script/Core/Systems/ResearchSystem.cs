@@ -50,6 +50,12 @@ public class ResearchSystem : MonoBehaviour
         GrantStartingUnlocks();
     }
 
+    void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
     void GrantStartingUnlocks()
     {
         unlockedBuildings.Clear();
@@ -72,6 +78,7 @@ public class ResearchSystem : MonoBehaviour
                     unlockedRecipes.Add(startingRecipes[i]);
             }
         }
+
     }
 
     public bool IsResearchUnlocked(ResearchNodeData node)
@@ -288,19 +295,28 @@ public class ResearchSystem : MonoBehaviour
     public List<ResearchNodeData> GetAvailableResearch()
     {
         var list = new List<ResearchNodeData>();
-        if (allResearchNodes == null)
+        List<ResearchNodeData> nodes = GetAllNodes();
+        if (nodes == null)
             return list;
 
-        for (int i = 0; i < allResearchNodes.Count; i++)
+        for (int i = 0; i < nodes.Count; i++)
         {
-            if (CanStartResearch(allResearchNodes[i]))
-                list.Add(allResearchNodes[i]);
+            if (CanStartResearch(nodes[i]))
+                list.Add(nodes[i]);
         }
 
         return list;
     }
 
-    public List<ResearchNodeData> GetAllNodes() => allResearchNodes;
+    public List<ResearchNodeData> GetAllNodes()
+    {
+        ResearchNodeData[] fromDb = GameDatabase.AllResearches();
+        if (fromDb != null && fromDb.Length > 0)
+            return new List<ResearchNodeData>(fromDb);
+        if (allResearchNodes != null && allResearchNodes.Count > 0)
+            return allResearchNodes;
+        return new List<ResearchNodeData>();
+    }
 
     [ContextMenu("Debug/Complete Current Research")]
     void DebugCompleteCurrentResearch()
@@ -428,6 +444,10 @@ public class ResearchSystem : MonoBehaviour
 
     ResearchNodeData FindNode(string id)
     {
+        ResearchNodeData fromDb = GameDatabase.FindResearch(id);
+        if (fromDb != null)
+            return fromDb;
+
         if (string.IsNullOrEmpty(id) || allResearchNodes == null)
             return null;
 
@@ -450,31 +470,6 @@ public class ResearchSystem : MonoBehaviour
 
     static ItemData FindItem(string id)
     {
-        if (string.IsNullOrEmpty(id))
-            return null;
-
-        ItemData[] items = Resources.FindObjectsOfTypeAll<ItemData>();
-        for (int i = 0; i < items.Length; i++)
-        {
-            if (items[i] != null && items[i].id == id)
-                return items[i];
-        }
-
-        return null;
+        return GameDatabase.FindItem(id);
     }
-}
-
-[System.Serializable]
-public class ResearchSaveData
-{
-    public List<string> unlockedResearchIds = new List<string>();
-    public string currentResearchId;
-    public List<ItemAmountSave> submittedItems = new List<ItemAmountSave>();
-}
-
-[System.Serializable]
-public class ItemAmountSave
-{
-    public string itemId;
-    public int amount;
 }
