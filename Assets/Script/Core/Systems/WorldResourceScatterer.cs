@@ -514,10 +514,25 @@ public class WorldResourceScatterer : MonoBehaviour
         if (ironPrefab == null) ironPrefab = LoadPrefab("stone_iron_ore");
         if (sulfurPrefab == null) sulfurPrefab = LoadPrefab("sulfur");
         if (treePrefab == null) treePrefab = LoadPrefab("tree");
+
+        if (sandPrefab == null && stonePrefab == null && treePrefab == null)
+            Debug.LogError("WorldResourceScatterer: no resource prefabs in the player. Add them to Resources/ResourceNodePrefabs.");
     }
 
     static GameObject LoadPrefab(string name)
     {
+        ResourceNodePrefabs catalog = Resources.Load<ResourceNodePrefabs>("ResourceNodePrefabs");
+        if (catalog != null)
+        {
+            GameObject fromCatalog = catalog.Get(name);
+            if (fromCatalog != null)
+                return fromCatalog;
+        }
+
+        GameObject fromResources = Resources.Load<GameObject>("resourses/" + name);
+        if (fromResources != null)
+            return fromResources;
+
 #if UNITY_EDITOR
         string[] guids = AssetDatabase.FindAssets(name + " t:Prefab", new[] { "Assets/prefabs/resourses" });
         for (int i = 0; i < (guids != null ? guids.Length : 0); i++)
@@ -532,7 +547,8 @@ public class WorldResourceScatterer : MonoBehaviour
         if (guids != null && guids.Length > 0)
             return AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guids[0]));
 #endif
-        return Resources.Load<GameObject>("resourses/" + name);
+        Debug.LogWarning("WorldResourceScatterer: missing prefab " + name);
+        return null;
     }
 
     struct MountainInfo
