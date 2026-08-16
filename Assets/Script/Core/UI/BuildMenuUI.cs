@@ -74,6 +74,9 @@ public class BuildMenuUI : MonoBehaviour
     {
         if (availableBuildings != null && availableBuildings.Length > 0)
             return availableBuildings;
+        BuildingData[] fromDb = GameDatabase.AllBuildings();
+        if (fromDb != null && fromDb.Length > 0)
+            return fromDb;
         if (inventory != null && inventory.allBuildings != null && inventory.allBuildings.Length > 0)
             return inventory.allBuildings;
         return null;
@@ -84,8 +87,7 @@ public class BuildMenuUI : MonoBehaviour
         if (inventory == null || building == null)
             return;
 
-        inventory.SetHotbarSlot(0, building);
-        inventory.selectedIndex = 0;
+        inventory.Equip(building);
 
         // Закрываем меню, но оставляем Build Mode (можно ставить из hotbar)
         CloseMenu(restorePlayerControl: true);

@@ -58,18 +58,31 @@ public class BuildGridVisualizer : MonoBehaviour
             return;
         }
 
-        if (!playerBuilder.IsBuildModeActive || !playerBuilder.HasPlacementTarget)
+        if (!playerBuilder.isBuildMode)
         {
             SetVisible(false);
             return;
         }
 
         SetVisible(true);
-        UpdateVisuals(
-            playerBuilder.CurrentPlacementPosition,
-            playerBuilder.CurrentFootprintSize,
-            playerBuilder.CanPlaceCurrent
-        );
+
+        if (playerBuilder.IsBuildModeActive && playerBuilder.HasPlacementTarget)
+        {
+            UpdateVisuals(
+                playerBuilder.CurrentPlacementPosition,
+                playerBuilder.CurrentFootprintSize,
+                playerBuilder.CanPlaceCurrent
+            );
+        }
+        else if (playerBuilder.HasPlacementTarget)
+        {
+            PlaceGridPlane(playerBuilder.CurrentPlacementPosition, playerBuilder.CurrentPlacementPosition.y + yOffset);
+            HideFootprint();
+        }
+        else
+        {
+            UpdateGridAroundPlayer();
+        }
     }
 
     void CreateVisuals()
@@ -167,14 +180,31 @@ public class BuildGridVisualizer : MonoBehaviour
         return texture;
     }
 
-    void UpdateVisuals(Vector3 placementCenter, Vector2Int footprintSize, bool canPlace)
+    void UpdateGridAroundPlayer()
     {
-        footprintSize = GridFootprint.NormalizeSize(footprintSize);
-        float surfaceY = placementCenter.y + yOffset;
-        float cell = grid.cellSize;
+        Transform player = playerBuilder.transform;
+        Vector3 pos = player.position;
+        pos.y = grid.origin.y;
+        PlaceGridPlane(pos, pos.y + yOffset);
 
-        // --- Фоновая сетка вокруг центра placement ---
-        Vector2Int centerCell = GridFootprint.GetMinCell(placementCenter, Vector2Int.one);
+        HideFootprint();
+    }
+
+    void HideFootprint()
+    {
+        if (footprintBorder != null)
+            footprintBorder.gameObject.SetActive(false);
+        for (int i = 0; i < cellHighlights.Count; i++)
+        {
+            if (cellHighlights[i] != null)
+                cellHighlights[i].gameObject.SetActive(false);
+        }
+    }
+
+    void PlaceGridPlane(Vector3 worldPos, float surfaceY)
+    {
+        float cell = grid.cellSize;
+        Vector2Int centerCell = GridFootprint.GetMinCell(worldPos, Vector2Int.one);
         int diameter = radiusInCells * 2 + 1;
         float worldSize = diameter * cell;
         float planeScale = worldSize / 10f;
@@ -185,9 +215,17 @@ public class BuildGridVisualizer : MonoBehaviour
             lastDiameter = diameter;
         }
 
-        Vector3 gridCenter = grid.GetCellCenter(centerCell, surfaceY);
-        gridPlane.position = gridCenter;
+        gridPlane.position = grid.GetCellCenter(centerCell, surfaceY);
         gridPlane.localScale = new Vector3(planeScale, 1f, planeScale);
+    }
+
+    void UpdateVisuals(Vector3 placementCenter, Vector2Int footprintSize, bool canPlace)
+    {
+        footprintSize = GridFootprint.NormalizeSize(footprintSize);
+        float surfaceY = placementCenter.y + yOffset;
+        float cell = grid.cellSize;
+
+        PlaceGridPlane(placementCenter, surfaceY);
 
         // --- Рамка всего footprint (center pivot) ---
         Vector3 fpWorld = GridFootprint.GetWorldSize(footprintSize);

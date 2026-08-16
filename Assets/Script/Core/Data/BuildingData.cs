@@ -15,6 +15,10 @@ public class BuildingData : ScriptableObject
     [Header("Conveyor")]
     [Tooltip("Если задан — это конвейер: в хотбаре один слот, прямой/угол выбирается сам.")]
     public GameObject cornerPrefab;
+    [Tooltip("Гост угла для превью линии. Если пусто — берётся cornerPrefab.")]
+    public GameObject cornerGhostPrefab;
+    [Tooltip("Труба: ставится линией, как конвейер, но возит только жидкости.")]
+    public bool isPipe;
 
     [Header("Visuals")]
     public Sprite icon;
@@ -27,7 +31,15 @@ public class BuildingData : ScriptableObject
     [Header("Optional")]
     public int buildCost = 0;
 
-    public bool IsConveyor => cornerPrefab != null;
+    [Header("Placement")]
+    [Tooltip("Ставить только на жилу. Для экстрактора и будущих шахтёров.")]
+    public bool requiresResourceNode;
+    [Tooltip("Можно ставить на воду. Для водокачки.")]
+    public bool allowOnWater;
+    [Tooltip("Только на воду (озеро / океан). Для водокачки.")]
+    public bool requiresWater;
+
+    public bool IsConveyor => cornerPrefab != null || isPipe;
 
     public GameObject GetDefaultPlacePrefab()
     {

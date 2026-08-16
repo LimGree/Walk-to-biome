@@ -69,7 +69,7 @@ public class Splitter : BuildingBase
 
     public override bool TryReceiveItem(ItemData item, BuildingSocket fromSocket)
     {
-        if (!isLive || item == null || !CanAccept())
+        if (!isLive || item == null || item.isFluid || !CanAccept())
             return false;
 
         SpawnCargo(item, null, InferEntryDir(fromSocket), Vector2Int.zero);
@@ -78,7 +78,7 @@ public class Splitter : BuildingBase
 
     public bool TryAcceptTransfer(ItemData item, Transform visual)
     {
-        if (!isLive || item == null || !CanAccept())
+        if (!isLive || item == null || item.isFluid || !CanAccept())
             return false;
 
         Vector3 from = visual != null ? visual.position : transform.position;
@@ -341,6 +341,55 @@ public class Splitter : BuildingBase
     static Vector2Int Opposite(Vector2Int dir)
     {
         return new Vector2Int(-dir.x, -dir.y);
+    }
+
+    public override void WriteSave(BuildingSaveData save)
+    {
+        base.WriteSave(save);
+        if (save == null)
+            return;
+        save.stateInt = nextOutput;
+        save.cargo = new List<BeltItemSave>(cargo.Count);
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            Cargo entry = cargo[i];
+            if (entry == null || entry.item == null || string.IsNullOrEmpty(entry.item.id))
+                continue;
+            save.cargo.Add(new BeltItemSave
+            {
+                itemId = entry.item.id,
+                progress = entry.progress,
+                entryX = entry.entryDir.x,
+                entryY = entry.entryDir.y,
+                exitX = entry.exitDir.x,
+                exitY = entry.exitDir.y
+            });
+        }
+    }
+
+    public override void ReadSave(BuildingSaveData save)
+    {
+        base.ReadSave(save);
+        ClearCargo();
+        if (save == null)
+            return;
+
+        nextOutput = Mathf.Max(0, save.stateInt);
+        if (save.cargo == null)
+            return;
+
+        for (int i = 0; i < save.cargo.Count; i++)
+        {
+            BeltItemSave entry = save.cargo[i];
+            ItemData item = GameDatabase.FindItem(entry.itemId);
+            if (item == null)
+                continue;
+            Vector2Int entryDir = new Vector2Int(entry.entryX, entry.entryY);
+            Vector2Int exitDir = new Vector2Int(entry.exitX, entry.exitY);
+            SpawnCargo(item, null, entryDir, exitDir);
+            if (cargo.Count > 0)
+                cargo[cargo.Count - 1].progress = Mathf.Clamp01(entry.progress);
+        }
     }
 
     void ClearCargo()

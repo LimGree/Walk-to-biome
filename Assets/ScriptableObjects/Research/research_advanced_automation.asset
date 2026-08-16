@@ -29,4 +29,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1a34ef5082ad6414ead63fc762ae0f41, type: 2}
   unlockedBuildings:
   - {fileID: 11400000, guid: 9a1b2c3d4e5f60718293a4b5c6d7e8f0, type: 2}
-  unlockedRecipes: []
+  unlockedRecipes:
+  - {fileID: 11400000, guid: 4041424344454647484940a1b2c3d4e8, type: 2}
+  - {fileID: 11400000, guid: 5051525354555657585950a1b2c3d4e9, type: 2}
+  - {fileID: 11400000, guid: 6061626364656667686960a1b2c3d4ea, type: 2}
+  - {fileID: 11400000, guid: 8081828384858687888980a1b2c3d4ec, type: 2}

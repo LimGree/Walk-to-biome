@@ -4,16 +4,20 @@ using UnityEngine;
 public class ItemData : ScriptableObject
 {
     [Header("Basic Info")]
-    public string id;                    // уникальный идентификатор (например "iron_ore")
-    public string displayName;           // "Железная руда"
+    public string id;                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ "iron_ore")
+    public string displayName;           // "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ"
     [TextArea] public string description;
 
     [Header("Visuals")]
-    public Sprite icon;                  // иконка для UI и инвентаря
-    public GameObject worldPrefab;       // префаб предмета, который едет по конвейеру
+    public Sprite icon;                  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ UI пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    public GameObject worldPrefab;       // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
     [Header("Settings")]
     public int maxStack = 100;
-    public bool isFuel = false;          // можно ли использовать как топливо
-    public float fuelValue = 0f;         // сколько секунд горит (если isFuel)
+    public bool isFuel = false;
+    public float fuelValue = 0f;
+
+    [Header("Future")]
+    [Tooltip("Р–РёРґРєРѕСЃС‚СЊ: РЅРµС„С‚СЊ, РІРѕРґР°, РєРёСЃР»РѕС‚Р°. РџРѕРєР° РЅР° Р»РµРЅС‚С‹ РЅРµ РІР»РёСЏРµС‚.")]
+    public bool isFluid;
 }

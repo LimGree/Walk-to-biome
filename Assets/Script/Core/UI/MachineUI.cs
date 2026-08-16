@@ -192,25 +192,29 @@ public class MachineUI : MonoBehaviour
         // Прячем все контенты
         HideAllContents();
 
-        if (building is Extractor extractor)
+        if (building is OilExtractor oil)
+        {
+            SetHeader("Нефтекачалка  ·  " + oil.RichnessName, building);
+            ShowOilExtractorUI(oil);
+        }
+        else if (building is WaterExtractor water)
+        {
+            SetHeader(water.data != null ? water.data.displayName : "Водокачка", building);
+            ShowWaterExtractorUI(water);
+        }
+        else if (building is Extractor extractor)
         {
             SetHeader("Extractor  ·  ур. " + extractor.level, building);
             ShowExtractorUI(extractor);
         }
-        else if (building is Smelter smelter)
+        else if (building is CrafterBuilding crafter)
         {
-            SetHeader("Smelter", building);
-            ShowSmelterUI(smelter);
-        }
-        else if (building is Assembler assembler)
-        {
-            SetHeader("Assembler  ·  ур. " + assembler.level, building);
-            ShowAssemblerUI(assembler);
-        }
-        else if (building is Constructor constructor)
-        {
-            SetHeader("Constructor", building);
-            ShowConstructorUI(constructor);
+            string title = building.data != null ? building.data.displayName : crafter.GetType().Name;
+            Assembler assembler = crafter as Assembler;
+            if (assembler != null)
+                title += "  ·  ур. " + assembler.level;
+            SetHeader(title, building);
+            ShowCrafterUI(crafter);
         }
         else if (building is ResearchLab lab)
         {
@@ -283,6 +287,64 @@ public class MachineUI : MonoBehaviour
         if (armFilterContent) armFilterContent.SetActive(false);
     }
 
+    void ShowOilExtractorUI(OilExtractor oil)
+    {
+        if (extractorContent != null)
+            extractorContent.SetActive(true);
+        if (extractorButtonsParent == null)
+            return;
+
+        foreach (Transform child in extractorButtonsParent)
+            Destroy(child.gameObject);
+
+        var fake = ScriptableObject.CreateInstance<RecipeData>();
+        fake.displayName = oil.resource != null
+            ? "Добыча  " + oil.resource.displayName
+            : "Нет нефти";
+        if (oil.resource != null)
+            fake.outputs.Add(new ItemStack(oil.resource, oil.CurrentItemsPerCycle));
+
+        UiFactory.CreateRecipeCard(extractorButtonsParent, fake, true, null);
+        Object.Destroy(fake);
+
+        string stats = oil.RichnessName + "  ·  " + oil.CurrentInterval.ToString("0.##") + " с / цикл";
+        UiFactory.CreateActionButton(
+            extractorButtonsParent,
+            "Скважина",
+            stats + "  ·  бесконечный запас",
+            false,
+            null);
+    }
+
+    void ShowWaterExtractorUI(WaterExtractor pump)
+    {
+        if (extractorContent != null)
+            extractorContent.SetActive(true);
+        if (extractorButtonsParent == null)
+            return;
+
+        foreach (Transform child in extractorButtonsParent)
+            Destroy(child.gameObject);
+
+        var fake = ScriptableObject.CreateInstance<RecipeData>();
+        fake.displayName = pump.resource != null
+            ? "Добыча  " + pump.resource.displayName
+            : "Нет воды";
+        if (pump.resource != null)
+            fake.outputs.Add(new ItemStack(pump.resource, pump.CurrentItemsPerCycle));
+
+        UiFactory.CreateRecipeCard(extractorButtonsParent, fake, true, null);
+        Object.Destroy(fake);
+
+        string stats = pump.CurrentInterval.ToString("0.##") + " с / цикл";
+        UiFactory.CreateActionButton(
+            extractorButtonsParent,
+            "Источник",
+            stats + "  ·  бесконечный запас",
+            false,
+            null);
+    }
+
     // ================== EXTRACTOR ==================
 
     void ShowExtractorUI(Extractor extractor)
@@ -331,58 +393,35 @@ public class MachineUI : MonoBehaviour
         }
     }
 
-    // ================== SMELTER ==================
-
-    void ShowSmelterUI(Smelter smelter)
-    {
-        smelterContent.SetActive(true);
-        RefreshRecipeList(smelter);
-    }
-
-    // ================== ASSEMBLER ==================
-
-    void ShowAssemblerUI(Assembler assembler)
-    {
-        // Список рецептов живёт в SmelterContent.
-        if (smelterContent != null)
-            smelterContent.SetActive(true);
-        RefreshRecipeList(assembler);
-    }
-
-    // ================== CONSTRUCTOR ==================
-
-    void ShowConstructorUI(Constructor constructor)
+    void ShowCrafterUI(CrafterBuilding crafter)
     {
         if (smelterContent != null)
             smelterContent.SetActive(true);
-        RefreshRecipeList(constructor);
+        RefreshRecipeList(crafter);
     }
 
-    void RefreshRecipeList(BuildingBase building)
+    void RefreshRecipeList(CrafterBuilding crafter)
     {
         if (recipeButtonsParent == null) return;
 
         foreach (Transform child in recipeButtonsParent)
             Destroy(child.gameObject);
 
-        EnsureRecipeCatalog();
-
-        if (allRecipes == null || building == null)
+        RecipeData[] catalog = GameDatabase.AllRecipes();
+        if (crafter == null)
             return;
 
-        BuildingData thisBuildingData = building.data;
-        RecipeData selected = GetCurrentRecipe(building);
+        BuildingData thisBuildingData = crafter.data;
+        RecipeData selected = crafter.currentRecipe;
 
-        foreach (var recipe in allRecipes)
+        for (int i = 0; i < catalog.Length; i++)
         {
-            if (recipe == null) continue;
-
-            if (recipe.requiredBuilding != null && thisBuildingData != null
-                && recipe.requiredBuilding != thisBuildingData)
+            RecipeData recipe = catalog[i];
+            if (recipe == null)
                 continue;
-
-            if (ResearchSystem.Instance != null
-                && !ResearchSystem.Instance.IsRecipeUnlocked(recipe))
+            if (!recipe.AllowsBuilding(thisBuildingData))
+                continue;
+            if (ResearchSystem.Instance != null && !ResearchSystem.Instance.IsRecipeUnlocked(recipe))
                 continue;
 
             RecipeData captured = recipe;
@@ -392,15 +431,16 @@ public class MachineUI : MonoBehaviour
                 selected == recipe,
                 () =>
                 {
-                    ApplyRecipe(building, captured);
-                    RefreshRecipeList(building);
+                    crafter.SetRecipe(captured);
+                    RefreshRecipeList(crafter);
                 });
         }
 
         if (currentRecipeText != null)
-            currentRecipeText.text = GetCurrentRecipeName(building);
+            currentRecipeText.text = selected != null ? "Selected: " + selected.displayName : "Select a recipe";
 
-        if (building is Assembler assembler)
+        Assembler assembler = crafter as Assembler;
+        if (assembler != null)
             AddAssemblerUpgradeButton(assembler);
     }
 
@@ -437,40 +477,7 @@ public class MachineUI : MonoBehaviour
         }
     }
 
-    static void ApplyRecipe(BuildingBase building, RecipeData recipe)
-    {
-        if (building is Smelter smelter)
-            smelter.SetRecipe(recipe);
-        else if (building is Assembler assembler)
-            assembler.SetRecipe(recipe);
-        else if (building is Constructor constructor)
-            constructor.SetRecipe(recipe);
-    }
 
-    static RecipeData GetCurrentRecipe(BuildingBase building)
-    {
-        if (building is Smelter smelter)
-            return smelter.currentRecipe;
-        if (building is Assembler assembler)
-            return assembler.currentRecipe;
-        if (building is Constructor constructor)
-            return constructor.currentRecipe;
-        return null;
-    }
-
-    static string GetCurrentRecipeName(BuildingBase building)
-    {
-        RecipeData recipe = GetCurrentRecipe(building);
-        return recipe != null ? "Selected: " + recipe.displayName : "Select a recipe";
-    }
-
-    void EnsureRecipeCatalog()
-    {
-        if (allRecipes != null && allRecipes.Length > 0)
-            return;
-
-        allRecipes = Resources.FindObjectsOfTypeAll<RecipeData>();
-    }
 
     // ================== STORAGE ==================
 
@@ -623,7 +630,7 @@ public class MachineUI : MonoBehaviour
             });
 
         var seen = new HashSet<string>();
-        ItemData[] items = Resources.FindObjectsOfTypeAll<ItemData>();
+        ItemData[] items = GameDatabase.AllItems();
         for (int i = 0; i < items.Length; i++)
         {
             ItemData item = items[i];
@@ -704,24 +711,10 @@ public class MachineUI : MonoBehaviour
 
     void UpdateProgress()
     {
-        if (currentBuilding is Smelter smelter && progressSlider != null)
+        if (currentBuilding is CrafterBuilding crafter && progressSlider != null)
         {
-            if (smelter.currentRecipe != null)
-                progressSlider.value = smelter.craftProgress / smelter.currentRecipe.craftTime;
-            else
-                progressSlider.value = 0f;
-        }
-        else if (currentBuilding is Assembler assembler && progressSlider != null)
-        {
-            if (assembler.currentRecipe != null)
-                progressSlider.value = assembler.craftProgress / assembler.currentRecipe.craftTime;
-            else
-                progressSlider.value = 0f;
-        }
-        else if (currentBuilding is Constructor constructor && progressSlider != null)
-        {
-            if (constructor.currentRecipe != null && constructor.currentRecipe.craftTime > 0f)
-                progressSlider.value = constructor.craftProgress / constructor.currentRecipe.craftTime;
+            if (crafter.currentRecipe != null && crafter.currentRecipe.craftTime > 0f)
+                progressSlider.value = crafter.craftProgress / crafter.currentRecipe.craftTime;
             else
                 progressSlider.value = 0f;
         }

@@ -10,21 +10,48 @@ public static class GridOccupancy
     private static readonly Dictionary<GameObject, List<Vector2Int>> objectCells =
         new Dictionary<GameObject, List<Vector2Int>>();
 
+    private static readonly Dictionary<Vector2Int, object> reservedCells =
+        new Dictionary<Vector2Int, object>();
+
+    private static readonly Dictionary<object, List<Vector2Int>> reservationCells =
+        new Dictionary<object, List<Vector2Int>>();
+
     public static bool IsCellFree(Vector2Int cell)
     {
-        if (!occupiedCells.TryGetValue(cell, out GameObject obj))
-            return true;
+        return IsCellFree(cell, null, null);
+    }
 
-        if (obj == null)
+    public static bool IsCellFree(
+        Vector2Int cell,
+        object ignoreReservation,
+        HashSet<GameObject> ignoreOccupants)
+    {
+        if (occupiedCells.TryGetValue(cell, out GameObject obj))
         {
-            occupiedCells.Remove(cell);
-            return true;
+            if (obj == null)
+                occupiedCells.Remove(cell);
+            else if (ignoreOccupants == null || !ignoreOccupants.Contains(obj))
+                return false;
         }
 
-        return false;
+        if (reservedCells.TryGetValue(cell, out object token)
+            && token != null
+            && token != ignoreReservation)
+            return false;
+
+        return true;
     }
 
     public static bool IsAreaFree(Vector2Int origin, Vector2Int size)
+    {
+        return IsAreaFree(origin, size, null, null);
+    }
+
+    public static bool IsAreaFree(
+        Vector2Int origin,
+        Vector2Int size,
+        object ignoreReservation,
+        HashSet<GameObject> ignoreOccupants)
     {
         size = NormalizeSize(size);
 
@@ -32,12 +59,58 @@ public static class GridOccupancy
         {
             for (int y = 0; y < size.y; y++)
             {
-                if (!IsCellFree(origin + new Vector2Int(x, y)))
+                if (!IsCellFree(origin + new Vector2Int(x, y), ignoreReservation, ignoreOccupants))
                     return false;
             }
         }
 
         return true;
+    }
+
+    public static void Reserve(object token, List<Vector2Int> cells)
+    {
+        if (token == null)
+            return;
+
+        Release(token);
+        if (cells == null || cells.Count == 0)
+            return;
+
+        var owned = new List<Vector2Int>(cells.Count);
+        for (int i = 0; i < cells.Count; i++)
+        {
+            Vector2Int cell = cells[i];
+            reservedCells[cell] = token;
+            owned.Add(cell);
+        }
+        reservationCells[token] = owned;
+    }
+
+    public static void Release(object token)
+    {
+        if (token == null)
+            return;
+        if (!reservationCells.TryGetValue(token, out List<Vector2Int> cells))
+            return;
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            if (reservedCells.TryGetValue(cells[i], out object owner) && owner == token)
+                reservedCells.Remove(cells[i]);
+        }
+        reservationCells.Remove(token);
+    }
+
+    public static bool TryGetCells(GameObject obj, List<Vector2Int> results)
+    {
+        if (results == null)
+            return false;
+        results.Clear();
+        if (obj == null || !objectCells.TryGetValue(obj, out List<Vector2Int> cells))
+            return false;
+
+        results.AddRange(cells);
+        return cells.Count > 0;
     }
 
     public static void Register(GameObject obj, Vector2Int cell)
@@ -161,5 +234,7 @@ public static class GridOccupancy
     {
         occupiedCells.Clear();
         objectCells.Clear();
+        reservedCells.Clear();
+        reservationCells.Clear();
     }
 }

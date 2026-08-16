@@ -17,6 +17,9 @@ public static class BuildingLinker
 
     static readonly List<Vector2Int> CellBuffer = new List<Vector2Int>(16);
     static readonly List<BuildingBase> NeighborBuffer = new List<BuildingBase>(16);
+    static readonly List<BuildingBase> AllBuffer = new List<BuildingBase>(256);
+
+    public static bool SuppressRelink;
 
     public static Vector2Int ToCardinal(Vector3 worldDir)
     {
@@ -61,6 +64,19 @@ public static class BuildingLinker
 
         CollectSelfAndNeighbors(building, NeighborBuffer);
         Relink(NeighborBuffer);
+    }
+
+    public static void RelinkAll()
+    {
+        BuildingBase[] found = UnityEngine.Object.FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
+        AllBuffer.Clear();
+        for (int i = 0; i < found.Length; i++)
+        {
+            if (found[i] != null)
+                AllBuffer.Add(found[i]);
+        }
+
+        Relink(AllBuffer);
     }
 
     public static void Relink(List<BuildingBase> buildings)
@@ -227,6 +243,17 @@ public static class BuildingLinker
         return false;
     }
 
+    static void CollectCellsSafe(BuildingBase building)
+    {
+        if (building == null)
+        {
+            CellBuffer.Clear();
+            return;
+        }
+
+        GridFootprint.CollectCells(building.transform.position, building.FootprintSize, CellBuffer);
+    }
+
     public static bool OccupiesCell(BuildingBase building, Vector2Int cell)
     {
         if (building == null)
@@ -264,9 +291,17 @@ public static class BuildingLinker
             if (GetSocketFrontCell(output) == targetCell)
                 return true;
 
+            Vector2Int outward = ToCardinal(output.GetOutward());
             if (IsAdjacentTo(building, targetCell)
-                && OccupiesCell(building, targetCell - ToCardinal(output.GetOutward())))
+                && OccupiesCell(building, targetCell - outward))
                 return true;
+
+            CollectCellsSafe(building);
+            for (int c = 0; c < CellBuffer.Count; c++)
+            {
+                if (CellBuffer[c] + outward == targetCell)
+                    return true;
+            }
         }
 
         return false;
