@@ -955,11 +955,7 @@ public class BuildSelectionController : MonoBehaviour
 
     static Material CreateMat(Color color)
     {
-        Shader shader = Shader.Find("Sprites/Diffuse");
-        if (shader == null)
-            shader = Shader.Find("Unlit/Transparent");
-        Material m = new Material(shader);
-        m.color = color;
+        Material m = RuntimeMaterials.Create(color);
         m.renderQueue = 3120;
         return m;
     }

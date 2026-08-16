@@ -90,8 +90,16 @@ public class WorldBiomeMap : MonoBehaviour
 
         ResolveBounds();
         BuildMap();
-        PaintOverlay();
         ready = true;
+
+        try
+        {
+            PaintOverlay();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("Biome overlay skipped: " + e.Message);
+        }
 
         WorldResourceScatterer scatter = GetComponent<WorldResourceScatterer>();
         if (scatter != null)
@@ -480,16 +488,6 @@ public class WorldBiomeMap : MonoBehaviour
         overlay.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
         overlay.transform.localScale = new Vector3(size.x, size.z, 1f);
 
-        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-        if (shader == null)
-            shader = Shader.Find("Unlit/Texture");
-        Material mat = new Material(shader);
-        mat.SetColor("_BaseColor", Color.white);
-        mat.SetColor("_Color", Color.white);
-        if (mat.HasProperty("_BaseMap"))
-            mat.SetTexture("_BaseMap", tex);
-        if (mat.HasProperty("_MainTex"))
-            mat.SetTexture("_MainTex", tex);
-        overlay.sharedMaterial = mat;
+        overlay.sharedMaterial = RuntimeMaterials.Create(tex, Color.white);
     }
 }

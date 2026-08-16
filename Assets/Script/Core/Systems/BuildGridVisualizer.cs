@@ -141,15 +141,7 @@ public class BuildGridVisualizer : MonoBehaviour
 
     static Material CreateTransparentMaterial(Color color)
     {
-        Shader shader = Shader.Find("Sprites/Diffuse");
-        if (shader == null)
-            shader = Shader.Find("Unlit/Transparent");
-        if (shader == null)
-            shader = Shader.Find("Universal Render Pipeline/Unlit");
-
-        Material material = new Material(shader);
-        material.color = color;
-        return material;
+        return RuntimeMaterials.Create(color);
     }
 
     static Texture2D CreateCellBorderTexture(int size)
