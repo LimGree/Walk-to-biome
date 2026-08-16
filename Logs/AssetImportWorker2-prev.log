@@ -1,0 +1,535 @@
+Using pre-set license
+Built from '6000.0/staging' branch; Version is '6000.0.60f1 (f02d6f9f9009) revision 15740271'; Using compiler version '193933523'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) 64bit Professional' Language: 'ru' Physical Memory: 32090 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+Date: 2026-08-16T15:32:30Z
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.0.60f1\Editor\Unity.exe
+-adb2
+-batchMode
+-noUpm
+-name
+AssetImportWorker2
+-projectPath
+C:/Users/step2/Desktop/Walk to biome
+-logFile
+Logs/AssetImportWorker2.log
+-srvPort
+52569
+-job-worker-count
+5
+-background-job-worker-count
+8
+-gc-helper-count
+1
+-name
+AssetImport
+Successfully changed project path to: C:/Users/step2/Desktop/Walk to biome
+C:/Users/step2/Desktop/Walk to biome
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gfx=262144"
+Player connection [29812]  Target information:
+
+Player connection [29812]  * "[IP] 192.168.0.16 [Port] 0 [Flags] 2 [Guid] 3638081230 [EditorId] 3638081230 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [29812]  * "[IP] 172.18.0.1 [Port] 0 [Flags] 2 [Guid] 3638081230 [EditorId] 3638081230 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [29812]  * "[IP] 192.168.0.13 [Port] 0 [Flags] 2 [Guid] 3638081230 [EditorId] 3638081230 [Version] 1048832 [Id] WindowsEditor(7,step) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [29812] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [29812] Host joined alternative multi-casting on [225.0.0.222:34997]...
+JobSystem: Creating JobQueue using job-worker-count value 5
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 2.76 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.0.60f1 (f02d6f9f9009)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path C:/Users/step2/Desktop/Walk to biome/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 1650 (ID=0x1f9d)
+    Vendor:   NVIDIA
+    VRAM:     3935 MB
+    Driver:   32.0.16.1062
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56828
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.60f1/Editor/Data/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.dll
+Registered in 0.006682 seconds.
+- Loaded All Assemblies, in  0.510 seconds
+[usbmuxd] Start listen thread
+[usbmuxd] Listen thread started
+[usbmuxd] Send listen message
+[usbmuxd] Attached: 20 00008030-001651EC0C82202E
+Native extension for iOS target not found
+Native extension for Android target not found
+Android Extension - Scanning For ADB Devices 354 ms
+Native extension for WindowsStandalone target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.907 seconds
+Domain Reload Profiling: 1414ms
+	BeginReloadAssembly (163ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (1ms)
+	RebuildCommonClasses (51ms)
+	RebuildNativeTypeToScriptingClass (15ms)
+	initialDomainReloadingComplete (67ms)
+	LoadAllAssembliesAndSetupDomain (209ms)
+		LoadAssemblies (160ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (204ms)
+			TypeCache.Refresh (201ms)
+				TypeCache.ScanAssembly (186ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (908ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (848ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (470ms)
+			SetLoadedEditorAssemblies (7ms)
+			BeforeProcessingInitializeOnLoad (83ms)
+			ProcessInitializeOnLoadAttributes (180ms)
+			ProcessInitializeOnLoadMethodAttributes (108ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+========================================================================
+Worker process is ready to serve import requests
+Import Worker Mode flag is 0x00
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  1.002 seconds
+Refreshing native plugins compatible for Editor in 1.63 ms, found 3 plugins.
+Native extension for iOS target not found
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+Package Manager log level set to [2]
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.974 seconds
+Domain Reload Profiling: 1971ms
+	BeginReloadAssembly (231ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (8ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (40ms)
+	RebuildCommonClasses (48ms)
+	RebuildNativeTypeToScriptingClass (14ms)
+	initialDomainReloadingComplete (56ms)
+	LoadAllAssembliesAndSetupDomain (646ms)
+		LoadAssemblies (494ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (281ms)
+			TypeCache.Refresh (234ms)
+				TypeCache.ScanAssembly (213ms)
+			BuildScriptInfoCaches (35ms)
+			ResolveRequiredComponents (7ms)
+	FinalizeReload (974ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (822ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (24ms)
+			SetLoadedEditorAssemblies (6ms)
+			BeforeProcessingInitializeOnLoad (208ms)
+			ProcessInitializeOnLoadAttributes (541ms)
+			ProcessInitializeOnLoadMethodAttributes (32ms)
+			AfterProcessingInitializeOnLoad (11ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (7ms)
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.02 seconds
+Refreshing native plugins compatible for Editor in 1.62 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 3981 unused Assets / (0.8 MB). Loaded Objects now: 4491.
+Memory consumption went from 95.7 MB to 95.0 MB.
+Total: 6.271100 ms (FindLiveObjects: 0.507000 ms CreateObjectMapping: 0.177800 ms MarkObjects: 4.526100 ms  DeleteObjects: 1.058400 ms)
+
+========================================================================
+Received Import Request.
+  Time since last request: 248054.182775 seconds.
+  path: Assets/models/Builders/chemical_plant_from_blender/Materials/wMaterial.002 1.mat
+  artifactKey: Guid(b180ef6232bba7144ae5ff6f1e6128be) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_from_blender/Materials/wMaterial.002 1.mat using Guid(b180ef6232bba7144ae5ff6f1e6128be) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '123379353e6a96367e19dc643a352197') in 0.1548402 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 66.169458 seconds.
+  path: Assets/models/Builders/chemical_plant_from_blender/chemical_plant.fbx
+  artifactKey: Guid(35ff16e37c95dd6449c80d6df571daa7) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_from_blender/chemical_plant.fbx using Guid(35ff16e37c95dd6449c80d6df571daa7) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '17ea5e3db16d35e719c5a353574e0d3c') in 0.2242356 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 55
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.491574 seconds.
+  path: Assets/models/Builders/chemical_plant_model.prefab
+  artifactKey: Guid(9801e23d79db2754297b23a2c485b5f5) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_model.prefab using Guid(9801e23d79db2754297b23a2c485b5f5) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2e29daa518603ee07ebb6916ae4700de') in 0.0252978 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 100
+
+========================================================================
+Received Import Request.
+  Time since last request: 44.259458 seconds.
+  path: Assets/prefabs/Builders/refinery.prefab
+  artifactKey: Guid(9b2747f03a852e343841b7bd1fdc1e8c) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/prefabs/Builders/refinery.prefab using Guid(9b2747f03a852e343841b7bd1fdc1e8c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '256512a33672beac97d6e76b6f6d28c1') in 0.0545745 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 254
+
+========================================================================
+Received Import Request.
+  Time since last request: 61.900708 seconds.
+  path: Assets/prefabs/Builders/chemical_plant.prefab
+  artifactKey: Guid(3a6036b7b5cdcc44f9a81bcc1957b878) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/prefabs/Builders/chemical_plant.prefab using Guid(3a6036b7b5cdcc44f9a81bcc1957b878) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '4384bc645bbb7d42fc3ccce3df965970') in 0.036494 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 212
+
+========================================================================
+Received Import Request.
+  Time since last request: 37.400545 seconds.
+  path: Assets/images/Builder_icon/chemical_plant.png
+  artifactKey: Guid(6dccd2373c25c8c449890c6d0994e76b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/images/Builder_icon/chemical_plant.png using Guid(6dccd2373c25c8c449890c6d0994e76b) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '8f679203d8b6cf603198eaa07c6de41f') in 0.0326751 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 9.115162 seconds.
+  path: Assets/images/Builder_icon/assembler_level_2_icon.png
+  artifactKey: Guid(94f50d20e48a14d4fbfa6b40d39d408a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/images/Builder_icon/assembler_level_2_icon.png using Guid(94f50d20e48a14d4fbfa6b40d39d408a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '7ca1d6ff7bb89ed8a568e7ac7536ca01') in 0.0225653 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.031128 seconds.
+  path: Assets/images/Builder_icon/chemical_plant.png
+  artifactKey: Guid(6dccd2373c25c8c449890c6d0994e76b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/images/Builder_icon/chemical_plant.png using Guid(6dccd2373c25c8c449890c6d0994e76b) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'a3860b458e83d17520779463ddce0951') in 0.0180821 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 7.215915 seconds.
+  path: Assets/images/Builder_icon/assembler_level_2_icon.png
+  artifactKey: Guid(94f50d20e48a14d4fbfa6b40d39d408a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/images/Builder_icon/assembler_level_2_icon.png using Guid(94f50d20e48a14d4fbfa6b40d39d408a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'fe5d889f4e214caeb4fd04b964a4de51') in 0.0374859 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 3
+
+========================================================================
+Received Import Request.
+  Time since last request: 7.008933 seconds.
+  path: Assets/images/Builder_icon/chemical_plant.png
+  artifactKey: Guid(6dccd2373c25c8c449890c6d0994e76b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/images/Builder_icon/chemical_plant.png using Guid(6dccd2373c25c8c449890c6d0994e76b) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '5227be73409982a62f941f6b99df365a') in 0.0259145 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 3
+
+========================================================================
+Received Import Request.
+  Time since last request: 17.424259 seconds.
+  path: Assets/models/Builders/chemical_plant_model.prefab
+  artifactKey: Guid(9801e23d79db2754297b23a2c485b5f5) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_model.prefab using Guid(9801e23d79db2754297b23a2c485b5f5) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '96d2d934e0b3cb73b3e65a2c3411e1de') in 0.0308957 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 149
+
+========================================================================
+Received Import Request.
+  Time since last request: 118.429202 seconds.
+  path: Assets/models/Builders/chemical_plant_model_ghost.prefab
+  artifactKey: Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_model_ghost.prefab using Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '0e7861c925891b979d65f622293cab5a') in 0.0323016 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 103
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000136 seconds.
+  path: Assets/models/Builders/Material.001.mat
+  artifactKey: Guid(8ef1f50fef2602b48a17d5313b423fd7) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/Material.001.mat using Guid(8ef1f50fef2602b48a17d5313b423fd7) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'dbd1483271074c14f3356280f0ecc7c1') in 0.0139235 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Prepare
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  1.226 seconds
+Refreshing native plugins compatible for Editor in 2.14 ms, found 3 plugins.
+Native extension for iOS target not found
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.152 seconds
+Domain Reload Profiling: 2373ms
+	BeginReloadAssembly (364ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (13ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (93ms)
+	RebuildCommonClasses (62ms)
+	RebuildNativeTypeToScriptingClass (20ms)
+	initialDomainReloadingComplete (58ms)
+	LoadAllAssembliesAndSetupDomain (716ms)
+		LoadAssemblies (632ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (262ms)
+			TypeCache.Refresh (14ms)
+				TypeCache.ScanAssembly (2ms)
+			BuildScriptInfoCaches (235ms)
+			ResolveRequiredComponents (8ms)
+	FinalizeReload (1153ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (965ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (33ms)
+			SetLoadedEditorAssemblies (7ms)
+			BeforeProcessingInitializeOnLoad (268ms)
+			ProcessInitializeOnLoadAttributes (596ms)
+			ProcessInitializeOnLoadMethodAttributes (50ms)
+			AfterProcessingInitializeOnLoad (11ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (11ms)
+Refreshing native plugins compatible for Editor in 2.76 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 3980 unused Assets / (1.1 MB). Loaded Objects now: 4546.
+Memory consumption went from 101.5 MB to 100.4 MB.
+Total: 8.924800 ms (FindLiveObjects: 0.963200 ms CreateObjectMapping: 0.857100 ms MarkObjects: 5.432500 ms  DeleteObjects: 1.668300 ms)
+
+Prepare: number of updated asset objects reloaded= 0
+========================================================================
+Received Import Request.
+  Time since last request: 41.162534 seconds.
+  path: Assets/models/Builders/chemical_plant_model_ghost.prefab
+  artifactKey: Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_model_ghost.prefab using Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2626ea0c4f7850911e311271139e4a7a') in 0.1718951 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 152
+
+========================================================================
+Received Import Request.
+  Time since last request: 16.553808 seconds.
+  path: Assets/prefabs/Builders/chemical_plant.prefab
+  artifactKey: Guid(3a6036b7b5cdcc44f9a81bcc1957b878) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/prefabs/Builders/chemical_plant.prefab using Guid(3a6036b7b5cdcc44f9a81bcc1957b878) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '913b1ce6dfaf66940729b97e024218b3') in 0.028784 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 216
+
+========================================================================
+Received Import Request.
+  Time since last request: 4.974411 seconds.
+  path: Assets/models/Builders/chemical_plant_model_ghost.prefab
+  artifactKey: Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_model_ghost.prefab using Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'ca177c19bb56d10616e61ca333f96cbc') in 0.0366537 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 155
+
+========================================================================
+Received Import Request.
+  Time since last request: 12.358111 seconds.
+  path: Assets/models/Builders/chemical_plant_model_ghost.prefab
+  artifactKey: Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/models/Builders/chemical_plant_model_ghost.prefab using Guid(f5c2a9e0e40d95f4da0d60d3d2092e9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '627b2a18e7572995d480b87b3ee41474') in 0.0317441 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 156
+
+========================================================================
+Received Import Request.
+  Time since last request: 20.954469 seconds.
+  path: Assets/Resources/GameDatabase.asset
+  artifactKey: Guid(2a9c3d4e5f60718293a4b5c6d7e8f901) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/GameDatabase.asset using Guid(2a9c3d4e5f60718293a4b5c6d7e8f901) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '8e06ca9e37136b51ddb2027976b5eb5a') in 0.1304876 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1943
+
+========================================================================
+Received Import Request.
+  Time since last request: 922.372378 seconds.
+  path: Assets/prefabs/Builders/fluid_storage_tank.prefab
+  artifactKey: Guid(e3f405162738495a6b7c8d9e0f1a2b3c) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/prefabs/Builders/fluid_storage_tank.prefab using Guid(e3f405162738495a6b7c8d9e0f1a2b3c) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '932cf93b5ab2bd1505d48c598cfae205') in 0.2329426 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 52
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000043 seconds.
+  path: Assets/images/item_icons/sulfuric_acid.png
+  artifactKey: Guid(145942397e14038409e00561a0944e50) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/images/item_icons/sulfuric_acid.png using Guid(145942397e14038409e00561a0944e50) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '307f54ab5d2cc20f185bc09c6a900621') in 0.1474174 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 3
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000196 seconds.
+  path: Assets/models/items/sulfur.fbx
+  artifactKey: Guid(e312385df8c5e03429ab420d32a336e0) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/models/items/sulfur.fbx using Guid(e312385df8c5e03429ab420d32a336e0) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '6762032de7b58b91a077e8435d1ded30') in 0.117403 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 8
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000033 seconds.
+  path: Assets/ScriptableObjects/Builders/ChemicalPlant.asset
+  artifactKey: Guid(f30415263748596a7b8c9d0e1f203142) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/ScriptableObjects/Builders/ChemicalPlant.asset using Guid(f30415263748596a7b8c9d0e1f203142) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: 'eb9b62c8f25afa5d3930d453dd7e9b4e') in 0.0487594 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 76
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000038 seconds.
+  path: Assets/models/Builders/chemical_plant_from_blender
+  artifactKey: Guid(910a21f523de9de4b9cbe77271b102c2) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/models/Builders/chemical_plant_from_blender using Guid(910a21f523de9de4b9cbe77271b102c2) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '77366a2f7555964ea09fd0b1bfd76126') in 0.0179848 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000145 seconds.
+  path: Assets/ScriptableObjects/Builders/FluidStorageTank.asset
+  artifactKey: Guid(a1b2c3d4e5f60718293a4b5c6d7e8f91) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/ScriptableObjects/Builders/FluidStorageTank.asset using Guid(a1b2c3d4e5f60718293a4b5c6d7e8f91) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '80b4cd27c42ad73c5b25d15cd82117ae') in 0.0299482 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 51
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000057 seconds.
+  path: Assets/ScriptableObjects/recipes/recipe_sulfuric_acid.asset
+  artifactKey: Guid(d5e6f708193a4b5c6d7e8f901a2b3c4e) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/ScriptableObjects/recipes/recipe_sulfuric_acid.asset using Guid(d5e6f708193a4b5c6d7e8f901a2b3c4e) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '3e5e879225fa08792d633a77ce83258e') in 0.0460121 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 190
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000062 seconds.
+  path: Assets/Script/Core/Buildings/CrafterBuilding.cs
+  artifactKey: Guid(3b0d4e5f60718293a4b5c6d7e8f901a2) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/Script/Core/Buildings/CrafterBuilding.cs using Guid(3b0d4e5f60718293a4b5c6d7e8f901a2) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '238400e6c509978d94fc9845f5ea3a36') in 0.0297914 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000261 seconds.
+  path: Assets/models/Builders/chemical_plant_from_blender/Materials/Material.001.mat
+  artifactKey: Guid(21d1c8de31085a646a72b35d17d3be35) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/models/Builders/chemical_plant_from_blender/Materials/Material.001.mat using Guid(21d1c8de31085a646a72b35d17d3be35) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '83e04d773fb598d939ee20db65fdfe3c') in 0.0262028 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000170 seconds.
+  path: Assets/Script/Core/Systems/WorldResourceScatterer.cs
+  artifactKey: Guid(0cc6b6d726d36e040adb8d33986c52c1) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/Script/Core/Systems/WorldResourceScatterer.cs using Guid(0cc6b6d726d36e040adb8d33986c52c1) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: 'e7d1b53506439c4ccca5b37d6bbe05a8') in 0.0245333 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000312 seconds.
+  path: Assets/models/items/sulfuric_acid.fbx
+  artifactKey: Guid(c157fe93b5bd88e458a523475ae2a143) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/models/items/sulfuric_acid.fbx using Guid(c157fe93b5bd88e458a523475ae2a143) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '804c198ec824e6d3a5f27219eeeaef9f') in 0.0565349 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 16
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000038 seconds.
+  path: Assets/ScriptableObjects/Research/research_computing.asset
+  artifactKey: Guid(0415263748596a7b8c9d0e1f20314253) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/ScriptableObjects/Research/research_computing.asset using Guid(0415263748596a7b8c9d0e1f20314253) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: 'b071553b3554531e899cca174af706cf') in 0.1802815 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1701
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000053 seconds.
+  path: Assets/models/Builders/chemical_plant_from_blender/chemical_plant.fbx
+  artifactKey: Guid(35ff16e37c95dd6449c80d6df571daa7) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/models/Builders/chemical_plant_from_blender/chemical_plant.fbx using Guid(35ff16e37c95dd6449c80d6df571daa7) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '788aa7c66a29839d1da5ddd6c35b6683') in 0.0788102 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 52
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000065 seconds.
+  path: Assets/prefabs/resourses/sulfur.prefab
+  artifactKey: Guid(271be1c58c2c25e46a4ea8e45c3f51dd) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/prefabs/resourses/sulfur.prefab using Guid(271be1c58c2c25e46a4ea8e45c3f51dd) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '9d2d1df244ab92b2b34db12ad3417c2d') in 0.0373907 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 35
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000044 seconds.
+  path: Assets/models/items/water_colba.fbx
+  artifactKey: Guid(cf60a5f1fc0ea8d4e80bd0c817e85485) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/models/items/water_colba.fbx using Guid(cf60a5f1fc0ea8d4e80bd0c817e85485) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: 'bce5de0bfd3544b9346330ce3f058b32') in 0.0654929 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 16
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000040 seconds.
+  path: Assets/ScriptableObjects/items/sulfuric_acid.asset
+  artifactKey: Guid(c4d5e6f708193a4b5c6d7e8f901a2b4d) Importer(2089858483,192608db42251d675da83286b1cce702)
+Start importing Assets/ScriptableObjects/items/sulfuric_acid.asset using Guid(c4d5e6f708193a4b5c6d7e8f901a2b4d) Importer(2089858483,192608db42251d675da83286b1cce702) (ScriptedImporter) -> (artifact id: '138938a6e6b08dffb7c7a92977576a82') in 0.0362025 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 15
+
+Editor requested this worker to shutdown with reason: Scaling down because of idle timeout
+AssetImportWorker is now disconnected from the server
+Process exiting
+Exiting without the bug reporter. Application will terminate with return code 0
