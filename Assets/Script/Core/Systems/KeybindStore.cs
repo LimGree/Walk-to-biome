@@ -88,6 +88,8 @@ public static class KeybindStore
         AddKeyboard(list, "Modifier", "Модификатор");
         AddKeyboard(list, "Delete", "Удалить");
         AddKeyboard(list, "Inventory", "Инвентарь");
+        AddKeyboard(list, "Shop", "Магазин");
+        AddKeyboard(list, "SelectionPanel", "Выделенные");
         return list;
     }
 

@@ -22,6 +22,6 @@ public class ItemData : ScriptableObject
     public bool isFluid;
 
     [Header("Economy")]
-    [Tooltip("Монеты за сдачу в лабораторию. 0 = авто по типу предмета.")]
+    [Tooltip("Монеты за сдачу одного предмета в лабораторию.")]
     public int sellValue;
 }

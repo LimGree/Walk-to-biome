@@ -50,8 +50,14 @@ public class MachineUI : MonoBehaviour
     private BuildingBase currentBuilding;
     int labTab;
     GameObject labChrome;
-    GameObject labPage;
-    TextMeshProUGUI labPageText;
+    GameObject labBody;
+    GameObject researchPage;
+    GameObject beltPage;
+    GameObject statsPage;
+    Transform beltList;
+    Transform statsList;
+    bool labCaptured;
+    float nextStatsRefresh;
 
 
     [Header("All recipes in game")]
@@ -61,6 +67,14 @@ public class MachineUI : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+    }
+
+    void OnDestroy()
+    {
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.OnChanged -= OnBeltChanged;
+        if (Instance == this)
+            Instance = null;
     }
 
     void Start()
@@ -702,36 +716,101 @@ public class MachineUI : MonoBehaviour
         tabsRt.anchorMin = new Vector2(0f, 1f);
         tabsRt.anchorMax = new Vector2(1f, 1f);
         tabsRt.pivot = new Vector2(0.5f, 1f);
-        tabsRt.anchoredPosition = new Vector2(0f, -8f);
-        tabsRt.sizeDelta = new Vector2(-24f, 48f);
+        tabsRt.anchoredPosition = Vector2.zero;
+        tabsRt.sizeDelta = new Vector2(0f, 56f);
+        tabsRt.offsetMin = new Vector2(12f, tabsRt.offsetMin.y);
+        tabsRt.offsetMax = new Vector2(-12f, tabsRt.offsetMax.y);
 
         HorizontalLayoutGroup row = labChrome.AddComponent<HorizontalLayoutGroup>();
         row.spacing = 8f;
         row.childForceExpandHeight = true;
         row.childForceExpandWidth = true;
-        row.padding = new RectOffset(8, 8, 0, 0);
+        row.padding = new RectOffset(0, 0, 6, 6);
+        row.childAlignment = TextAnchor.MiddleCenter;
 
         AddLabTabButton("Исследования", 0);
         AddLabTabButton("Конвейеры", 1);
         AddLabTabButton("Статистика", 2);
 
-        labPage = new GameObject("LabPage", typeof(RectTransform));
-        labPage.transform.SetParent(researchLabContent.transform, false);
-        RectTransform pageRt = labPage.GetComponent<RectTransform>();
-        pageRt.anchorMin = Vector2.zero;
-        pageRt.anchorMax = Vector2.one;
-        pageRt.offsetMin = new Vector2(16f, 16f);
-        pageRt.offsetMax = new Vector2(-16f, -64f);
-
-        labPageText = UiTheme.AddText(labPage.transform, "Body", "", 18f, UiTheme.Text);
-        labPageText.alignment = TextAlignmentOptions.TopLeft;
-        labPageText.enableWordWrapping = true;
-        labPageText.overflowMode = TextOverflowModes.Overflow;
-        RectTransform bodyRt = labPageText.rectTransform;
+        labBody = new GameObject("LabBody", typeof(RectTransform));
+        labBody.transform.SetParent(researchLabContent.transform, false);
+        RectTransform bodyRt = labBody.GetComponent<RectTransform>();
         bodyRt.anchorMin = Vector2.zero;
         bodyRt.anchorMax = Vector2.one;
-        bodyRt.offsetMin = Vector2.zero;
-        bodyRt.offsetMax = Vector2.zero;
+        bodyRt.offsetMin = new Vector2(12f, 12f);
+        bodyRt.offsetMax = new Vector2(-12f, -64f);
+
+        researchPage = CreateLabPage("ResearchPage");
+        beltPage = CreateLabPage("BeltPage");
+        statsPage = CreateLabPage("StatsPage");
+
+        beltList = CreateScrollColumn(beltPage.transform, "BeltTree");
+        statsList = CreateScrollColumn(statsPage.transform, "StatsList");
+
+        CaptureResearchIntoPage();
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.OnChanged += OnBeltChanged;
+    }
+
+    void OnBeltChanged()
+    {
+        if (IsOpen && currentBuilding is ResearchLab && labTab == 1)
+            RebuildBeltTree();
+    }
+
+    GameObject CreateLabPage(string name)
+    {
+        GameObject page = new GameObject(name, typeof(RectTransform));
+        page.transform.SetParent(labBody.transform, false);
+        RectTransform rt = page.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        page.SetActive(false);
+        return page;
+    }
+
+    static Transform CreateScrollColumn(Transform parent, string name)
+    {
+        GameObject content = new GameObject(name, typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+        content.transform.SetParent(parent, false);
+        RectTransform rt = content.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        VerticalLayoutGroup layout = content.GetComponent<VerticalLayoutGroup>();
+        layout.spacing = 8f;
+        layout.padding = new RectOffset(8, 8, 8, 8);
+        layout.childAlignment = TextAnchor.UpperLeft;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
+        content.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        UiTheme.EnsureVerticalScroll(rt);
+        return content.transform;
+    }
+
+    void CaptureResearchIntoPage()
+    {
+        if (labCaptured || researchPage == null || researchLabContent == null)
+            return;
+        labCaptured = true;
+
+        var move = new List<Transform>();
+        foreach (Transform child in researchLabContent.transform)
+        {
+            if (child == null)
+                continue;
+            if (child.gameObject == labChrome || child.gameObject == labBody)
+                continue;
+            move.Add(child);
+        }
+
+        for (int i = 0; i < move.Count; i++)
+            move[i].SetParent(researchPage.transform, false);
     }
 
     void AddLabTabButton(string label, int tab)
@@ -754,15 +833,12 @@ public class MachineUI : MonoBehaviour
     void OpenLabTab(int tab)
     {
         labTab = tab;
-        bool research = tab == 0;
-        if (researchButtonsParent != null)
-            researchButtonsParent.gameObject.SetActive(research);
-        if (researchProgressText != null)
-            researchProgressText.gameObject.SetActive(research);
-        if (researchProgressSlider != null)
-            researchProgressSlider.gameObject.SetActive(research);
-        if (labPage != null)
-            labPage.SetActive(!research);
+        if (researchPage != null)
+            researchPage.SetActive(tab == 0);
+        if (beltPage != null)
+            beltPage.SetActive(tab == 1);
+        if (statsPage != null)
+            statsPage.SetActive(tab == 2);
 
         if (labChrome != null)
         {
@@ -774,10 +850,12 @@ public class MachineUI : MonoBehaviour
             }
         }
 
-        if (research)
+        if (tab == 0)
             FillResearchTab();
+        else if (tab == 1)
+            RebuildBeltTree();
         else
-            RefreshLabPage();
+            RebuildStatsList();
     }
 
     void FillResearchTab()
@@ -824,64 +902,238 @@ public class MachineUI : MonoBehaviour
         }
     }
 
-    void RefreshLabPage()
+    void RebuildBeltTree()
     {
-        if (labPageText == null)
+        if (beltList == null)
             return;
 
-        if (labTab == 1)
+        for (int i = beltList.childCount - 1; i >= 0; i--)
+            Destroy(beltList.GetChild(i).gameObject);
+
+        BeltSpeedSystem belts = BeltSpeedSystem.Instance;
+        int level = belts != null ? belts.Level : 0;
+        int have = belts != null ? belts.GearsTowardNext : 0;
+        ItemData gear = GameDatabase.FindItem("gear");
+        Sprite gearIcon = gear != null ? gear.icon : null;
+
+        TextMeshProUGUI head = UiTheme.AddText(beltList, "Head", "Дерево прокачки конвейеров", 22f, UiTheme.Accent);
+        head.fontStyle = FontStyles.Bold;
+        LayoutText(head, 32f);
+        TextMeshProUGUI hint = UiTheme.AddText(
+            beltList,
+            "Hint",
+            "Сдавайте шестерёнки в лабораторию. Лишние (не нужные исследованию) идут в это дерево. Уже стоящие ленты тоже ускоряются.",
+            16f,
+            UiTheme.TextDim);
+        hint.enableWordWrapping = true;
+        LayoutText(hint, 56f);
+
+        int lastShown = level + 1;
+        for (int i = 0; i <= lastShown; i++)
         {
-            BeltSpeedSystem belts = BeltSpeedSystem.Instance;
-            int level = belts != null ? belts.Level : 0;
-            int have = belts != null ? belts.GearsTowardNext : 0;
-            int need = belts != null ? belts.NextCost : Economy.BeltUpgradeCost(1);
-            float mul = belts != null ? belts.Multiplier : 1f;
-            labPageText.text =
-                "Ускорение конвейеров\n\n" +
-                "Уровень: " + level + "   ·   скорость ×" + mul.ToString("0.##") + "\n" +
-                "Следующее: " + have + " / " + need + " шестерёнок\n" +
-                "Каждый уровень +15% и на +10% дороже шестерёнок.\n\n" +
-                "Сдайте шестерёнки на ленту в лабораторию.\n" +
-                "Если активное исследование их не ждёт — они идут в это улучшение.\n" +
-                "Работает на уже стоящих и на новых конвейерах.";
-            return;
+            bool unlocked = i <= level;
+            bool next = i == level + 1;
+            float speedNow = Economy.BeltMultiplier(i);
+            float speedPrev = i == 0 ? speedNow : Economy.BeltMultiplier(i - 1);
+            int cost = i == 0 ? 0 : Economy.BeltUpgradeCost(i);
+            string state = unlocked ? (i == level ? "текущий" : "открыт") : "следующий";
+            string speedText = i == 0
+                ? "Скорость ×" + speedNow.ToString("0.##")
+                : "Скорость ×" + speedPrev.ToString("0.##") + "  →  ×" + speedNow.ToString("0.##");
+            string costText = i == 0
+                ? "Цена: старт"
+                : next
+                    ? "Цена: " + have + " / " + cost + " шестерёнок"
+                    : "Цена: " + cost + " шестерёнок";
+
+            AddBeltNode(
+                beltList,
+                i,
+                "Ур. " + i + "  ·  " + state,
+                speedText,
+                costText,
+                gearIcon,
+                unlocked,
+                next,
+                i < lastShown);
         }
+    }
+
+    void AddBeltNode(Transform parent, int level, string title, string speed, string cost, Sprite icon, bool unlocked, bool next, bool connector)
+    {
+        GameObject row = new GameObject("Belt_" + level, typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        row.transform.SetParent(parent, false);
+        Image bg = row.GetComponent<Image>();
+        UiTheme.StyleImage(bg, next ? UiTheme.AccentDim : unlocked ? UiTheme.Card : UiTheme.Chip);
+        row.GetComponent<LayoutElement>().preferredHeight = 96f;
+        row.GetComponent<LayoutElement>().minHeight = 96f;
+
+        Image mark = UiTheme.AddImage(row.transform, "Mark", new Vector2(18f, 18f), next ? UiTheme.Warn : unlocked ? UiTheme.Ok : UiTheme.Muted);
+        RectTransform markRt = mark.rectTransform;
+        markRt.anchorMin = new Vector2(0f, 0.5f);
+        markRt.anchorMax = new Vector2(0f, 0.5f);
+        markRt.pivot = new Vector2(0.5f, 0.5f);
+        markRt.anchoredPosition = new Vector2(28f, 8f);
+        markRt.sizeDelta = new Vector2(18f, 18f);
+
+        if (connector)
+        {
+            Image line = UiTheme.AddImage(row.transform, "Line", new Vector2(4f, 28f), UiTheme.Muted);
+            RectTransform lineRt = line.rectTransform;
+            lineRt.anchorMin = new Vector2(0f, 0f);
+            lineRt.anchorMax = new Vector2(0f, 0f);
+            lineRt.pivot = new Vector2(0.5f, 0f);
+            lineRt.anchoredPosition = new Vector2(28f, 2f);
+            lineRt.sizeDelta = new Vector2(4f, 26f);
+        }
+
+        if (icon != null)
+        {
+            Image gear = UiTheme.AddImage(row.transform, "Icon", new Vector2(36f, 36f), Color.white);
+            gear.type = Image.Type.Simple;
+            gear.preserveAspect = true;
+            gear.sprite = icon;
+            RectTransform iconRt = gear.rectTransform;
+            iconRt.anchorMin = new Vector2(0f, 0.5f);
+            iconRt.anchorMax = new Vector2(0f, 0.5f);
+            iconRt.anchoredPosition = new Vector2(68f, 0f);
+            iconRt.sizeDelta = new Vector2(36f, 36f);
+        }
+
+        TextMeshProUGUI titleText = UiTheme.AddText(row.transform, "Title", title, 20f, unlocked || next ? UiTheme.Text : UiTheme.TextDim);
+        titleText.fontStyle = FontStyles.Bold;
+        RectTransform titleRt = titleText.rectTransform;
+        titleRt.anchorMin = new Vector2(0f, 0.58f);
+        titleRt.anchorMax = new Vector2(1f, 0.95f);
+        titleRt.offsetMin = new Vector2(100f, 0f);
+        titleRt.offsetMax = new Vector2(-12f, 0f);
+
+        TextMeshProUGUI speedText = UiTheme.AddText(row.transform, "Speed", speed, 16f, UiTheme.Accent);
+        RectTransform speedRt = speedText.rectTransform;
+        speedRt.anchorMin = new Vector2(0f, 0.3f);
+        speedRt.anchorMax = new Vector2(1f, 0.58f);
+        speedRt.offsetMin = new Vector2(100f, 0f);
+        speedRt.offsetMax = new Vector2(-12f, 0f);
+
+        TextMeshProUGUI costText = UiTheme.AddText(row.transform, "Cost", cost, 16f, next ? UiTheme.Warn : UiTheme.TextDim);
+        RectTransform costRt = costText.rectTransform;
+        costRt.anchorMin = new Vector2(0f, 0.05f);
+        costRt.anchorMax = new Vector2(1f, 0.3f);
+        costRt.offsetMin = new Vector2(100f, 0f);
+        costRt.offsetMax = new Vector2(-12f, 0f);
+    }
+
+    void RebuildStatsList()
+    {
+        if (statsList == null)
+            return;
+
+        for (int i = statsList.childCount - 1; i >= 0; i--)
+            Destroy(statsList.GetChild(i).gameObject);
 
         ProductionStats stats = ProductionStats.Instance;
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        sb.AppendLine("Статистика производства");
-        sb.AppendLine();
-        if (PlayerWallet.Instance != null)
-            sb.AppendLine("Монеты " + PlayerWallet.Instance.Coins + "   ·   рубины " + PlayerWallet.Instance.Rubies);
-        if (stats != null)
-        {
-            sb.AppendLine("Монеты: +" + stats.CoinsPerMinute().ToString("0.#") + "/мин   −" + stats.CoinsSpentPerMinute().ToString("0.#") + "/мин");
-            sb.AppendLine("Рубины: +" + stats.RubiesPerMinute().ToString("0.#") + "/мин   (всего " + stats.RubiesGainedTotal + ")");
-            sb.AppendLine();
-            sb.AppendLine("Произведено / тратится");
-            var ids = new HashSet<string>();
-            foreach (var pair in stats.ProducedTotal)
-                ids.Add(pair.Key);
-            foreach (var pair in stats.ConsumedTotal)
-                ids.Add(pair.Key);
+        PlayerWallet wallet = PlayerWallet.Instance;
 
-            var sorted = new List<string>(ids);
-            sorted.Sort();
-            for (int i = 0; i < sorted.Count; i++)
-            {
-                string id = sorted[i];
-                ItemData item = GameDatabase.FindItem(id);
-                string name = item != null ? item.displayName : id;
-                stats.ProducedTotal.TryGetValue(id, out int made);
-                stats.ConsumedTotal.TryGetValue(id, out int used);
-                sb.AppendLine(
-                    name + "  +" + made + "  −" + used +
-                    "   ·   +" + stats.ProducedPerMinute(id).ToString("0.#") + "/мин" +
-                    "  −" + stats.ConsumedPerMinute(id).ToString("0.#") + "/мин");
-            }
+        AddStatMoneyRow(statsList, GameHudIcons.Coin, "Монеты",
+            wallet != null ? wallet.Coins : 0,
+            stats != null ? stats.CoinsPerMinute() : 0f,
+            stats != null ? stats.CoinsSpentPerMinute() : 0f,
+            stats != null ? stats.CoinsGainedTotal : 0,
+            stats != null ? stats.CoinsSpentTotal : 0);
+        AddStatMoneyRow(statsList, GameHudIcons.Ruby, "Рубины",
+            wallet != null ? wallet.Rubies : 0,
+            stats != null ? stats.RubiesPerMinute() : 0f,
+            0f,
+            stats != null ? stats.RubiesGainedTotal : 0,
+            0);
+
+        if (stats == null)
+            return;
+
+        var ids = new HashSet<string>();
+        foreach (var pair in stats.ProducedTotal)
+            ids.Add(pair.Key);
+        foreach (var pair in stats.ConsumedTotal)
+            ids.Add(pair.Key);
+        var sorted = new List<string>(ids);
+        sorted.Sort();
+
+        for (int i = 0; i < sorted.Count; i++)
+        {
+            string id = sorted[i];
+            ItemData item = GameDatabase.FindItem(id);
+            stats.ProducedTotal.TryGetValue(id, out int made);
+            stats.ConsumedTotal.TryGetValue(id, out int used);
+            AddStatItemRow(
+                statsList,
+                item != null ? item.icon : null,
+                item != null ? item.displayName : id,
+                made,
+                used,
+                stats.ProducedPerMinute(id),
+                stats.ConsumedPerMinute(id));
         }
 
-        labPageText.text = sb.ToString();
+        nextStatsRefresh = Time.unscaledTime + 0.6f;
+    }
+
+    void AddStatMoneyRow(Transform parent, Sprite icon, string name, int now, float plusMin, float minusMin, int gained, int spent)
+    {
+        string sub = "сейчас " + now + "   всего +" + gained + (spent > 0 ? "  −" + spent : "");
+        string rates = "+" + plusMin.ToString("0.#") + "/мин" + (minusMin > 0f ? "   −" + minusMin.ToString("0.#") + "/мин" : "");
+        AddStatItemRow(parent, icon, name, sub, rates);
+    }
+
+    void AddStatItemRow(Transform parent, Sprite icon, string name, int made, int used, float plusMin, float minusMin)
+    {
+        AddStatItemRow(
+            parent,
+            icon,
+            name,
+            "всего +" + made + "   −" + used,
+            "+" + plusMin.ToString("0.#") + "/мин   −" + minusMin.ToString("0.#") + "/мин");
+    }
+
+    void AddStatItemRow(Transform parent, Sprite icon, string name, string totals, string rates)
+    {
+        GameObject row = new GameObject("Stat", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        row.transform.SetParent(parent, false);
+        UiTheme.StyleImage(row.GetComponent<Image>(), UiTheme.Card);
+        row.GetComponent<LayoutElement>().preferredHeight = 64f;
+        row.GetComponent<LayoutElement>().minHeight = 64f;
+
+        Image image = UiTheme.AddImage(row.transform, "Icon", new Vector2(40f, 40f), Color.white);
+        image.type = Image.Type.Simple;
+        image.preserveAspect = true;
+        image.sprite = icon;
+        image.enabled = icon != null;
+        RectTransform iconRt = image.rectTransform;
+        iconRt.anchorMin = new Vector2(0f, 0.5f);
+        iconRt.anchorMax = new Vector2(0f, 0.5f);
+        iconRt.anchoredPosition = new Vector2(32f, 0f);
+        iconRt.sizeDelta = new Vector2(40f, 40f);
+
+        TextMeshProUGUI title = UiTheme.AddText(row.transform, "Name", name, 18f, UiTheme.Text);
+        title.fontStyle = FontStyles.Bold;
+        RectTransform titleRt = title.rectTransform;
+        titleRt.anchorMin = new Vector2(0f, 0.5f);
+        titleRt.anchorMax = new Vector2(1f, 1f);
+        titleRt.offsetMin = new Vector2(64f, 0f);
+        titleRt.offsetMax = new Vector2(-12f, -4f);
+
+        TextMeshProUGUI sub = UiTheme.AddText(row.transform, "Totals", totals + "   ·   " + rates, 15f, UiTheme.TextDim);
+        RectTransform subRt = sub.rectTransform;
+        subRt.anchorMin = new Vector2(0f, 0f);
+        subRt.anchorMax = new Vector2(1f, 0.52f);
+        subRt.offsetMin = new Vector2(64f, 6f);
+        subRt.offsetMax = new Vector2(-12f, 0f);
+    }
+
+    static void LayoutText(TextMeshProUGUI text, float height)
+    {
+        LayoutElement layout = text.gameObject.AddComponent<LayoutElement>();
+        layout.preferredHeight = height;
+        layout.minHeight = height;
     }
 
     // ================== PROGRESS ==================
@@ -920,8 +1172,8 @@ public class MachineUI : MonoBehaviour
                 researchProgressText.text = $"{name}: {(progress * 100f):0}%";
             }
 
-            if (labTab != 0)
-                RefreshLabPage();
+            if (labTab == 2 && Time.unscaledTime >= nextStatsRefresh)
+                RebuildStatsList();
         }
     }
 }

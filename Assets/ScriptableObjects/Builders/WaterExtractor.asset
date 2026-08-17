@@ -27,7 +27,7 @@ MonoBehaviour:
   icon: {fileID: 918274653, guid: 293e319f4abb35a419e4a1145deb62a2, type: 3}
   size: {x: 2, y: 2}
   canRotate: 1
-  buildCost: 0
+  buildCost: 40
   requiresResourceNode: 0
   allowOnWater: 1
   requiresWater: 1

@@ -28,7 +28,8 @@ public class BuildingData : ScriptableObject
     public Vector2Int size = Vector2Int.one;
     public bool canRotate = true;
 
-    [Header("Optional")]
+    [Header("Economy")]
+    [Tooltip("Цена установки в монетах.")]
     public int buildCost = 0;
 
     [Header("Placement")]

@@ -1,26 +1,91 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class WalletHud : MonoBehaviour
 {
+    public static WalletHud Instance { get; private set; }
+
     TextMeshProUGUI coinsText;
     TextMeshProUGUI rubiesText;
     GameObject shopRoot;
     TextMeshProUGUI shopInfo;
+    InputAction shopAction;
+    bool bound;
+
+    public bool IsShopOpen => shopRoot != null && shopRoot.activeSelf;
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
         Build();
+        BindInput();
         if (PlayerWallet.Instance != null)
             PlayerWallet.Instance.OnChanged += Refresh;
         Refresh();
     }
 
+    void OnEnable()
+    {
+        BindInput();
+    }
+
+    void OnDisable()
+    {
+        UnbindInput();
+    }
+
     void OnDestroy()
     {
+        UnbindInput();
         if (PlayerWallet.Instance != null)
             PlayerWallet.Instance.OnChanged -= Refresh;
+        if (Instance == this)
+            Instance = null;
+    }
+
+    void BindInput()
+    {
+        if (bound)
+            return;
+        InputSystem_Actions actions = KeybindStore.Shared;
+        shopAction = actions != null ? actions.asset.FindAction("Player/Shop", false) : null;
+        if (shopAction != null)
+            shopAction.performed += OnShopPerformed;
+        bound = true;
+    }
+
+    void UnbindInput()
+    {
+        if (shopAction != null)
+            shopAction.performed -= OnShopPerformed;
+        shopAction = null;
+        bound = false;
+    }
+
+    void Update()
+    {
+        if (shopAction != null)
+            return;
+        if (KeybindStore.BlocksGameplayInput)
+            return;
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null && keyboard.hKey.wasPressedThisFrame)
+            ToggleShop();
+    }
+
+    void OnShopPerformed(InputAction.CallbackContext ctx)
+    {
+        if (KeybindStore.BlocksGameplayInput)
+            return;
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+        ToggleShop();
     }
 
     void Build()
@@ -34,24 +99,37 @@ public class WalletHud : MonoBehaviour
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
 
-        Image chip = UiTheme.AddImage(canvasGo.transform, "Chip", new Vector2(320f, 78f), UiTheme.Chip);
+        Image chip = UiTheme.AddImage(canvasGo.transform, "Chip", new Vector2(280f, 78f), UiTheme.Chip);
         RectTransform chipRt = chip.rectTransform;
         chipRt.anchorMin = new Vector2(0f, 1f);
         chipRt.anchorMax = new Vector2(0f, 1f);
         chipRt.pivot = new Vector2(0f, 1f);
         chipRt.anchoredPosition = new Vector2(24f, -18f);
 
+        Image coinIcon = AddSprite(chip.transform, "CoinIcon", GameHudIcons.Coin, new Vector2(28f, 28f));
+        Place(coinIcon.rectTransform, 14f, -12f, 28f, 28f);
         coinsText = UiTheme.AddText(chip.transform, "Coins", "0", 22f, UiTheme.Warn);
-        Stretch(coinsText.rectTransform, 0.08f, 0.52f, 0.08f, 0.92f);
-        rubiesText = UiTheme.AddText(chip.transform, "Rubies", "0", 20f, UiTheme.Accent);
-        Stretch(rubiesText.rectTransform, 0.08f, 0.52f, 0.08f, 0.48f);
+        coinsText.fontStyle = FontStyles.Bold;
+        RectTransform coinsRt = coinsText.rectTransform;
+        coinsRt.anchorMin = new Vector2(0f, 0.5f);
+        coinsRt.anchorMax = new Vector2(0f, 1f);
+        coinsRt.pivot = new Vector2(0f, 0.5f);
+        coinsRt.anchoredPosition = new Vector2(48f, 0f);
+        coinsRt.sizeDelta = new Vector2(200f, 0f);
 
-        Button shopBtn = CreateTextButton(chip.transform, "ShopBtn", "Магазин", new Vector2(0.56f, 0.18f), new Vector2(0.94f, 0.82f));
-        shopBtn.onClick.AddListener(ToggleShop);
+        Image rubyIcon = AddSprite(chip.transform, "RubyIcon", GameHudIcons.Ruby, new Vector2(26f, 26f));
+        Place(rubyIcon.rectTransform, 14f, -44f, 26f, 26f);
+        rubiesText = UiTheme.AddText(chip.transform, "Rubies", "0", 20f, UiTheme.Accent);
+        RectTransform rubiesRt = rubiesText.rectTransform;
+        rubiesRt.anchorMin = new Vector2(0f, 0f);
+        rubiesRt.anchorMax = new Vector2(0f, 0.5f);
+        rubiesRt.pivot = new Vector2(0f, 0.5f);
+        rubiesRt.anchoredPosition = new Vector2(48f, 0f);
+        rubiesRt.sizeDelta = new Vector2(220f, 0f);
 
         shopRoot = new GameObject("Shop", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         shopRoot.transform.SetParent(canvasGo.transform, false);
-        UiTheme.StylePanel(shopRoot, new Vector2(420f, 260f));
+        UiTheme.StylePanel(shopRoot, new Vector2(460f, 300f));
         RectTransform shopRt = shopRoot.GetComponent<RectTransform>();
         shopRt.anchorMin = new Vector2(0f, 1f);
         shopRt.anchorMax = new Vector2(0f, 1f);
@@ -59,12 +137,13 @@ public class WalletHud : MonoBehaviour
         shopRt.anchoredPosition = new Vector2(24f, -110f);
         shopRoot.SetActive(false);
 
-        TextMeshProUGUI title = UiTheme.AddText(shopRoot.transform, "Title", "Обмен рубинов", 24f, UiTheme.Accent);
+        TextMeshProUGUI title = UiTheme.AddText(shopRoot.transform, "Title", "Магазин  ·  H", 24f, UiTheme.Accent);
         title.fontStyle = FontStyles.Bold;
-        Stretch(title.rectTransform, 0.08f, 0.92f, 0.78f, 0.94f);
+        Stretch(title.rectTransform, 0.08f, 0.92f, 0.8f, 0.94f);
 
         shopInfo = UiTheme.AddText(shopRoot.transform, "Info", "", 18f, UiTheme.Text);
-        Stretch(shopInfo.rectTransform, 0.08f, 0.92f, 0.54f, 0.76f);
+        shopInfo.enableWordWrapping = true;
+        Stretch(shopInfo.rectTransform, 0.08f, 0.92f, 0.54f, 0.78f);
 
         Button one = CreateTextButton(shopRoot.transform, "One", "1 рубин", new Vector2(0.08f, 0.28f), new Vector2(0.48f, 0.5f));
         one.onClick.AddListener(() => Exchange(1));
@@ -78,10 +157,15 @@ public class WalletHud : MonoBehaviour
         });
     }
 
-    void ToggleShop()
+    public void ToggleShop()
+    {
+        SetShopOpen(shopRoot == null || !shopRoot.activeSelf);
+    }
+
+    public void SetShopOpen(bool open)
     {
         if (shopRoot != null)
-            shopRoot.SetActive(!shopRoot.activeSelf);
+            shopRoot.SetActive(open);
         Refresh();
     }
 
@@ -98,11 +182,30 @@ public class WalletHud : MonoBehaviour
         int coins = wallet != null ? wallet.Coins : 0;
         int rubies = wallet != null ? wallet.Rubies : 0;
         if (coinsText != null)
-            coinsText.text = "Монеты  " + coins;
+            coinsText.text = coins.ToString();
         if (rubiesText != null)
-            rubiesText.text = "Рубины  " + rubies;
+            rubiesText.text = rubies.ToString();
         if (shopInfo != null)
             shopInfo.text = "1 рубин = " + Economy.CoinsPerRuby + " монет\nСейчас: " + rubies + " руб.  →  +" + (rubies * Economy.CoinsPerRuby) + " монет";
+    }
+
+    static Image AddSprite(Transform parent, string name, Sprite sprite, Vector2 size)
+    {
+        Image image = UiTheme.AddImage(parent, name, size, Color.white);
+        image.type = Image.Type.Simple;
+        image.preserveAspect = true;
+        image.sprite = sprite;
+        image.enabled = sprite != null;
+        return image;
+    }
+
+    static void Place(RectTransform rt, float x, float y, float w, float h)
+    {
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(x, y);
+        rt.sizeDelta = new Vector2(w, h);
     }
 
     static Button CreateTextButton(Transform parent, string name, string label, Vector2 min, Vector2 max)

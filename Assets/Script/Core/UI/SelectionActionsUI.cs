@@ -1,10 +1,13 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class SelectionActionsUI : MonoBehaviour
 {
+    public static SelectionActionsUI Instance { get; private set; }
+
     BuildSelectionController selection;
     GameObject root;
     GameObject panel;
@@ -14,24 +17,83 @@ public class SelectionActionsUI : MonoBehaviour
     Transform recipeList;
     string recipeTypeId;
     int lastCount = -1;
+    InputAction panelAction;
+
+    public bool IsOpen => panel != null && panel.activeSelf;
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
         selection = FindFirstObjectByType<BuildSelectionController>();
         Build();
         SetOpen(false);
+        BindInput();
+    }
+
+    void OnEnable()
+    {
+        BindInput();
+    }
+
+    void OnDisable()
+    {
+        UnbindInput();
+    }
+
+    void OnDestroy()
+    {
+        UnbindInput();
+        if (Instance == this)
+            Instance = null;
+    }
+
+    void BindInput()
+    {
+        if (panelAction != null)
+            return;
+        InputSystem_Actions actions = KeybindStore.Shared;
+        panelAction = actions != null ? actions.asset.FindAction("Player/SelectionPanel", false) : null;
+        if (panelAction != null)
+            panelAction.performed += OnPanelPerformed;
+    }
+
+    void UnbindInput()
+    {
+        if (panelAction != null)
+            panelAction.performed -= OnPanelPerformed;
+        panelAction = null;
+    }
+
+    void OnPanelPerformed(InputAction.CallbackContext ctx)
+    {
+        if (KeybindStore.BlocksGameplayInput)
+            return;
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+        Toggle();
     }
 
     void Update()
     {
         if (selection == null)
             selection = FindFirstObjectByType<BuildSelectionController>();
+
+        if (panelAction == null
+            && !KeybindStore.BlocksGameplayInput
+            && Keyboard.current != null
+            && Keyboard.current.oKey.wasPressedThisFrame)
+        {
+            Toggle();
+        }
+
         int count = selection != null ? selection.SelectedBuildings.Count : 0;
         if (count != lastCount)
         {
             lastCount = count;
-            if (count == 0)
-                SetOpen(false);
             RefreshOpenButton();
             if (panel != null && panel.activeSelf)
                 Rebuild();
@@ -50,7 +112,7 @@ public class SelectionActionsUI : MonoBehaviour
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         root = canvasGo;
 
-        Button open = CreateButton(canvasGo.transform, "Open", "Выделенные", new Vector2(1f, 1f), new Vector2(-24f, -18f), new Vector2(220f, 52f), new Vector2(1f, 1f));
+        Button open = CreateButton(canvasGo.transform, "Open", "Выделенные  ·  O", new Vector2(1f, 1f), new Vector2(-24f, -18f), new Vector2(240f, 52f), new Vector2(1f, 1f));
         open.onClick.AddListener(Toggle);
 
         panel = new GameObject("Panel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
@@ -62,7 +124,7 @@ public class SelectionActionsUI : MonoBehaviour
         panelRt.pivot = new Vector2(1f, 0.5f);
         panelRt.anchoredPosition = new Vector2(-24f, -20f);
 
-        TextMeshProUGUI title = UiTheme.AddText(panel.transform, "Title", "Выделенные здания", 26f, UiTheme.Accent);
+        TextMeshProUGUI title = UiTheme.AddText(panel.transform, "Title", "Выделенные  ·  O", 26f, UiTheme.Accent);
         title.fontStyle = FontStyles.Bold;
         Stretch(title.rectTransform, 0.06f, 0.78f, 0.9f, 0.97f);
 
@@ -116,10 +178,8 @@ public class SelectionActionsUI : MonoBehaviour
         UiTheme.EnsureVerticalScroll(recListRt);
     }
 
-    void Toggle()
+    public void Toggle()
     {
-        if (selection == null || selection.SelectedBuildings.Count == 0)
-            return;
         SetOpen(panel == null || !panel.activeSelf);
     }
 
@@ -166,7 +226,9 @@ public class SelectionActionsUI : MonoBehaviour
         }
 
         if (summary != null)
-            summary.text = "Зданий: " + buildings.Count + "   ·   типов: " + groups.Count;
+            summary.text = buildings.Count == 0
+                ? "Ничего не выделено. Войди в режим редактирования и выдели здания."
+                : "Зданий: " + buildings.Count + "   ·   типов: " + groups.Count;
 
         foreach (var pair in groups)
         {

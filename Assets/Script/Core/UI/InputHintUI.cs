@@ -192,6 +192,7 @@ public class InputHintUI : MonoBehaviour
         {
             Add(hints, KeybindStore.Hint("BuildMode"), "режим строительства");
             Add(hints, KeybindStore.Hint("MoveSelection"), "карта");
+            Add(hints, ShopHint(), "магазин");
             Add(hints, "колесо на карте", "масштаб");
             if (interactor != null && interactor.HasInteractableTarget)
                 Add(hints, KeybindStore.Hint("Interact"), interactor.InteractableHint);
@@ -236,6 +237,7 @@ public class InputHintUI : MonoBehaviour
                 Add(hints, KeybindStore.Hint("Rotate"), "повернуть вокруг центра");
                 Add(hints, Combo("Modifier", "Rotate"), "повернуть на месте");
                 Add(hints, KeybindStore.Hint("Delete"), "удалить");
+                Add(hints, SelectionHint(), "настройки выделенных");
                 Add(hints, KeybindStore.Hint("ClearSelection"), "сбросить выделение");
             }
             if (selection.HasClipboard)
@@ -260,6 +262,7 @@ public class InputHintUI : MonoBehaviour
         }
 
         Add(hints, KeybindStore.Hint("Demolish"), "снести");
+        Add(hints, ShopHint(), "магазин");
         Add(hints, "колесо", "хотбар");
         Add(hints, KeybindStore.Hint("Pause"), "пауза");
         return hints;
@@ -268,6 +271,18 @@ public class InputHintUI : MonoBehaviour
     static string Combo(string modifierAction, string actionName)
     {
         return KeybindStore.Hint(modifierAction) + "+" + KeybindStore.Hint(actionName);
+    }
+
+    static string ShopHint()
+    {
+        string hint = KeybindStore.Hint("Shop");
+        return hint == "—" ? "H" : hint;
+    }
+
+    static string SelectionHint()
+    {
+        string hint = KeybindStore.Hint("SelectionPanel");
+        return hint == "—" ? "O" : hint;
     }
 
     static void Add(List<(string, string)> hints, string key, string label)

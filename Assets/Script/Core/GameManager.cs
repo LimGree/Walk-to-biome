@@ -77,6 +77,18 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+        {
+            WalletHud.Instance.SetShopOpen(false);
+            return;
+        }
+
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+        {
+            SelectionActionsUI.Instance.Toggle();
+            return;
+        }
+
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
         {
             MachineUI.Instance.Close();
@@ -106,6 +118,8 @@ public class GameManager : MonoBehaviour
             WorldMapUI.Instance.SetOpen(false);
         if (paused && InventoryUI.Instance != null && InventoryUI.Instance.IsBagOpen)
             InventoryUI.Instance.SetBagOpen(false);
+        if (paused && WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            WalletHud.Instance.SetShopOpen(false);
 
         EnsurePauseOverlay();
         if (pauseRoot != null)
