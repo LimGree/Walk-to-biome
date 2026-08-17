@@ -196,6 +196,13 @@ public abstract class BuildingBase : MonoBehaviour
         return 1;
     }
 
+    public virtual bool CanUpgradeBuilding => false;
+
+    public virtual bool TryUpgradeBuilding()
+    {
+        return false;
+    }
+
     public virtual void ApplyLevel(int level)
     {
     }

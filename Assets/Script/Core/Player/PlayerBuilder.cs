@@ -477,6 +477,12 @@ public class PlayerBuilder : MonoBehaviour
             return false;
         }
 
+        if (PlayerWallet.Instance != null
+            && !PlayerWallet.Instance.CanAfford(Economy.BuildCost(currentBuildingData)))
+        {
+            return false;
+        }
+
         if (NeedsResourceNode(currentBuildingData))
         {
             Vector2Int minCell = GridFootprint.GetMinCell(position, size);
@@ -725,6 +731,11 @@ public class PlayerBuilder : MonoBehaviour
         bool isLab = IsResearchLabData(strokeBuilding);
         int labCapacity = GetLabCapacity();
         int labUsed = 0;
+        int pieceCost = Economy.BuildCost(strokeBuilding);
+        int coinBudget = PlayerWallet.Instance != null && pieceCost > 0
+            ? PlayerWallet.Instance.Coins / pieceCost
+            : extra + 1;
+        int paid = 0;
 
         for (int i = 0; i <= extra; i++)
         {
@@ -738,6 +749,14 @@ public class PlayerBuilder : MonoBehaviour
                 valid = labUsed < labCapacity;
                 if (valid)
                     labUsed++;
+            }
+
+            if (valid)
+            {
+                if (paid >= coinBudget)
+                    valid = false;
+                else
+                    paid++;
             }
 
             strokeSlots.Add(new LineSlot { min = min, pos = pos, valid = valid });
@@ -864,6 +883,13 @@ public class PlayerBuilder : MonoBehaviour
             return;
         }
 
+        int lineCost = Economy.BuildCost(currentBuildingData) * strokeSlots.Count;
+        if (PlayerWallet.Instance != null && !PlayerWallet.Instance.CanAfford(lineCost))
+        {
+            EndStroke();
+            return;
+        }
+
         Quaternion rot = Quaternion.Euler(0f, strokeYaw, 0f);
         for (int i = 0; i < strokeSlots.Count; i++)
             SpawnAt(strokeSlots[i].pos, rot);
@@ -874,6 +900,10 @@ public class PlayerBuilder : MonoBehaviour
     void SpawnAt(Vector3 placePos, Quaternion placeRot)
     {
         if (currentBuildingData == null || currentBuildingData.prefab == null)
+            return;
+
+        int cost = Economy.BuildCost(currentBuildingData);
+        if (PlayerWallet.Instance != null && !PlayerWallet.Instance.TrySpendCoins(cost))
             return;
 
         GameObject go = Instantiate(currentBuildingData.prefab, placePos, placeRot);

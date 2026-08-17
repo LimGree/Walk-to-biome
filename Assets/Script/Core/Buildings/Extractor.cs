@@ -27,6 +27,7 @@ public class Extractor : BuildingBase, IInteractable
     private float nextFailLogTime;
 
     public bool CanUpgrade => level < 2;
+    public override bool CanUpgradeBuilding => CanUpgrade;
     public float CurrentInterval => Mathf.Max(0.05f, extractInterval);
     public int CurrentItemsPerCycle => Mathf.Max(1, itemsPerCycle);
 
@@ -54,6 +55,11 @@ public class Extractor : BuildingBase, IInteractable
     }
 
     public bool TryUpgrade()
+    {
+        return TryUpgradeBuilding();
+    }
+
+    public override bool TryUpgradeBuilding()
     {
         if (!CanUpgrade)
             return false;
@@ -194,6 +200,8 @@ public class Extractor : BuildingBase, IInteractable
 
             if (!TryOutputToAny(resource))
                 break;
+
+            ProductionStats.Instance?.RecordProduced(resource, 1);
 
             if (showDebug)
                 Debug.Log($"[Extractor] Выдал {resource.displayName}");

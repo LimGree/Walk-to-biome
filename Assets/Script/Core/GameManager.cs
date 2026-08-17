@@ -43,6 +43,16 @@ public class GameManager : MonoBehaviour
             gameObject.AddComponent<InputHintUI>();
         if (GetComponent<WorldMapUI>() == null)
             gameObject.AddComponent<WorldMapUI>();
+        if (GetComponent<PlayerWallet>() == null)
+            gameObject.AddComponent<PlayerWallet>();
+        if (GetComponent<ProductionStats>() == null)
+            gameObject.AddComponent<ProductionStats>();
+        if (GetComponent<BeltSpeedSystem>() == null)
+            gameObject.AddComponent<BeltSpeedSystem>();
+        if (GetComponent<WalletHud>() == null)
+            gameObject.AddComponent<WalletHud>();
+        if (GetComponent<SelectionActionsUI>() == null)
+            gameObject.AddComponent<SelectionActionsUI>();
     }
 
     void OnEnable()

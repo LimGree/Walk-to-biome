@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     public int version = CurrentVersion;
     public string worldName;
@@ -18,6 +18,15 @@ public class SaveData
     public ResearchSaveData research = new ResearchSaveData();
     public List<string> hotbarBuildingIds = new List<string>();
     public int hotbarSelectedIndex;
+    public int coins;
+    public int rubies;
+    public int beltLevel;
+    public int beltGears;
+    public List<ItemAmountSave> statsProduced = new List<ItemAmountSave>();
+    public List<ItemAmountSave> statsConsumed = new List<ItemAmountSave>();
+    public int statsCoinsGained;
+    public int statsCoinsSpent;
+    public int statsRubiesGained;
     public List<SaveKeyValue> extras = new List<SaveKeyValue>();
 
     public static SaveData Normalize(SaveData data)
@@ -35,6 +44,10 @@ public class SaveData
             data.extras = new List<SaveKeyValue>();
         if (data.hotbarBuildingIds == null)
             data.hotbarBuildingIds = new List<string>();
+        if (data.statsProduced == null)
+            data.statsProduced = new List<ItemAmountSave>();
+        if (data.statsConsumed == null)
+            data.statsConsumed = new List<ItemAmountSave>();
 
         for (int i = 0; i < data.buildings.Count; i++)
         {

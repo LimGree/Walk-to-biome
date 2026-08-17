@@ -91,6 +91,12 @@ public class SaveSystem : MonoBehaviour
 
         if (ResearchSystem.Instance != null)
             data.research = ResearchSystem.Instance.CaptureSave();
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.CaptureSave(data);
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.CaptureSave(data);
+        if (ProductionStats.Instance != null)
+            ProductionStats.Instance.CaptureSave(data);
 
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)
@@ -116,7 +122,15 @@ public class SaveSystem : MonoBehaviour
 
         string path = WorldCatalog.ActiveSavePath;
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
+        {
+            if (PlayerWallet.Instance != null)
+                PlayerWallet.Instance.ResetToNewWorld();
+            if (BeltSpeedSystem.Instance != null)
+                BeltSpeedSystem.Instance.ResetToNewWorld();
+            if (ProductionStats.Instance != null)
+                ProductionStats.Instance.ResetAll();
             return;
+        }
 
         SaveData data = SaveData.Normalize(JsonUtility.FromJson<SaveData>(File.ReadAllText(path)));
         if (data == null)
@@ -158,6 +172,12 @@ public class SaveSystem : MonoBehaviour
 
         if (ResearchSystem.Instance != null)
             ResearchSystem.Instance.ApplySave(data.research);
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.ApplySave(data);
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.ApplySave(data);
+        if (ProductionStats.Instance != null)
+            ProductionStats.Instance.ApplySave(data);
 
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)

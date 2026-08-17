@@ -138,32 +138,45 @@ public class ResearchSystem : MonoBehaviour
 
     public bool TrySubmitItem(ItemData item)
     {
-        if (CurrentResearch == null || item == null || CurrentResearch.requiredItems == null)
+        if (item == null)
             return false;
 
-        int requiredAmount = 0;
-        bool needed = false;
-        for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
+        bool countedForResearch = false;
+        if (CurrentResearch != null && CurrentResearch.requiredItems != null)
         {
-            ItemStack req = CurrentResearch.requiredItems[i];
-            if (req.item == item)
+            int requiredAmount = 0;
+            bool needed = false;
+            for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
             {
-                needed = true;
-                requiredAmount = req.amount;
-                break;
+                ItemStack req = CurrentResearch.requiredItems[i];
+                if (req.item == item)
+                {
+                    needed = true;
+                    requiredAmount = req.amount;
+                    break;
+                }
+            }
+
+            if (needed)
+            {
+                submittedItems.TryGetValue(item, out int have);
+                if (have < requiredAmount)
+                {
+                    submittedItems[item] = have + 1;
+                    countedForResearch = true;
+                    OnResearchProgressChanged?.Invoke();
+                    TryCompleteCurrentResearch();
+                }
             }
         }
 
-        if (!needed)
-            return false;
+        if (!countedForResearch && Economy.IsGear(item) && BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.SubmitGear();
 
-        submittedItems.TryGetValue(item, out int have);
-        if (have >= requiredAmount)
-            return false;
+        int coins = Economy.SellValue(item);
+        if (coins > 0 && PlayerWallet.Instance != null)
+            PlayerWallet.Instance.AddCoins(coins);
 
-        submittedItems[item] = have + 1;
-        OnResearchProgressChanged?.Invoke();
-        TryCompleteCurrentResearch();
         return true;
     }
 
@@ -182,10 +195,15 @@ public class ResearchSystem : MonoBehaviour
                 return;
         }
 
-        CompleteResearch(CurrentResearch);
+        CompleteResearch(CurrentResearch, grantReward: true);
     }
 
     public void CompleteResearch(ResearchNodeData node)
+    {
+        CompleteResearch(node, grantReward: true);
+    }
+
+    public void CompleteResearch(ResearchNodeData node, bool grantReward)
     {
         if (node == null || IsResearchUnlocked(node))
             return;
@@ -216,7 +234,17 @@ public class ResearchSystem : MonoBehaviour
             submittedItems.Clear();
         }
 
-        Debug.Log($"[Research] Completed: {node.displayName}");
+        if (grantReward)
+        {
+            int rubies = Economy.RubyReward(node);
+            if (rubies > 0 && PlayerWallet.Instance != null)
+                PlayerWallet.Instance.AddRubies(rubies);
+            Debug.Log($"[Research] Completed: {node.displayName}  +{rubies} ruby");
+        }
+        else
+        {
+            Debug.Log($"[Research] Completed: {node.displayName}");
+        }
         OnUnlocksChanged?.Invoke();
         OnResearchProgressChanged?.Invoke();
     }
@@ -418,7 +446,7 @@ public class ResearchSystem : MonoBehaviour
             {
                 ResearchNodeData node = FindNode(save.unlockedResearchIds[i]);
                 if (node != null)
-                    CompleteResearch(node);
+                    CompleteResearch(node, grantReward: false);
             }
         }
 

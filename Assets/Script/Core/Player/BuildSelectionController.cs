@@ -13,6 +13,15 @@ public class BuildSelectionController : MonoBehaviour
     public bool HasClipboard => clipboard.Count > 0;
     public bool HasSelectedBuildings => selectedBuildings.Count > 0;
 
+    public IReadOnlyList<BuildingBase> SelectedBuildings
+    {
+        get
+        {
+            selectedBuildings.RemoveAll(b => b == null);
+            return selectedBuildings;
+        }
+    }
+
     PlayerBuilder builder;
     PlayerInventory inventory;
     InputSystem_Actions input;

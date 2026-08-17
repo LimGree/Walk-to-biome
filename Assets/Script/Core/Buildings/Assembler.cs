@@ -3,13 +3,13 @@ using UnityEngine;
 public class Assembler : CrafterBuilding
 {
     [Header("Upgrade")]
-    public int level = 1;
     public float upgradedCraftSpeed = 2f;
 
     GameObject level1Visual;
     GameObject level2Visual;
 
     public bool CanUpgrade => level < 2;
+    public override bool CanUpgradeBuilding => CanUpgrade;
     public override float CraftSpeed => level >= 2 ? Mathf.Max(1f, upgradedCraftSpeed) : 1f;
 
     void Awake()
@@ -28,6 +28,11 @@ public class Assembler : CrafterBuilding
     }
 
     public bool TryUpgrade()
+    {
+        return TryUpgradeBuilding();
+    }
+
+    public override bool TryUpgradeBuilding()
     {
         if (!CanUpgrade)
             return false;

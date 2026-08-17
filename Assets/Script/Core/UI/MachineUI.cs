@@ -48,6 +48,10 @@ public class MachineUI : MonoBehaviour
     public bool IsOpen { get; private set; }
 
     private BuildingBase currentBuilding;
+    int labTab;
+    GameObject labChrome;
+    GameObject labPage;
+    TextMeshProUGUI labPageText;
 
 
     [Header("All recipes in game")]
@@ -368,14 +372,16 @@ public class MachineUI : MonoBehaviour
         if (extractor.CanUpgrade)
         {
             string next = $"{extractor.upgradedExtractInterval:0.##} с / цикл  ·  {Mathf.Max(1, extractor.upgradedItemsPerCycle)} шт";
+            int cost = Economy.UpgradeCost(extractor);
+            bool canPay = PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost);
             UiFactory.CreateActionButton(
                 extractorButtonsParent,
-                "Прокачать  →  ур. 2",
+                "Прокачать  →  ур. 2  ·  " + cost + " монет",
                 "Сейчас: " + stats + "   |   После: " + next,
-                true,
+                canPay,
                 () =>
                 {
-                    if (extractor.TryUpgrade())
+                    if (TryPaidUpgrade(extractor))
                     {
                         SetHeader("Extractor  ·  ур. " + extractor.level, extractor);
                         ShowExtractorUI(extractor);
@@ -439,34 +445,35 @@ public class MachineUI : MonoBehaviour
         if (currentRecipeText != null)
             currentRecipeText.text = selected != null ? "Selected: " + selected.displayName : "Select a recipe";
 
-        Assembler assembler = crafter as Assembler;
-        if (assembler != null)
-            AddAssemblerUpgradeButton(assembler);
+        AddCrafterUpgradeButton(crafter);
     }
 
-    void AddAssemblerUpgradeButton(Assembler assembler)
+    void AddCrafterUpgradeButton(CrafterBuilding crafter)
     {
-        if (recipeButtonsParent == null || assembler == null)
+        if (recipeButtonsParent == null || crafter == null)
             return;
 
-        string speed = "×" + assembler.CraftSpeed.ToString("0.##");
-        if (assembler.CanUpgrade)
+        string speed = "×" + crafter.CraftSpeed.ToString("0.##");
+        if (crafter.CanUpgradeBuilding)
         {
+            int cost = Economy.UpgradeCost(crafter);
+            bool canPay = PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost);
             UiFactory.CreateActionButton(
                 recipeButtonsParent,
-                "Прокачать  →  ур. 2",
-                "Скорость крафта " + speed + "  →  ×" + Mathf.Max(1f, assembler.upgradedCraftSpeed).ToString("0.##"),
-                true,
+                "Прокачать  →  ур. 2  ·  " + cost + " монет",
+                "Скорость крафта " + speed + "  →  ×2",
+                canPay,
                 () =>
                 {
-                    if (assembler.TryUpgrade())
+                    if (TryPaidUpgrade(crafter))
                     {
-                        SetHeader("Assembler  ·  ур. " + assembler.level, assembler);
-                        RefreshRecipeList(assembler);
+                        string title = crafter.data != null ? crafter.data.displayName : crafter.GetType().Name;
+                        SetHeader(title + "  ·  ур. " + crafter.ReadLevel(), crafter);
+                        RefreshRecipeList(crafter);
                     }
                 });
         }
-        else
+        else if (crafter.ReadLevel() >= 2)
         {
             UiFactory.CreateActionButton(
                 recipeButtonsParent,
@@ -475,6 +482,20 @@ public class MachineUI : MonoBehaviour
                 false,
                 null);
         }
+    }
+
+    static bool TryPaidUpgrade(BuildingBase building)
+    {
+        if (building == null || !building.CanUpgradeBuilding)
+            return false;
+        int cost = Economy.UpgradeCost(building);
+        if (PlayerWallet.Instance != null && !PlayerWallet.Instance.TrySpendCoins(cost))
+            return false;
+        if (building.TryUpgradeBuilding())
+            return true;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.AddCoins(cost);
+        return false;
     }
 
 
@@ -664,17 +685,113 @@ public class MachineUI : MonoBehaviour
 
     void ShowResearchLabUI(ResearchLab lab)
     {
-        researchLabContent.SetActive(true);
+        if (researchLabContent != null)
+            researchLabContent.SetActive(true);
+        EnsureLabChrome();
+        OpenLabTab(labTab);
+    }
+
+    void EnsureLabChrome()
+    {
+        if (researchLabContent == null || labChrome != null)
+            return;
+
+        labChrome = new GameObject("LabTabs", typeof(RectTransform));
+        labChrome.transform.SetParent(researchLabContent.transform, false);
+        RectTransform tabsRt = labChrome.GetComponent<RectTransform>();
+        tabsRt.anchorMin = new Vector2(0f, 1f);
+        tabsRt.anchorMax = new Vector2(1f, 1f);
+        tabsRt.pivot = new Vector2(0.5f, 1f);
+        tabsRt.anchoredPosition = new Vector2(0f, -8f);
+        tabsRt.sizeDelta = new Vector2(-24f, 48f);
+
+        HorizontalLayoutGroup row = labChrome.AddComponent<HorizontalLayoutGroup>();
+        row.spacing = 8f;
+        row.childForceExpandHeight = true;
+        row.childForceExpandWidth = true;
+        row.padding = new RectOffset(8, 8, 0, 0);
+
+        AddLabTabButton("Исследования", 0);
+        AddLabTabButton("Конвейеры", 1);
+        AddLabTabButton("Статистика", 2);
+
+        labPage = new GameObject("LabPage", typeof(RectTransform));
+        labPage.transform.SetParent(researchLabContent.transform, false);
+        RectTransform pageRt = labPage.GetComponent<RectTransform>();
+        pageRt.anchorMin = Vector2.zero;
+        pageRt.anchorMax = Vector2.one;
+        pageRt.offsetMin = new Vector2(16f, 16f);
+        pageRt.offsetMax = new Vector2(-16f, -64f);
+
+        labPageText = UiTheme.AddText(labPage.transform, "Body", "", 18f, UiTheme.Text);
+        labPageText.alignment = TextAlignmentOptions.TopLeft;
+        labPageText.enableWordWrapping = true;
+        labPageText.overflowMode = TextOverflowModes.Overflow;
+        RectTransform bodyRt = labPageText.rectTransform;
+        bodyRt.anchorMin = Vector2.zero;
+        bodyRt.anchorMax = Vector2.one;
+        bodyRt.offsetMin = Vector2.zero;
+        bodyRt.offsetMax = Vector2.zero;
+    }
+
+    void AddLabTabButton(string label, int tab)
+    {
+        GameObject go = new GameObject("Tab" + tab, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        go.transform.SetParent(labChrome.transform, false);
+        UiTheme.StyleImage(go.GetComponent<Image>(), tab == labTab ? UiTheme.AccentDim : UiTheme.Card);
+        Button button = go.GetComponent<Button>();
+        int captured = tab;
+        button.onClick.AddListener(() => OpenLabTab(captured));
+        TextMeshProUGUI text = UiTheme.AddText(go.transform, "Label", label, 18f, UiTheme.Text);
+        text.alignment = TextAlignmentOptions.Center;
+        RectTransform textRt = text.rectTransform;
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = Vector2.zero;
+        textRt.offsetMax = Vector2.zero;
+    }
+
+    void OpenLabTab(int tab)
+    {
+        labTab = tab;
+        bool research = tab == 0;
+        if (researchButtonsParent != null)
+            researchButtonsParent.gameObject.SetActive(research);
+        if (researchProgressText != null)
+            researchProgressText.gameObject.SetActive(research);
+        if (researchProgressSlider != null)
+            researchProgressSlider.gameObject.SetActive(research);
+        if (labPage != null)
+            labPage.SetActive(!research);
+
+        if (labChrome != null)
+        {
+            for (int i = 0; i < labChrome.transform.childCount; i++)
+            {
+                Image image = labChrome.transform.GetChild(i).GetComponent<Image>();
+                if (image != null)
+                    image.color = i == tab ? UiTheme.AccentDim : UiTheme.Card;
+            }
+        }
+
+        if (research)
+            FillResearchTab();
+        else
+            RefreshLabPage();
+    }
+
+    void FillResearchTab()
+    {
+        if (researchButtonsParent == null || ResearchSystem.Instance == null)
+            return;
 
         foreach (Transform child in researchButtonsParent)
             Destroy(child.gameObject);
 
-        if (ResearchSystem.Instance == null)
-            return;
-
         foreach (var node in ResearchSystem.Instance.GetAllNodes())
         {
-            if (node == null) continue;
+            if (node == null)
+                continue;
 
             string status = "READY";
             bool canStart = ResearchSystem.Instance.CanStartResearch(node);
@@ -705,6 +822,66 @@ public class MachineUI : MonoBehaviour
                         Close();
                 });
         }
+    }
+
+    void RefreshLabPage()
+    {
+        if (labPageText == null)
+            return;
+
+        if (labTab == 1)
+        {
+            BeltSpeedSystem belts = BeltSpeedSystem.Instance;
+            int level = belts != null ? belts.Level : 0;
+            int have = belts != null ? belts.GearsTowardNext : 0;
+            int need = belts != null ? belts.NextCost : Economy.BeltUpgradeCost(1);
+            float mul = belts != null ? belts.Multiplier : 1f;
+            labPageText.text =
+                "Ускорение конвейеров\n\n" +
+                "Уровень: " + level + "   ·   скорость ×" + mul.ToString("0.##") + "\n" +
+                "Следующее: " + have + " / " + need + " шестерёнок\n" +
+                "Каждый уровень +15% и на +10% дороже шестерёнок.\n\n" +
+                "Сдайте шестерёнки на ленту в лабораторию.\n" +
+                "Если активное исследование их не ждёт — они идут в это улучшение.\n" +
+                "Работает на уже стоящих и на новых конвейерах.";
+            return;
+        }
+
+        ProductionStats stats = ProductionStats.Instance;
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.AppendLine("Статистика производства");
+        sb.AppendLine();
+        if (PlayerWallet.Instance != null)
+            sb.AppendLine("Монеты " + PlayerWallet.Instance.Coins + "   ·   рубины " + PlayerWallet.Instance.Rubies);
+        if (stats != null)
+        {
+            sb.AppendLine("Монеты: +" + stats.CoinsPerMinute().ToString("0.#") + "/мин   −" + stats.CoinsSpentPerMinute().ToString("0.#") + "/мин");
+            sb.AppendLine("Рубины: +" + stats.RubiesPerMinute().ToString("0.#") + "/мин   (всего " + stats.RubiesGainedTotal + ")");
+            sb.AppendLine();
+            sb.AppendLine("Произведено / тратится");
+            var ids = new HashSet<string>();
+            foreach (var pair in stats.ProducedTotal)
+                ids.Add(pair.Key);
+            foreach (var pair in stats.ConsumedTotal)
+                ids.Add(pair.Key);
+
+            var sorted = new List<string>(ids);
+            sorted.Sort();
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                string id = sorted[i];
+                ItemData item = GameDatabase.FindItem(id);
+                string name = item != null ? item.displayName : id;
+                stats.ProducedTotal.TryGetValue(id, out int made);
+                stats.ConsumedTotal.TryGetValue(id, out int used);
+                sb.AppendLine(
+                    name + "  +" + made + "  −" + used +
+                    "   ·   +" + stats.ProducedPerMinute(id).ToString("0.#") + "/мин" +
+                    "  −" + stats.ConsumedPerMinute(id).ToString("0.#") + "/мин");
+            }
+        }
+
+        labPageText.text = sb.ToString();
     }
 
     // ================== PROGRESS ==================
@@ -742,6 +919,9 @@ public class MachineUI : MonoBehaviour
                     : "None";
                 researchProgressText.text = $"{name}: {(progress * 100f):0}%";
             }
+
+            if (labTab != 0)
+                RefreshLabPage();
         }
     }
 }

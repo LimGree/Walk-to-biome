@@ -57,6 +57,7 @@ public class WaterExtractor : BuildingBase, IInteractable
                 break;
             if (!TryOutputToAny(resource))
                 break;
+            ProductionStats.Instance?.RecordProduced(resource, 1);
         }
     }
 

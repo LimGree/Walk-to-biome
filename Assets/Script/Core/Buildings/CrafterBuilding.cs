@@ -11,12 +11,35 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
     [Tooltip("Макс. множитель запасов относительно рецепта (2 = два крафта вперёд).")]
     public int inputBufferMultiplier = 2;
 
+    [Header("Upgrade")]
+    public int level = 1;
+
     [Header("Debug")]
     public bool showDebug;
 
     protected readonly Dictionary<ItemData, int> inputBuffer = new Dictionary<ItemData, int>();
 
-    public virtual float CraftSpeed => 1f;
+    public virtual float CraftSpeed => level >= 2 ? 2f : 1f;
+    public override bool CanUpgradeBuilding => level < 2;
+
+    public override int ReadLevel()
+    {
+        return level;
+    }
+
+    public override void ApplyLevel(int savedLevel)
+    {
+        if (savedLevel >= 2)
+            level = 2;
+    }
+
+    public override bool TryUpgradeBuilding()
+    {
+        if (level >= 2)
+            return false;
+        level = 2;
+        return true;
+    }
 
     public float GetEffectiveCraftTime()
     {
@@ -151,6 +174,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
         {
             ItemStack required = currentRecipe.inputs[i];
             inputBuffer[required.item] -= required.amount;
+            ProductionStats.Instance?.RecordConsumed(required.item, required.amount);
         }
 
         for (int i = 0; i < currentRecipe.outputs.Count; i++)
@@ -158,6 +182,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
             ItemStack output = currentRecipe.outputs[i];
             if (output.item == null)
                 continue;
+            ProductionStats.Instance?.RecordProduced(output.item, output.amount);
             for (int n = 0; n < output.amount; n++)
             {
                 if (!TryOutputToAny(output.item) && showDebug)

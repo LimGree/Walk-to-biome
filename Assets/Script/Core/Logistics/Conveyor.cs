@@ -198,7 +198,8 @@ public class Conveyor : BuildingBase
             return;
 
         float cell = GridFootprint.CellSize;
-        float move = speed * Time.deltaTime / Mathf.Max(0.05f, cell);
+        float boost = BeltSpeedSystem.Instance != null ? BeltSpeedSystem.Instance.Multiplier : 1f;
+        float move = speed * boost * Time.deltaTime / Mathf.Max(0.05f, cell);
         float gap = ItemGap;
 
         // Ближе к выходу — раньше. Никто не обгоняет соседа впереди.
