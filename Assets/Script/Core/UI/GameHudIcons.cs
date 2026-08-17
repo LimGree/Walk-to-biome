@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "GameHudIcons", menuName = "Walk to biome/HUD Icons")]
+[CreateAssetMenu(fileName = "GameHudIcons", menuName = "Walk of Industry/HUD Icons")]
 public class GameHudIcons : ScriptableObject
 {
     public Sprite coin;

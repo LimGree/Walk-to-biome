@@ -21,7 +21,7 @@ public static class AlphaBuild
         EditorApplication.delayCall += () => BuildWindowsAlpha(exitEditor: false);
     }
 
-    [MenuItem("Walk to biome/Build Windows Alpha")]
+    [MenuItem("Walk of Industry/Build Windows Alpha")]
     public static void BuildWindowsAlphaMenu()
     {
         BuildWindowsAlpha(exitEditor: false);
@@ -39,7 +39,7 @@ public static class AlphaBuild
             ? "0.0.0"
             : PlayerSettings.bundleVersion.Trim();
         string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-        string outDir = Path.Combine(projectRoot, "Builds", "Windows", $"WalkToBiome-{version}");
+        string outDir = Path.Combine(projectRoot, "Builds", "Windows", $"{GameBranding.BuildFolderPrefix}-{version}");
         string statusPath = Path.Combine(projectRoot, StatusRelativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(statusPath));
 
@@ -63,7 +63,7 @@ public static class AlphaBuild
             return false;
         }
 
-        string exePath = Path.Combine(outDir, "Walk to biome.exe");
+        string exePath = Path.Combine(outDir, GameBranding.ExeName);
         var options = new BuildPlayerOptions
         {
             scenes = scenePaths.ToArray(),
@@ -101,9 +101,10 @@ public static class AlphaBuild
     static void WriteReadme(string path, string version)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Walk to biome — Alpha " + version);
+        sb.AppendLine(GameBranding.Title + " — Alpha " + version);
+        sb.AppendLine(GameBranding.Tagline);
         sb.AppendLine();
-        sb.AppendLine("Windows 64-bit. Unpack the whole folder and run \"Walk to biome.exe\".");
+        sb.AppendLine("Windows 64-bit. Unpack the whole folder and run \"" + GameBranding.ExeName + "\".");
         sb.AppendLine("Alt+Enter toggles fullscreen.");
         sb.AppendLine();
         sb.AppendLine("This is an early playable build: expect missing machines, balance issues, and bugs.");

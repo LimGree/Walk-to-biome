@@ -24,8 +24,52 @@ public static class WorldCatalog
     public static WorldInfo Active { get; private set; }
     public static bool HasActive => Active != null && !string.IsNullOrEmpty(Active.id);
 
-    static string Root => Path.Combine(Application.persistentDataPath, "worlds");
+    static string Root
+    {
+        get
+        {
+            MigrateOldSavesOnce();
+            return Path.Combine(Application.persistentDataPath, "worlds");
+        }
+    }
     static string IndexPath => Path.Combine(Root, "index.json");
+    static bool migrated;
+
+    static void MigrateOldSavesOnce()
+    {
+        if (migrated)
+            return;
+        migrated = true;
+
+        string current = Application.persistentDataPath;
+        DirectoryInfo parent = Directory.GetParent(current);
+        if (parent == null)
+            return;
+
+        string oldRoot = Path.Combine(parent.FullName, "Walk to biome", "worlds");
+        string newRoot = Path.Combine(current, "worlds");
+        if (!Directory.Exists(oldRoot) || Directory.Exists(newRoot))
+            return;
+
+        try
+        {
+            CopyDirectory(oldRoot, newRoot);
+            Debug.Log("[Worlds] Перенесены сохранения из Walk to biome → Walk of Industry");
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[Worlds] Не удалось перенести старые сохранения: " + e.Message);
+        }
+    }
+
+    static void CopyDirectory(string source, string dest)
+    {
+        Directory.CreateDirectory(dest);
+        foreach (string file in Directory.GetFiles(source))
+            File.Copy(file, Path.Combine(dest, Path.GetFileName(file)), false);
+        foreach (string dir in Directory.GetDirectories(source))
+            CopyDirectory(dir, Path.Combine(dest, Path.GetFileName(dir)));
+    }
 
     public static string SavePath(WorldInfo world)
     {

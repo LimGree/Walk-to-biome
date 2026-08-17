@@ -119,14 +119,23 @@ public class LoadingScreen : MonoBehaviour
         bgRt.offsetMax = Vector2.zero;
         bg.GetComponent<Image>().color = new Color(0.04f, 0.10f, 0.07f, 1f);
 
-        TextMeshProUGUI title = UiTheme.AddText(canvasGo.transform, "Title", "WALK TO BIOME", 52f, UiTheme.Accent);
+        TextMeshProUGUI title = UiTheme.AddText(canvasGo.transform, "Title", GameBranding.TitleCaps, 48f, UiTheme.Accent);
         title.alignment = TextAlignmentOptions.Center;
         title.fontStyle = FontStyles.Bold;
         RectTransform titleRt = title.rectTransform;
-        titleRt.anchorMin = new Vector2(0.1f, 0.58f);
-        titleRt.anchorMax = new Vector2(0.9f, 0.72f);
+        titleRt.anchorMin = new Vector2(0.08f, 0.60f);
+        titleRt.anchorMax = new Vector2(0.92f, 0.74f);
         titleRt.offsetMin = Vector2.zero;
         titleRt.offsetMax = Vector2.zero;
+
+        TextMeshProUGUI tag = UiTheme.AddText(canvasGo.transform, "Tagline", GameBranding.Tagline, 20f, UiTheme.TextDim);
+        tag.alignment = TextAlignmentOptions.Center;
+        tag.enableWordWrapping = true;
+        RectTransform tagRt = tag.rectTransform;
+        tagRt.anchorMin = new Vector2(0.12f, 0.52f);
+        tagRt.anchorMax = new Vector2(0.88f, 0.60f);
+        tagRt.offsetMin = Vector2.zero;
+        tagRt.offsetMax = Vector2.zero;
 
         status = UiTheme.AddText(canvasGo.transform, "Status", "Загрузка…", 24f, UiTheme.Text);
         status.alignment = TextAlignmentOptions.Center;

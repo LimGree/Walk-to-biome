@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ResourceNodePrefabs", menuName = "Walk to biome/Resource Node Prefabs")]
+[CreateAssetMenu(fileName = "ResourceNodePrefabs", menuName = "Walk of Industry/Resource Node Prefabs")]
 public class ResourceNodePrefabs : ScriptableObject
 {
     public GameObject sand;

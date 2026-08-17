@@ -67,15 +67,16 @@ public class MainMenu : MonoBehaviour
         bgImg.color = new Color(0.04f, 0.10f, 0.07f, 1f);
         bgImg.raycastTarget = true;
 
-        home = CreatePanel(canvasGo.transform, "Home", new Vector2(560f, 520f));
-        TextMeshProUGUI title = UiTheme.AddText(home.transform, "Title", "WALK TO BIOME", 48f, UiTheme.Accent);
+        home = CreatePanel(canvasGo.transform, "Home", new Vector2(640f, 560f));
+        TextMeshProUGUI title = UiTheme.AddText(home.transform, "Title", GameBranding.TitleCaps, 40f, UiTheme.Accent);
         title.alignment = TextAlignmentOptions.Center;
         title.fontStyle = FontStyles.Bold;
-        Stretch(title.rectTransform, 0.72f, 0.96f, 16f);
+        Stretch(title.rectTransform, 0.78f, 0.96f, 16f);
 
-        TextMeshProUGUI sub = UiTheme.AddText(home.transform, "Sub", "фабрика у границы биома", 20f, UiTheme.TextDim);
+        TextMeshProUGUI sub = UiTheme.AddText(home.transform, "Sub", GameBranding.Tagline, 16f, UiTheme.TextDim);
         sub.alignment = TextAlignmentOptions.Center;
-        Stretch(sub.rectTransform, 0.62f, 0.74f, 16f);
+        sub.enableWordWrapping = true;
+        Stretch(sub.rectTransform, 0.62f, 0.78f, 20f);
 
         CreateButton(home.transform, "Play", "Миры", new Vector2(0.56f, 0.40f), ShowWorlds);
         CreateButton(home.transform, "Settings", "Настройки", new Vector2(0.34f, 0.18f), ShowSettings);
