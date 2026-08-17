@@ -203,6 +203,10 @@ public class MachineUI : MonoBehaviour
         if (building == null) return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            WalletHud.Instance.SetShopOpen(false);
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            SelectionActionsUI.Instance.SetOpen(false);
 
         currentBuilding = building;
         IsOpen = true;

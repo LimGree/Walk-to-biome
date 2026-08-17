@@ -173,6 +173,20 @@ public class InputHintUI : MonoBehaviour
             return hints;
         }
 
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+        {
+            Add(hints, ShopHint(), "закрыть магазин");
+            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            return hints;
+        }
+
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+        {
+            Add(hints, SelectionHint(), "закрыть выделенные");
+            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            return hints;
+        }
+
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
         {
             Add(hints, KeybindStore.Hint("Pause"), "закрыть");

@@ -9,17 +9,18 @@ public class SelectionActionsUI : MonoBehaviour
     public static SelectionActionsUI Instance { get; private set; }
 
     BuildSelectionController selection;
-    GameObject root;
-    GameObject panel;
+    GameObject overlay;
+    GameObject mainView;
+    GameObject recipeView;
     Transform list;
-    TextMeshProUGUI summary;
-    GameObject recipePanel;
     Transform recipeList;
+    TextMeshProUGUI summary;
+    TextMeshProUGUI recipeTitle;
     string recipeTypeId;
     int lastCount = -1;
     InputAction panelAction;
 
-    public bool IsOpen => panel != null && panel.activeSelf;
+    public bool IsOpen => overlay != null && overlay.activeSelf;
 
     void Awake()
     {
@@ -94,132 +95,116 @@ public class SelectionActionsUI : MonoBehaviour
         if (count != lastCount)
         {
             lastCount = count;
-            RefreshOpenButton();
-            if (panel != null && panel.activeSelf)
+            if (IsOpen)
                 Rebuild();
         }
     }
 
     void Build()
     {
-        GameObject canvasGo = new GameObject("SelectionActions", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-        canvasGo.transform.SetParent(transform, false);
-        Canvas canvas = canvasGo.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 70;
-        CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        root = canvasGo;
+        GameObject canvasGo = OverlayUi.CreateCanvas(transform, "SelectionActions", 85);
 
-        Button open = CreateButton(canvasGo.transform, "Open", "Выделенные  ·  O", new Vector2(1f, 1f), new Vector2(-24f, -18f), new Vector2(240f, 52f), new Vector2(1f, 1f));
-        open.onClick.AddListener(Toggle);
+        overlay = new GameObject("Overlay", typeof(RectTransform));
+        overlay.transform.SetParent(canvasGo.transform, false);
+        RectTransform overlayRt = overlay.GetComponent<RectTransform>();
+        overlayRt.anchorMin = Vector2.zero;
+        overlayRt.anchorMax = Vector2.one;
+        overlayRt.offsetMin = Vector2.zero;
+        overlayRt.offsetMax = Vector2.zero;
 
-        panel = new GameObject("Panel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        panel.transform.SetParent(canvasGo.transform, false);
-        UiTheme.StylePanel(panel, new Vector2(640f, 720f));
-        RectTransform panelRt = panel.GetComponent<RectTransform>();
-        panelRt.anchorMin = new Vector2(1f, 0.5f);
-        panelRt.anchorMax = new Vector2(1f, 0.5f);
-        panelRt.pivot = new Vector2(1f, 0.5f);
-        panelRt.anchoredPosition = new Vector2(-24f, -20f);
+        OverlayUi.CreateDim(overlay.transform);
+        GameObject panel = OverlayUi.CreatePanel(overlay.transform);
+        OverlayUi.CreateHeader(panel.transform, null, "Выделенные здания", () => SetOpen(false));
+        Transform body = OverlayUi.CreateBody(panel.transform);
 
-        TextMeshProUGUI title = UiTheme.AddText(panel.transform, "Title", "Выделенные  ·  O", 26f, UiTheme.Accent);
-        title.fontStyle = FontStyles.Bold;
-        Stretch(title.rectTransform, 0.06f, 0.78f, 0.9f, 0.97f);
+        summary = UiTheme.AddText(body, "Summary", "", 20f, UiTheme.TextDim);
+        RectTransform summaryRt = summary.rectTransform;
+        summaryRt.anchorMin = new Vector2(0f, 1f);
+        summaryRt.anchorMax = new Vector2(1f, 1f);
+        summaryRt.pivot = new Vector2(0.5f, 1f);
+        summaryRt.anchoredPosition = Vector2.zero;
+        summaryRt.sizeDelta = new Vector2(0f, 40f);
 
-        Button close = CreateButton(panel.transform, "Close", "✕", new Vector2(1f, 1f), new Vector2(-16f, -16f), new Vector2(44f, 44f), new Vector2(1f, 1f));
-        close.onClick.AddListener(() => SetOpen(false));
+        mainView = new GameObject("Main", typeof(RectTransform));
+        mainView.transform.SetParent(body, false);
+        StretchBelow(mainView.GetComponent<RectTransform>(), 48f);
+        list = OverlayUi.CreateScrollColumn(mainView.transform, "List");
 
-        summary = UiTheme.AddText(panel.transform, "Summary", "", 16f, UiTheme.TextDim);
-        Stretch(summary.rectTransform, 0.06f, 0.94f, 0.84f, 0.9f);
+        recipeView = new GameObject("Recipes", typeof(RectTransform));
+        recipeView.transform.SetParent(body, false);
+        StretchBelow(recipeView.GetComponent<RectTransform>(), 48f);
+        recipeView.SetActive(false);
 
-        GameObject scroll = new GameObject("List", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
-        scroll.transform.SetParent(panel.transform, false);
-        list = scroll.transform;
-        RectTransform listRt = scroll.GetComponent<RectTransform>();
-        listRt.anchorMin = new Vector2(0.05f, 0.06f);
-        listRt.anchorMax = new Vector2(0.95f, 0.83f);
-        listRt.offsetMin = Vector2.zero;
-        listRt.offsetMax = Vector2.zero;
-        VerticalLayoutGroup layout = scroll.GetComponent<VerticalLayoutGroup>();
-        layout.spacing = 8f;
-        layout.childForceExpandHeight = false;
-        layout.childForceExpandWidth = true;
-        layout.childAlignment = TextAnchor.UpperCenter;
-        scroll.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        UiTheme.EnsureVerticalScroll(listRt);
+        recipeTitle = UiTheme.AddText(recipeView.transform, "RecipeTitle", "Рецепт", 22f, UiTheme.Accent);
+        recipeTitle.fontStyle = FontStyles.Bold;
+        RectTransform recTitleRt = recipeTitle.rectTransform;
+        recTitleRt.anchorMin = new Vector2(0f, 1f);
+        recTitleRt.anchorMax = new Vector2(0.78f, 1f);
+        recTitleRt.pivot = new Vector2(0f, 1f);
+        recTitleRt.anchoredPosition = Vector2.zero;
+        recTitleRt.sizeDelta = new Vector2(0f, 40f);
 
-        recipePanel = new GameObject("Recipes", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        recipePanel.transform.SetParent(canvasGo.transform, false);
-        UiTheme.StylePanel(recipePanel, new Vector2(520f, 620f));
-        RectTransform recRt = recipePanel.GetComponent<RectTransform>();
-        recRt.anchoredPosition = new Vector2(-200f, 0f);
-        recipePanel.SetActive(false);
+        Button back = OverlayUi.CreateIconButton(recipeView.transform, "Back", "Назад", new Vector2(1f, 1f), new Vector2(-70f, -20f), new Vector2(140f, 40f));
+        back.onClick.AddListener(ShowMain);
+        var backLabel = back.GetComponentInChildren<TextMeshProUGUI>();
+        if (backLabel != null)
+            backLabel.fontSize = 20f;
 
-        TextMeshProUGUI recTitle = UiTheme.AddText(recipePanel.transform, "Title", "Рецепт для типа", 22f, UiTheme.Accent);
-        Stretch(recTitle.rectTransform, 0.06f, 0.8f, 0.9f, 0.97f);
-        Button recClose = CreateButton(recipePanel.transform, "Close", "✕", new Vector2(1f, 1f), new Vector2(-16f, -16f), new Vector2(44f, 44f), new Vector2(1f, 1f));
-        recClose.onClick.AddListener(() => recipePanel.SetActive(false));
-
-        GameObject recListGo = new GameObject("RecipeList", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
-        recListGo.transform.SetParent(recipePanel.transform, false);
-        recipeList = recListGo.transform;
-        RectTransform recListRt = recListGo.GetComponent<RectTransform>();
-        recListRt.anchorMin = new Vector2(0.05f, 0.06f);
-        recListRt.anchorMax = new Vector2(0.95f, 0.88f);
-        recListRt.offsetMin = Vector2.zero;
-        recListRt.offsetMax = Vector2.zero;
-        VerticalLayoutGroup recLayout = recListGo.GetComponent<VerticalLayoutGroup>();
-        recLayout.spacing = 6f;
-        recLayout.childForceExpandHeight = false;
-        recLayout.childForceExpandWidth = true;
-        recListGo.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        UiTheme.EnsureVerticalScroll(recListRt);
+        GameObject recBody = new GameObject("RecipeBody", typeof(RectTransform));
+        recBody.transform.SetParent(recipeView.transform, false);
+        StretchBelow(recBody.GetComponent<RectTransform>(), 48f);
+        recipeList = OverlayUi.CreateScrollColumn(recBody.transform, "RecipeList");
     }
 
     public void Toggle()
     {
-        SetOpen(panel == null || !panel.activeSelf);
+        SetOpen(!IsOpen);
     }
 
-    void SetOpen(bool open)
+    public void SetOpen(bool open)
     {
-        if (panel != null)
-            panel.SetActive(open);
-        if (!open && recipePanel != null)
-            recipePanel.SetActive(false);
+        if (overlay != null)
+            overlay.SetActive(open);
+        if (!open)
+            ShowMain();
+        if (open && WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            WalletHud.Instance.SetShopOpen(false);
         if (open)
             Rebuild();
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
     }
 
-    void RefreshOpenButton()
+    void ShowMain()
     {
-        Transform btn = root != null ? root.transform.Find("Open") : null;
-        if (btn != null)
-            btn.gameObject.SetActive(selection != null && selection.SelectedBuildings.Count > 0);
+        if (mainView != null)
+            mainView.SetActive(true);
+        if (recipeView != null)
+            recipeView.SetActive(false);
     }
 
     void Rebuild()
     {
-        if (list == null || selection == null)
+        if (list == null)
             return;
 
         for (int i = list.childCount - 1; i >= 0; i--)
             Destroy(list.GetChild(i).gameObject);
 
         var groups = new Dictionary<string, List<BuildingBase>>();
-        IReadOnlyList<BuildingBase> buildings = selection.SelectedBuildings;
+        IReadOnlyList<BuildingBase> buildings = selection != null
+            ? selection.SelectedBuildings
+            : (IReadOnlyList<BuildingBase>)System.Array.Empty<BuildingBase>();
+
         for (int i = 0; i < buildings.Count; i++)
         {
             BuildingBase b = buildings[i];
             if (b == null || b.data == null)
                 continue;
-            string key = b.data.id;
-            if (!groups.TryGetValue(key, out List<BuildingBase> bucket))
+            if (!groups.TryGetValue(b.data.id, out List<BuildingBase> bucket))
             {
                 bucket = new List<BuildingBase>();
-                groups[key] = bucket;
+                groups[b.data.id] = bucket;
             }
 
             bucket.Add(b);
@@ -227,41 +212,121 @@ public class SelectionActionsUI : MonoBehaviour
 
         if (summary != null)
             summary.text = buildings.Count == 0
-                ? "Ничего не выделено. Войди в режим редактирования и выдели здания."
-                : "Зданий: " + buildings.Count + "   ·   типов: " + groups.Count;
+                ? "Ничего не выделено. В режиме редактирования выдели здания и нажми O."
+                : "Выделено " + buildings.Count + "   ·   типов " + groups.Count;
 
         foreach (var pair in groups)
+            AddGroupCard(pair.Value);
+    }
+
+    void AddGroupCard(List<BuildingBase> bucket)
+    {
+        BuildingData data = bucket[0].data;
+        int upgradable = 0;
+        int upgradeCost = 0;
+        bool crafters = false;
+        int maxLevel = 1;
+        for (int i = 0; i < bucket.Count; i++)
         {
-            List<BuildingBase> bucket = pair.Value;
-            BuildingData data = bucket[0].data;
-            int upgradable = 0;
-            int upgradeCost = 0;
-            bool crafters = false;
-            for (int i = 0; i < bucket.Count; i++)
+            maxLevel = Mathf.Max(maxLevel, bucket[i].ReadLevel());
+            if (bucket[i].CanUpgradeBuilding)
             {
-                if (bucket[i].CanUpgradeBuilding)
-                {
-                    upgradable++;
-                    upgradeCost += Economy.UpgradeCost(bucket[i]);
-                }
-
-                if (bucket[i] is CrafterBuilding)
-                    crafters = true;
+                upgradable++;
+                upgradeCost += Economy.UpgradeCost(bucket[i]);
             }
 
-            string title = (data != null ? data.displayName : pair.Key) + "  ×" + bucket.Count;
-            string sub = upgradable > 0
-                ? "Прокачка " + upgradable + " шт  ·  " + upgradeCost + " монет"
-                : "Прокачка недоступна";
-            bool canPay = PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(upgradeCost);
-            UiFactory.CreateActionButton(list, title, sub, upgradable > 0 && canPay, () => UpgradeGroup(bucket));
-
-            if (crafters)
-            {
-                string typeId = pair.Key;
-                UiFactory.CreateActionButton(list, "Сменить рецепт — " + (data != null ? data.displayName : typeId), "для всех выделенных этого типа", true, () => OpenRecipes(typeId, bucket));
-            }
+            if (bucket[i] is CrafterBuilding)
+                crafters = true;
         }
+
+        GameObject card = new GameObject("Group", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(LayoutElement));
+        card.transform.SetParent(list, false);
+        UiTheme.StyleImage(card.GetComponent<Image>(), UiTheme.Card);
+        OverlayUi.LayoutHeight(card.GetComponent<LayoutElement>(), crafters ? 168f : 128f);
+
+        Image icon = OverlayUi.CreateSprite(card.transform, "Icon", data != null ? data.icon : null, new Vector2(88f, 88f));
+        RectTransform iconRt = icon.rectTransform;
+        iconRt.anchorMin = new Vector2(0f, 0.5f);
+        iconRt.anchorMax = new Vector2(0f, 0.5f);
+        iconRt.anchoredPosition = new Vector2(64f, 0f);
+        iconRt.sizeDelta = new Vector2(88f, 88f);
+
+        TextMeshProUGUI title = UiTheme.AddText(
+            card.transform,
+            "Title",
+            (data != null ? data.displayName : "Здание") + "  ×" + bucket.Count,
+            26f,
+            UiTheme.Text);
+        title.fontStyle = FontStyles.Bold;
+        RectTransform titleRt = title.rectTransform;
+        titleRt.anchorMin = new Vector2(0f, 0.62f);
+        titleRt.anchorMax = new Vector2(1f, 0.95f);
+        titleRt.offsetMin = new Vector2(130f, 0f);
+        titleRt.offsetMax = new Vector2(-20f, 0f);
+
+        bool canPay = upgradable > 0 && (PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(upgradeCost));
+        string sub = upgradable > 0
+            ? "Можно прокачать " + upgradable + " шт  ·  ур. до 2"
+            : "Макс. ур. " + maxLevel;
+        TextMeshProUGUI subText = UiTheme.AddText(card.transform, "Sub", sub, 18f, UiTheme.TextDim);
+        RectTransform subRt = subText.rectTransform;
+        subRt.anchorMin = new Vector2(0f, 0.4f);
+        subRt.anchorMax = new Vector2(1f, 0.62f);
+        subRt.offsetMin = new Vector2(130f, 0f);
+        subRt.offsetMax = new Vector2(-20f, 0f);
+
+        Button upgrade = MakeCardButton(card.transform, "Upgrade", 130f, crafters ? 62f : 18f, 280f, 44f);
+        SetButtonVisual(upgrade, canPay, GameHudIcons.Coin, canPay ? "Прокачать  " + upgradeCost : "Нет прокачки");
+        if (canPay)
+            upgrade.onClick.AddListener(() => UpgradeGroup(bucket));
+
+        if (crafters)
+        {
+            Button recipe = MakeCardButton(card.transform, "Recipe", 430f, 18f, 280f, 44f);
+            SetButtonVisual(recipe, true, data != null ? data.icon : null, "Сменить рецепт");
+            string typeId = data != null ? data.id : "";
+            recipe.onClick.AddListener(() => OpenRecipes(typeId, bucket));
+        }
+    }
+
+    static Button MakeCardButton(Transform parent, string name, float x, float y, float w, float h)
+    {
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        go.transform.SetParent(parent, false);
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(0f, 0f);
+        rt.pivot = new Vector2(0f, 0f);
+        rt.anchoredPosition = new Vector2(x, y);
+        rt.sizeDelta = new Vector2(w, h);
+        UiTheme.StyleImage(go.GetComponent<Image>(), UiTheme.Chip);
+        return go.GetComponent<Button>();
+    }
+
+    static void SetButtonVisual(Button button, bool enabled, Sprite icon, string label)
+    {
+        button.interactable = enabled;
+        Image bg = button.GetComponent<Image>();
+        if (bg != null)
+            bg.color = enabled ? UiTheme.Chip : UiTheme.Locked;
+
+        if (icon != null)
+        {
+            Image image = OverlayUi.CreateSprite(button.transform, "Icon", icon, new Vector2(28f, 28f));
+            RectTransform iconRt = image.rectTransform;
+            iconRt.anchorMin = new Vector2(0f, 0.5f);
+            iconRt.anchorMax = new Vector2(0f, 0.5f);
+            iconRt.anchoredPosition = new Vector2(22f, 0f);
+            iconRt.sizeDelta = new Vector2(28f, 28f);
+        }
+
+        TextMeshProUGUI text = UiTheme.AddText(button.transform, "Label", label, 18f, enabled ? UiTheme.Accent : UiTheme.TextDim);
+        text.alignment = TextAlignmentOptions.MidlineLeft;
+        RectTransform textRt = text.rectTransform;
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = new Vector2(icon != null ? 44f : 12f, 0f);
+        textRt.offsetMax = new Vector2(-8f, 0f);
     }
 
     void UpgradeGroup(List<BuildingBase> bucket)
@@ -284,7 +349,10 @@ public class SelectionActionsUI : MonoBehaviour
     void OpenRecipes(string typeId, List<BuildingBase> bucket)
     {
         recipeTypeId = typeId;
-        recipePanel.SetActive(true);
+        mainView.SetActive(false);
+        recipeView.SetActive(true);
+        recipeTitle.text = bucket[0].data != null ? "Рецепт: " + bucket[0].data.displayName : "Рецепт";
+
         for (int i = recipeList.childCount - 1; i >= 0; i--)
             Destroy(recipeList.GetChild(i).gameObject);
 
@@ -299,7 +367,8 @@ public class SelectionActionsUI : MonoBehaviour
                 continue;
 
             RecipeData captured = recipe;
-            UiFactory.CreateRecipeCard(recipeList, recipe, false, () => ApplyRecipe(captured));
+            GameObject card = UiFactory.CreateRecipeCard(recipeList, recipe, false, () => ApplyRecipe(captured));
+            OverlayUi.LayoutHeight(card.GetComponent<LayoutElement>() ?? card.AddComponent<LayoutElement>(), 108f);
         }
     }
 
@@ -316,32 +385,15 @@ public class SelectionActionsUI : MonoBehaviour
             crafter.SetRecipe(recipe);
         }
 
-        recipePanel.SetActive(false);
+        ShowMain();
         Rebuild();
     }
 
-    static Button CreateButton(Transform parent, string name, string label, Vector2 anchor, Vector2 pos, Vector2 size, Vector2 pivot)
+    static void StretchBelow(RectTransform rt, float top)
     {
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
-        go.transform.SetParent(parent, false);
-        RectTransform rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = anchor;
-        rt.anchorMax = anchor;
-        rt.pivot = pivot;
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = size;
-        UiTheme.StyleImage(go.GetComponent<Image>(), UiTheme.Card);
-        TextMeshProUGUI text = UiTheme.AddText(go.transform, "Label", label, 18f, UiTheme.Text);
-        text.alignment = TextAlignmentOptions.Center;
-        Stretch(text.rectTransform, 0f, 1f, 0f, 1f);
-        return go.GetComponent<Button>();
-    }
-
-    static void Stretch(RectTransform rt, float xMin, float xMax, float yMin, float yMax)
-    {
-        rt.anchorMin = new Vector2(xMin, yMin);
-        rt.anchorMax = new Vector2(xMax, yMax);
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
+        rt.offsetMax = new Vector2(0f, -top);
     }
 }

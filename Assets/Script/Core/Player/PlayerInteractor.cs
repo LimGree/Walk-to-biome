@@ -62,6 +62,10 @@ public class PlayerInteractor : MonoBehaviour
             return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            return;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            return;
         if (currentInteractable != null)
             currentInteractable.Interact(gameObject);
     }

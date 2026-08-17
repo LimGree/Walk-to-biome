@@ -88,6 +88,10 @@ public class PlayerInventory : MonoBehaviour
             return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            return;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            return;
 
         PlayerBuilder builder = ResolveBuilder();
         if (builder == null || !builder.isBuildMode)
@@ -113,6 +117,10 @@ public class PlayerInventory : MonoBehaviour
     bool CanUseHotbar()
     {
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return false;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            return false;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
             return false;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return false;

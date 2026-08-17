@@ -166,6 +166,10 @@ public class PlayerBuilder : MonoBehaviour
             return true;
         if (buildMenuUI != null && buildMenuUI.IsOpen)
             return true;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            return true;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            return true;
         return false;
     }
 

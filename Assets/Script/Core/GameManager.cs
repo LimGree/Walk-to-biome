@@ -135,11 +135,14 @@ public class GameManager : MonoBehaviour
         bool uiOpen = MachineUI.Instance != null && MachineUI.Instance.IsOpen;
         bool mapOpen = WorldMapUI.Instance != null && WorldMapUI.Instance.IsOpen;
         bool bagOpen = InventoryUI.Instance != null && InventoryUI.Instance.IsBagOpen;
-        bool freeCursor = isPaused || uiOpen || mapOpen || bagOpen;
+        bool shopOpen = WalletHud.Instance != null && WalletHud.Instance.IsShopOpen;
+        bool selectionOpen = SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen;
+        bool menuOpen = uiOpen || mapOpen || bagOpen || shopOpen || selectionOpen;
+        bool freeCursor = isPaused || menuOpen;
 
         Cursor.lockState = freeCursor ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = freeCursor;
-        SetPlayerControl(!isPaused && !uiOpen && !mapOpen && !bagOpen);
+        SetPlayerControl(!isPaused && !menuOpen);
     }
 
     static void SetPlayerControl(bool enabled)

@@ -147,6 +147,10 @@ public class BuildSelectionController : MonoBehaviour
             return true;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return true;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            return true;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            return true;
         return false;
     }
 
