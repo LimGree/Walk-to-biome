@@ -111,7 +111,9 @@ public static class WorldCatalog
         {
             version = SaveData.CurrentVersion,
             worldName = world.name,
-            seed = world.seed
+            seed = world.seed,
+            coins = Economy.StartingCoins,
+            rubies = Economy.StartingRubies
         };
         File.WriteAllText(SavePath(world), JsonUtility.ToJson(save, true));
         return world;

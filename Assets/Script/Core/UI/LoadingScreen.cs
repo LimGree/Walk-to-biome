@@ -1,22 +1,21 @@
 using System.Collections;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class LoadingScreen : MonoBehaviour
 {
-    Image fill;
-    TextMeshProUGUI status;
-    TextMeshProUGUI percent;
+    VisualElement fill;
+    Label status;
+    Label percent;
 
     void Awake()
     {
         DontDestroyOnLoad(gameObject);
         Time.timeScale = 1f;
         AudioListener.pause = false;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        UnityEngine.Cursor.lockState = CursorLockMode.None;
+        UnityEngine.Cursor.visible = true;
         BuildUi();
         StartCoroutine(LoadGame());
     }
@@ -91,85 +90,37 @@ public class LoadingScreen : MonoBehaviour
 
     void SetProgress(float value, string text)
     {
+        float t = Mathf.Clamp01(value);
         if (fill != null)
-            fill.fillAmount = Mathf.Clamp01(value);
+            fill.style.width = Length.Percent(t * 100f);
         if (percent != null)
-            percent.text = Mathf.RoundToInt(Mathf.Clamp01(value) * 100f) + "%";
+            percent.text = Mathf.RoundToInt(t * 100f) + "%";
         if (status != null)
             status.text = text;
     }
 
     void BuildUi()
     {
-        GameObject canvasGo = new GameObject("LoadingCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
-        canvasGo.transform.SetParent(transform, false);
-        Canvas canvas = canvasGo.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 800;
-        CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-
-        GameObject bg = new GameObject("Bg", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        bg.transform.SetParent(canvasGo.transform, false);
-        RectTransform bgRt = bg.GetComponent<RectTransform>();
-        bgRt.anchorMin = Vector2.zero;
-        bgRt.anchorMax = Vector2.one;
-        bgRt.offsetMin = Vector2.zero;
-        bgRt.offsetMax = Vector2.zero;
-        bg.GetComponent<Image>().color = new Color(0.04f, 0.10f, 0.07f, 1f);
-
-        TextMeshProUGUI title = UiTheme.AddText(canvasGo.transform, "Title", GameBranding.TitleCaps, 48f, UiTheme.Accent);
-        title.alignment = TextAlignmentOptions.Center;
-        title.fontStyle = FontStyles.Bold;
-        RectTransform titleRt = title.rectTransform;
-        titleRt.anchorMin = new Vector2(0.08f, 0.60f);
-        titleRt.anchorMax = new Vector2(0.92f, 0.74f);
-        titleRt.offsetMin = Vector2.zero;
-        titleRt.offsetMax = Vector2.zero;
-
-        TextMeshProUGUI tag = UiTheme.AddText(canvasGo.transform, "Tagline", GameBranding.Tagline, 20f, UiTheme.TextDim);
-        tag.alignment = TextAlignmentOptions.Center;
-        tag.enableWordWrapping = true;
-        RectTransform tagRt = tag.rectTransform;
-        tagRt.anchorMin = new Vector2(0.12f, 0.52f);
-        tagRt.anchorMax = new Vector2(0.88f, 0.60f);
-        tagRt.offsetMin = Vector2.zero;
-        tagRt.offsetMax = Vector2.zero;
-
-        status = UiTheme.AddText(canvasGo.transform, "Status", "Загрузка…", 24f, UiTheme.Text);
-        status.alignment = TextAlignmentOptions.Center;
-        RectTransform stRt = status.rectTransform;
-        stRt.anchorMin = new Vector2(0.15f, 0.44f);
-        stRt.anchorMax = new Vector2(0.85f, 0.52f);
-        stRt.offsetMin = Vector2.zero;
-        stRt.offsetMax = Vector2.zero;
-
-        GameObject bar = new GameObject("Bar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        bar.transform.SetParent(canvasGo.transform, false);
-        RectTransform barRt = bar.GetComponent<RectTransform>();
-        barRt.anchorMin = new Vector2(0.22f, 0.36f);
-        barRt.anchorMax = new Vector2(0.78f, 0.41f);
-        barRt.offsetMin = Vector2.zero;
-        barRt.offsetMax = Vector2.zero;
-        UiTheme.StyleImage(bar.GetComponent<Image>(), UiTheme.Chip);
-
-        fill = UiTheme.AddImage(bar.transform, "Fill", Vector2.zero, UiTheme.Accent);
-        fill.type = Image.Type.Filled;
-        fill.fillMethod = Image.FillMethod.Horizontal;
-        fill.fillAmount = 0f;
-        RectTransform fillRt = fill.rectTransform;
-        fillRt.anchorMin = Vector2.zero;
-        fillRt.anchorMax = Vector2.one;
-        fillRt.offsetMin = new Vector2(4f, 4f);
-        fillRt.offsetMax = new Vector2(-4f, -4f);
-
-        percent = UiTheme.AddText(canvasGo.transform, "Percent", "0%", 22f, UiTheme.TextDim);
-        percent.alignment = TextAlignmentOptions.Center;
-        RectTransform pRt = percent.rectTransform;
-        pRt.anchorMin = new Vector2(0.3f, 0.28f);
-        pRt.anchorMax = new Vector2(0.7f, 0.35f);
-        pRt.offsetMin = Vector2.zero;
-        pRt.offsetMax = Vector2.zero;
+        VisualElement root = IndustryUi.Mount(this, 800);
+        var screen = IndustryUi.El("Bg", "bg-menu");
+        screen.style.justifyContent = Justify.Center;
+        screen.style.alignItems = Align.Center;
+        var box = IndustryUi.El("Box", "col");
+        box.style.width = 720;
+        box.Add(IndustryUi.Text("Title", GameBranding.TitleCaps, "title-hero"));
+        box.Add(IndustryUi.Text("Tag", GameBranding.Tagline, "tagline"));
+        status = IndustryUi.Text("Status", "Загрузка…", "body-text");
+        box.Add(status);
+        var track = IndustryUi.El("Track", "progress-track");
+        track.style.marginTop = 18;
+        fill = IndustryUi.El("Fill", "progress-fill");
+        fill.style.width = Length.Percent(0);
+        track.Add(fill);
+        box.Add(track);
+        percent = IndustryUi.Text("Pct", "0%", "muted");
+        percent.style.marginTop = 10;
+        box.Add(percent);
+        screen.Add(box);
+        root.Add(screen);
     }
 }

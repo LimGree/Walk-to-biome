@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: recipe_cable
   m_EditorClassIdentifier: 
   id: recipe_cable
-  displayName: "Кабель"
+  displayName: "\u041A\u0430\u0431\u0435\u043B\u044C"
   inputs:
   - item: {fileID: 11400000, guid: 38e39d45a26d5e848b316a39c736f253, type: 2}
     amount: 2
@@ -23,6 +23,6 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314202, type: 2}
     amount: 2
   craftTime: 2
-  requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}
+  requiredBuilding: {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
   allowedBuildingIds:
-  - assembler
+  - constructor

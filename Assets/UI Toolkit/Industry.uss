@@ -1,0 +1,588 @@
+.root {
+    flex-grow: 1;
+    -unity-font-style: normal;
+    color: rgb(232, 236, 235);
+    font-size: 16px;
+}
+
+.screen {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.dim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(6, 8, 10, 0.78);
+}
+
+.bg-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgb(9, 11, 13);
+}
+
+.panel {
+    background-color: rgb(18, 22, 26);
+    border-color: rgb(52, 62, 68);
+    border-width: 1px;
+    border-radius: 4px;
+    padding: 28px 32px;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-wide {
+    width: 1120px;
+    height: 760px;
+    max-height: 82%;
+    align-self: center;
+    margin-top: 80px;
+    overflow: hidden;
+}
+
+.panel-menu {
+    width: 560px;
+    align-self: center;
+    margin-top: 180px;
+    padding: 40px 44px 32px 44px;
+}
+
+.header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 18px;
+    min-height: 56px;
+}
+
+.header-icon {
+    width: 48px;
+    height: 48px;
+    margin-right: 14px;
+}
+
+.title {
+    font-size: 34px;
+    color: rgb(232, 165, 75);
+    -unity-font-style: bold;
+    flex-grow: 1;
+}
+
+.title-hero {
+    font-size: 42px;
+    color: rgb(232, 165, 75);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+
+.tagline {
+    font-size: 15px;
+    color: rgb(150, 158, 156);
+    margin-bottom: 28px;
+    white-space: normal;
+}
+
+.muted {
+    font-size: 15px;
+    color: rgb(139, 150, 148);
+    white-space: normal;
+}
+
+.body-text {
+    font-size: 18px;
+    color: rgb(220, 226, 224);
+    white-space: normal;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.col {
+    flex-direction: column;
+    min-height: 0;
+}
+
+.grow {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    min-width: 0;
+}
+
+.btn {
+    height: 52px;
+    background-color: rgb(28, 35, 40);
+    border-color: rgb(62, 74, 80);
+    border-width: 1px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    padding: 0 18px;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn:hover {
+    background-color: rgb(38, 48, 54);
+    border-color: rgb(232, 165, 75);
+}
+
+.btn:active {
+    background-color: rgb(22, 28, 32);
+}
+
+.btn-label {
+    font-size: 20px;
+    color: rgb(232, 236, 235);
+}
+
+.btn-primary {
+    background-color: rgb(46, 34, 18);
+    border-color: rgb(232, 165, 75);
+}
+
+.btn-primary .btn-label {
+    color: rgb(232, 165, 75);
+}
+
+.btn-danger {
+    background-color: rgb(48, 22, 22);
+    border-color: rgb(196, 78, 70);
+}
+
+.btn-ghost {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.btn-small {
+    height: 40px;
+    min-width: 96px;
+    margin-bottom: 0;
+    margin-left: 8px;
+}
+
+.card {
+    background-color: rgb(24, 30, 34);
+    border-color: rgb(48, 58, 64);
+    border-width: 1px;
+    border-left-width: 3px;
+    border-left-color: rgb(232, 165, 75);
+    border-radius: 3px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.card:hover {
+    background-color: rgb(30, 38, 42);
+}
+
+.card-icon {
+    width: 72px;
+    height: 72px;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.icon-24 {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.icon-32 {
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.icon-48 {
+    width: 48px;
+    height: 48px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.chip {
+    background-color: rgb(14, 18, 20);
+    border-radius: 3px;
+    padding: 10px 14px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.hud-chip {
+    position: absolute;
+    left: 20px;
+    top: 16px;
+    min-width: 180px;
+    background-color: rgba(14, 18, 20, 0.92);
+    border-color: rgb(52, 62, 68);
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 10px 14px;
+}
+
+.hud-line {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.gold {
+    color: rgb(232, 165, 75);
+    font-size: 22px;
+    -unity-font-style: bold;
+}
+
+.ruby {
+    color: rgb(214, 92, 110);
+    font-size: 20px;
+    -unity-font-style: bold;
+}
+
+.scroll {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.close {
+    width: 44px;
+    height: 44px;
+    background-color: rgb(72, 28, 28);
+    border-color: rgb(196, 78, 70);
+    border-width: 1px;
+    border-radius: 3px;
+    justify-content: center;
+    align-items: center;
+    margin-left: 12px;
+}
+
+.close:hover {
+    background-color: rgb(110, 36, 32);
+}
+
+.tab-row {
+    flex-direction: row;
+    margin-bottom: 14px;
+}
+
+.tab {
+    flex-grow: 1;
+    height: 42px;
+    margin-right: 8px;
+    background-color: rgb(22, 28, 32);
+    border-width: 1px;
+    border-color: rgb(48, 58, 64);
+    border-radius: 3px;
+    justify-content: center;
+    align-items: center;
+}
+
+.tab-on {
+    border-color: rgb(232, 165, 75);
+    background-color: rgb(42, 32, 18);
+}
+
+.hint-bar {
+    position: absolute;
+    left: 20px;
+    bottom: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.hint {
+    background-color: rgba(14, 18, 20, 0.88);
+    border-width: 1px;
+    border-color: rgb(48, 58, 64);
+    border-radius: 3px;
+    padding: 6px 10px;
+    margin-right: 8px;
+    margin-bottom: 6px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.hint-key {
+    color: rgb(232, 165, 75);
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin-right: 8px;
+}
+
+.hint-label {
+    color: rgb(190, 196, 194);
+    font-size: 13px;
+}
+
+.progress-track {
+    height: 10px;
+    background-color: rgb(14, 18, 20);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 10px;
+    background-color: rgb(232, 165, 75);
+}
+
+.field {
+    height: 48px;
+    background-color: rgb(14, 18, 20);
+    border-color: rgb(62, 74, 80);
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 6px 12px;
+    margin-bottom: 16px;
+    color: rgb(232, 236, 235);
+    font-size: 18px;
+}
+
+.card-on {
+    background-color: rgb(42, 32, 18);
+    border-color: rgb(232, 165, 75);
+}
+
+.card-locked {
+    opacity: 0.55;
+}
+
+.card-building {
+    flex-direction: column;
+    width: 176px;
+    min-height: 196px;
+    margin-right: 10px;
+    align-items: center;
+}
+
+.card-building .card-icon {
+    margin-right: 0;
+    margin-bottom: 8px;
+}
+
+Button.card {
+    height: auto;
+    background-color: rgb(24, 30, 34);
+    border-color: rgb(48, 58, 64);
+    border-width: 1px;
+    border-left-width: 3px;
+    border-left-color: rgb(232, 165, 75);
+    padding: 14px 16px;
+}
+
+Button.card:hover {
+    background-color: rgb(30, 38, 42);
+}
+
+Button.card-on {
+    background-color: rgb(42, 32, 18);
+    border-color: rgb(232, 165, 75);
+}
+
+.stack-chip {
+    width: 48px;
+    height: 48px;
+    background-color: rgb(14, 18, 20);
+    border-radius: 3px;
+    margin-right: 6px;
+    margin-bottom: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+.stack-icon {
+    width: 36px;
+    height: 36px;
+}
+
+.stack-count {
+    position: absolute;
+    right: 3px;
+    bottom: 1px;
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.io-row {
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.ok {
+    color: rgb(110, 196, 130);
+    font-size: 15px;
+    -unity-font-style: bold;
+}
+
+.warn {
+    color: rgb(220, 150, 70);
+    font-size: 15px;
+    -unity-font-style: bold;
+}
+
+.hotbar-root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 18px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.hotbar {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(18, 22, 26, 0.94);
+    border-color: rgb(52, 62, 68);
+    border-width: 1px;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+.slot {
+    width: 80px;
+    height: 80px;
+    margin-right: 8px;
+    background-color: rgb(24, 30, 34);
+    border-color: rgb(48, 58, 64);
+    border-width: 1px;
+    border-radius: 3px;
+    align-items: center;
+    justify-content: center;
+}
+
+.slot-on {
+    border-color: rgb(232, 165, 75);
+    background-color: rgb(42, 32, 18);
+}
+
+.slot-key {
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    font-size: 12px;
+    color: rgb(139, 150, 148);
+}
+
+.slot-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.empty-slot {
+    margin-left: 20px;
+    background-color: rgb(14, 18, 20);
+}
+
+.bag {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 130px;
+    align-items: center;
+}
+
+.bag-panel {
+    width: 860px;
+    height: 420px;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.bag-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.mini-map {
+    position: absolute;
+    right: 20px;
+    top: 16px;
+}
+
+.map-frame {
+    background-color: rgb(18, 22, 26);
+    border-color: rgb(52, 62, 68);
+    border-width: 1px;
+    border-radius: 4px;
+    padding: 6px;
+    overflow: hidden;
+}
+
+.map-full-wrap {
+    align-self: center;
+    margin-top: 70px;
+}
+
+.map-full {
+    width: 820px;
+    height: 820px;
+}
+
+.player-mark {
+    width: 12px;
+    height: 16px;
+    background-color: rgb(255, 242, 89);
+    position: absolute;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: rgb(18, 22, 26);
+    border-color: rgb(52, 62, 68);
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 6px 10px;
+    font-size: 16px;
+}
+
+.storage-slot {
+    width: 200px;
+    height: 200px;
+    background-color: rgb(14, 18, 20);
+    border-color: rgb(48, 58, 64);
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.belt-mark {
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    margin-right: 14px;
+    flex-shrink: 0;
+}
+
+.drag-ghost {
+    width: 64px;
+    height: 64px;
+    position: absolute;
+    opacity: 0.9;
+}

@@ -98,7 +98,8 @@ public class PlayerWallet : MonoBehaviour
 
         Coins = Mathf.Max(0, save.coins);
         Rubies = Mathf.Max(0, save.rubies);
-        if (save.version < 3 && Coins == 0 && Rubies == 0)
+        bool emptyWorld = save.buildings == null || save.buildings.Count == 0;
+        if (Coins == 0 && Rubies == 0 && (save.version < 3 || emptyWorld))
             Coins = Economy.StartingCoins;
         OnChanged?.Invoke();
     }

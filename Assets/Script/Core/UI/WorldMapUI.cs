@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class WorldMapUI : MonoBehaviour
 {
@@ -14,16 +13,13 @@ public class WorldMapUI : MonoBehaviour
     static readonly Color BeltColor = new Color(0.82f, 0.62f, 0.28f, 1f);
 
     InputSystem_Actions input;
-    RawImage miniImage;
-    RawImage fullImage;
-    RectTransform miniMarker;
-    RectTransform fullMarker;
-    RectTransform miniViewRt;
-    RectTransform fullViewRt;
-    RectTransform miniFrameRt;
-    GameObject fullRoot;
-    GameObject tooltipRoot;
-    TextMeshProUGUI tooltipText;
+    VisualElement fullRoot;
+    VisualElement miniFrame;
+    Image miniImage;
+    Image fullImage;
+    VisualElement miniMarker;
+    VisualElement fullMarker;
+    Label tooltip;
     Texture2D mapTex;
     Rect viewUv = new Rect(0f, 0f, 1f, 1f);
     Rect miniUv = new Rect(0f, 0f, 1f, 1f);
@@ -44,12 +40,14 @@ public class WorldMapUI : MonoBehaviour
 
     void OnEnable()
     {
-        input.Player.MoveSelection.performed += OnMapToggle;
+        if (input != null)
+            input.Player.MoveSelection.performed += OnMapToggle;
     }
 
     void OnDisable()
     {
-        input.Player.MoveSelection.performed -= OnMapToggle;
+        if (input != null)
+            input.Player.MoveSelection.performed -= OnMapToggle;
     }
 
     void OnDestroy()
@@ -87,19 +85,13 @@ public class WorldMapUI : MonoBehaviour
             Rebuild();
 
         UpdateMiniView();
-        UpdateMarker(miniMarker, miniSize, miniUv);
+        UpdateMarker(miniMarker, miniImage, miniUv);
 
         if (IsOpen)
         {
-            HandleZoomPan();
             if (fullImage != null)
-                fullImage.uvRect = viewUv;
-            UpdateMarker(fullMarker, 820f, viewUv);
-            UpdateTooltip(fullViewRt, viewUv);
-        }
-        else
-        {
-            UpdateTooltip(miniViewRt, miniUv);
+                fullImage.uv = viewUv;
+            UpdateMarker(fullMarker, fullImage, viewUv);
         }
     }
 
@@ -123,8 +115,8 @@ public class WorldMapUI : MonoBehaviour
     public void SetOpen(bool open)
     {
         IsOpen = open;
-        if (fullRoot != null)
-            fullRoot.SetActive(open);
+        IndustryUi.Show(fullRoot, open);
+        IndustryUi.Show(miniFrame, !open);
         if (open)
         {
             viewUv = new Rect(0f, 0f, 1f, 1f);
@@ -162,13 +154,12 @@ public class WorldMapUI : MonoBehaviour
         }
 
         PaintBuildings(pixels, w, h, map);
-
         mapTex.SetPixels(pixels);
         mapTex.Apply(false, false);
         if (miniImage != null)
-            miniImage.texture = mapTex;
+            miniImage.image = mapTex;
         if (fullImage != null)
-            fullImage.texture = mapTex;
+            fullImage.image = mapTex;
     }
 
     static void PaintBuildings(Color[] pixels, int w, int h, WorldBiomeMap map)
@@ -201,55 +192,142 @@ public class WorldMapUI : MonoBehaviour
         pixels[z * w + x] = color;
     }
 
-    void HandleZoomPan()
+    void BuildUi()
     {
-        if (Mouse.current == null || fullViewRt == null)
-            return;
+        VisualElement root = IndustryUi.Mount(this, 95);
+        miniFrame = IndustryUi.El("Mini", "mini-map", "map-frame");
+        miniImage = MakeMapImage("MiniImage");
+        miniMarker = IndustryUi.El("MiniMark", "player-mark");
+        miniMarker.pickingMode = PickingMode.Ignore;
+        miniImage.Add(miniMarker);
+        miniFrame.Add(miniImage);
+        miniImage.RegisterCallback<WheelEvent>(OnMiniWheel);
+        miniImage.RegisterCallback<PointerMoveEvent>(evt => UpdateTooltip(miniImage, miniUv, evt.localPosition, evt.position));
+        miniImage.RegisterCallback<PointerLeaveEvent>(_ => IndustryUi.Show(tooltip, false));
+        root.Add(miniFrame);
 
-        Vector2 mouse = Mouse.current.position.ReadValue();
-        bool over = RectTransformUtility.RectangleContainsScreenPoint(fullViewRt, mouse, null);
-
-        Vector2 scroll = Mouse.current.scroll.ReadValue();
-        if (over && Mathf.Abs(scroll.y) > 0.01f)
-            ZoomAt(mouse, scroll.y > 0f ? 0.82f : 1.22f);
-
-        if (Mouse.current.leftButton.wasPressedThisFrame && over)
+        fullRoot = IndustryUi.Screen("FullMap");
+        fullRoot.Add(IndustryUi.El("Dim", "dim"));
+        var wrap = IndustryUi.El("FullWrap", "map-frame", "map-full-wrap");
+        fullImage = MakeMapImage("FullImage");
+        fullImage.AddToClassList("map-full");
+        fullMarker = IndustryUi.El("FullMark", "player-mark");
+        fullMarker.pickingMode = PickingMode.Ignore;
+        fullImage.Add(fullMarker);
+        wrap.Add(fullImage);
+        fullRoot.Add(wrap);
+        fullImage.RegisterCallback<WheelEvent>(OnFullWheel);
+        fullImage.RegisterCallback<PointerDownEvent>(OnFullDown);
+        fullImage.RegisterCallback<PointerMoveEvent>(OnFullMove);
+        fullImage.RegisterCallback<PointerUpEvent>(OnFullUp);
+        fullImage.RegisterCallback<PointerLeaveEvent>(_ =>
         {
-            dragging = true;
-            lastMouse = mouse;
-        }
-        if (dragging)
-        {
-            if (!Mouse.current.leftButton.isPressed)
-            {
-                dragging = false;
-            }
-            else
-            {
-                Vector2 delta = mouse - lastMouse;
-                lastMouse = mouse;
-                Vector2 size = fullViewRt.rect.size;
-                if (size.x > 1f && size.y > 1f)
-                {
-                    viewUv.x -= delta.x / size.x * viewUv.width;
-                    viewUv.y -= delta.y / size.y * viewUv.height;
-                    ClampView();
-                }
-            }
-        }
+            if (!IsOpen)
+                return;
+            IndustryUi.Show(tooltip, false);
+        });
+        IndustryUi.Show(fullRoot, false);
+        root.Add(fullRoot);
+
+        tooltip = IndustryUi.Text("Tip", "", "tooltip");
+        tooltip.pickingMode = PickingMode.Ignore;
+        IndustryUi.Show(tooltip, false);
+        root.Add(tooltip);
     }
 
-    void ZoomAt(Vector2 screen, float factor)
+    static Image MakeMapImage(string name)
     {
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(fullViewRt, screen, null, out Vector2 local))
+        var image = new Image { name = name };
+        image.scaleMode = ScaleMode.StretchToFill;
+        image.uv = new Rect(0f, 0f, 1f, 1f);
+        return image;
+    }
+
+    void ApplyMiniSize()
+    {
+        if (miniFrame == null || miniImage == null)
+            return;
+        miniFrame.style.width = miniSize + 12f;
+        miniFrame.style.height = miniSize + 12f;
+        miniImage.style.width = miniSize;
+        miniImage.style.height = miniSize;
+    }
+
+    void UpdateMiniView()
+    {
+        if (miniImage == null || WorldBiomeMap.Instance == null || !WorldBiomeMap.Instance.IsReady)
             return;
 
-        Vector2 size = fullViewRt.rect.size;
-        float nx = Mathf.Clamp01(local.x / size.x + 0.5f);
-        float ny = Mathf.Clamp01(local.y / size.y + 0.5f);
+        Vector2 center = PlayerUv();
+        float z = Mathf.Clamp(miniZoom, 0.06f, 1f);
+        miniUv = new Rect(center.x - z * 0.5f, center.y - z * 0.5f, z, z);
+        miniUv.x = Mathf.Clamp(miniUv.x, 0f, 1f - miniUv.width);
+        miniUv.y = Mathf.Clamp(miniUv.y, 0f, 1f - miniUv.height);
+        miniImage.uv = miniUv;
+    }
+
+    void OnMiniWheel(WheelEvent evt)
+    {
+        if (IsOpen)
+            return;
+        MiniZoom *= evt.delta.y > 0f ? 0.85f : 1.18f;
+        evt.StopPropagation();
+    }
+
+    void OnFullWheel(WheelEvent evt)
+    {
+        if (!IsOpen)
+            return;
+        ZoomAt(fullImage, evt.localMousePosition, evt.delta.y > 0f ? 0.82f : 1.22f);
+        evt.StopPropagation();
+    }
+
+    void OnFullDown(PointerDownEvent evt)
+    {
+        if (!IsOpen || evt.button != 0)
+            return;
+        dragging = true;
+        lastMouse = (Vector2)evt.position;
+        fullImage.CapturePointer(evt.pointerId);
+        evt.StopPropagation();
+    }
+
+    void OnFullMove(PointerMoveEvent evt)
+    {
+        if (IsOpen)
+            UpdateTooltip(fullImage, viewUv, evt.localPosition, evt.position);
+        if (!dragging)
+            return;
+
+        Vector2 delta = (Vector2)evt.position - lastMouse;
+        lastMouse = (Vector2)evt.position;
+        float w = Mathf.Max(1f, fullImage.resolvedStyle.width);
+        float h = Mathf.Max(1f, fullImage.resolvedStyle.height);
+        viewUv.x -= delta.x / w * viewUv.width;
+        viewUv.y += delta.y / h * viewUv.height;
+        ClampView();
+        evt.StopPropagation();
+    }
+
+    void OnFullUp(PointerUpEvent evt)
+    {
+        if (!dragging)
+            return;
+        dragging = false;
+        if (fullImage.HasPointerCapture(evt.pointerId))
+            fullImage.ReleasePointer(evt.pointerId);
+    }
+
+    void ZoomAt(Image image, Vector2 local, float factor)
+    {
+        if (image == null)
+            return;
+        float w = Mathf.Max(1f, image.resolvedStyle.width);
+        float h = Mathf.Max(1f, image.resolvedStyle.height);
+        float nx = Mathf.Clamp01(local.x / w);
+        float ny = 1f - Mathf.Clamp01(local.y / h);
         float worldU = viewUv.x + nx * viewUv.width;
         float worldV = viewUv.y + ny * viewUv.height;
-
         float zoom = Mathf.Clamp(viewUv.width * factor, 0.06f, 1f);
         viewUv.width = zoom;
         viewUv.height = zoom;
@@ -264,37 +342,6 @@ public class WorldMapUI : MonoBehaviour
         viewUv.height = viewUv.width;
         viewUv.x = Mathf.Clamp(viewUv.x, 0f, 1f - viewUv.width);
         viewUv.y = Mathf.Clamp(viewUv.y, 0f, 1f - viewUv.height);
-    }
-
-    void UpdateMiniView()
-    {
-        if (miniImage == null || WorldBiomeMap.Instance == null || !WorldBiomeMap.Instance.IsReady)
-            return;
-
-        if (!IsOpen && Mouse.current != null && miniViewRt != null)
-        {
-            Vector2 mouse = Mouse.current.position.ReadValue();
-            if (RectTransformUtility.RectangleContainsScreenPoint(miniViewRt, mouse, null))
-            {
-                Vector2 scroll = Mouse.current.scroll.ReadValue();
-                if (Mathf.Abs(scroll.y) > 0.01f)
-                    MiniZoom *= scroll.y > 0f ? 0.85f : 1.18f;
-            }
-        }
-
-        Vector2 center = PlayerUv();
-        float z = Mathf.Clamp(miniZoom, 0.06f, 1f);
-        miniUv = new Rect(center.x - z * 0.5f, center.y - z * 0.5f, z, z);
-        miniUv.x = Mathf.Clamp(miniUv.x, 0f, 1f - miniUv.width);
-        miniUv.y = Mathf.Clamp(miniUv.y, 0f, 1f - miniUv.height);
-        miniImage.uvRect = miniUv;
-    }
-
-    void ApplyMiniSize()
-    {
-        if (miniFrameRt == null)
-            return;
-        miniFrameRt.sizeDelta = new Vector2(miniSize + 12f, miniSize + 12f);
     }
 
     Vector2 PlayerUv()
@@ -317,47 +364,42 @@ public class WorldMapUI : MonoBehaviour
             (cell.y - map.MapMinZ + 0.5f) / map.MapHeight);
     }
 
-    void UpdateTooltip(RectTransform view, Rect uv)
+    void UpdateTooltip(Image image, Rect uv, Vector2 local, Vector2 panelPos)
     {
-        if (tooltipRoot == null || view == null || Mouse.current == null)
+        if (tooltip == null || image == null)
             return;
-
-        Vector2 mouse = Mouse.current.position.ReadValue();
-        if (!RectTransformUtility.RectangleContainsScreenPoint(view, mouse, null)
-            || !ScreenToCell(view, uv, mouse, out Vector2Int cell))
+        if (!LocalToCell(image, uv, local, out Vector2Int cell))
         {
-            tooltipRoot.SetActive(false);
+            IndustryUi.Show(tooltip, false);
             return;
         }
 
         string label = LabelAt(cell);
         if (string.IsNullOrEmpty(label))
         {
-            tooltipRoot.SetActive(false);
+            IndustryUi.Show(tooltip, false);
             return;
         }
 
-        tooltipRoot.SetActive(true);
-        tooltipText.text = label;
-        RectTransform tipRt = tooltipRoot.GetComponent<RectTransform>();
-        tipRt.position = mouse + new Vector2(18f, -18f);
+        tooltip.text = label;
+        tooltip.style.left = panelPos.x + 18f;
+        tooltip.style.top = panelPos.y - 18f;
+        IndustryUi.Show(tooltip, true);
     }
 
-    static bool ScreenToCell(RectTransform view, Rect uv, Vector2 screen, out Vector2Int cell)
+    static bool LocalToCell(Image image, Rect uv, Vector2 local, out Vector2Int cell)
     {
         cell = default;
         WorldBiomeMap map = WorldBiomeMap.Instance;
-        if (map == null || !map.IsReady)
+        if (map == null || !map.IsReady || image == null)
             return false;
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(view, screen, null, out Vector2 local))
-            return false;
-
-        Vector2 size = view.rect.size;
-        if (size.x < 1f || size.y < 1f)
+        float w = image.resolvedStyle.width;
+        float h = image.resolvedStyle.height;
+        if (w < 1f || h < 1f)
             return false;
 
-        float nx = Mathf.Clamp01(local.x / size.x + 0.5f);
-        float ny = Mathf.Clamp01(local.y / size.y + 0.5f);
+        float nx = Mathf.Clamp01(local.x / w);
+        float ny = 1f - Mathf.Clamp01(local.y / h);
         float u = uv.x + nx * uv.width;
         float v = uv.y + ny * uv.height;
         int x = map.MapMinX + Mathf.FloorToInt(u * map.MapWidth);
@@ -386,9 +428,9 @@ public class WorldMapUI : MonoBehaviour
         return obj.name;
     }
 
-    void UpdateMarker(RectTransform marker, float size, Rect uv)
+    void UpdateMarker(VisualElement marker, Image image, Rect uv)
     {
-        if (marker == null || WorldBiomeMap.Instance == null || !WorldBiomeMap.Instance.IsReady)
+        if (marker == null || image == null || WorldBiomeMap.Instance == null || !WorldBiomeMap.Instance.IsReady)
             return;
 
         PlayerBuilder builder = GameManager.Instance != null
@@ -406,103 +448,20 @@ public class WorldMapUI : MonoBehaviour
         float v = (cell.y - map.MapMinZ + 0.5f) / map.MapHeight;
         if (u < uv.x || v < uv.y || u > uv.x + uv.width || v > uv.y + uv.height)
         {
-            marker.gameObject.SetActive(false);
+            IndustryUi.Show(marker, false);
             return;
         }
 
-        marker.gameObject.SetActive(true);
-        float lx = (u - uv.x) / uv.width - 0.5f;
-        float ly = (v - uv.y) / uv.height - 0.5f;
-        marker.anchoredPosition = new Vector2(lx * size, ly * size);
-        marker.localRotation = Quaternion.Euler(0f, 0f, -builder.transform.eulerAngles.y);
-    }
+        float w = image.resolvedStyle.width;
+        float h = image.resolvedStyle.height;
+        if (w < 1f || h < 1f)
+            return;
 
-    void BuildUi()
-    {
-        GameObject canvasGo = new GameObject("WorldMapCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
-        canvasGo.transform.SetParent(transform, false);
-        Canvas canvas = canvasGo.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 90;
-
-        CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-
-        miniImage = CreateMapFrame(canvasGo.transform, "Minimap", new Vector2(1f, 1f), new Vector2(1f, 1f),
-            new Vector2(-28f, -28f), new Vector2(miniSize, miniSize), out miniMarker);
-        miniViewRt = miniImage.rectTransform;
-        miniFrameRt = miniImage.transform.parent as RectTransform;
-        miniImage.raycastTarget = true;
-
-        fullRoot = new GameObject("FullMap", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        fullRoot.transform.SetParent(canvasGo.transform, false);
-        RectTransform fullRt = fullRoot.GetComponent<RectTransform>();
-        fullRt.anchorMin = Vector2.zero;
-        fullRt.anchorMax = Vector2.one;
-        fullRt.offsetMin = Vector2.zero;
-        fullRt.offsetMax = Vector2.zero;
-        Image dim = fullRoot.GetComponent<Image>();
-        dim.color = new Color(0.03f, 0.07f, 0.05f, 0.72f);
-        dim.raycastTarget = true;
-
-        fullImage = CreateMapFrame(fullRoot.transform, "Full", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            Vector2.zero, new Vector2(820f, 820f), out fullMarker);
-        fullViewRt = fullImage.rectTransform;
-        fullImage.raycastTarget = true;
-        fullRoot.SetActive(false);
-
-        tooltipRoot = new GameObject("Tooltip", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        tooltipRoot.transform.SetParent(canvasGo.transform, false);
-        RectTransform tipRt = tooltipRoot.GetComponent<RectTransform>();
-        tipRt.pivot = new Vector2(0f, 1f);
-        tipRt.sizeDelta = new Vector2(240f, 36f);
-        UiTheme.StyleImage(tooltipRoot.GetComponent<Image>(), UiTheme.Panel);
-        tooltipRoot.GetComponent<Image>().raycastTarget = false;
-        tooltipText = UiTheme.AddText(tooltipRoot.transform, "Text", "", 20f, UiTheme.Text);
-        tooltipText.alignment = TextAlignmentOptions.MidlineLeft;
-        RectTransform textRt = tooltipText.rectTransform;
-        textRt.anchorMin = Vector2.zero;
-        textRt.anchorMax = Vector2.one;
-        textRt.offsetMin = new Vector2(10f, 4f);
-        textRt.offsetMax = new Vector2(-10f, -4f);
-        tooltipRoot.SetActive(false);
-    }
-
-    static RawImage CreateMapFrame(Transform parent, string name, Vector2 anchor, Vector2 pivot, Vector2 pos, Vector2 size, out RectTransform marker)
-    {
-        GameObject frame = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        frame.transform.SetParent(parent, false);
-        RectTransform frameRt = frame.GetComponent<RectTransform>();
-        frameRt.anchorMin = anchor;
-        frameRt.anchorMax = anchor;
-        frameRt.pivot = pivot;
-        frameRt.anchoredPosition = pos;
-        frameRt.sizeDelta = size + new Vector2(12f, 12f);
-        UiTheme.StyleImage(frame.GetComponent<Image>(), UiTheme.Panel);
-        frame.GetComponent<Image>().raycastTarget = false;
-
-        GameObject imgGo = new GameObject("Image", typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
-        imgGo.transform.SetParent(frame.transform, false);
-        RectTransform imgRt = imgGo.GetComponent<RectTransform>();
-        imgRt.anchorMin = Vector2.zero;
-        imgRt.anchorMax = Vector2.one;
-        imgRt.offsetMin = new Vector2(6f, 6f);
-        imgRt.offsetMax = new Vector2(-6f, -6f);
-        RawImage raw = imgGo.GetComponent<RawImage>();
-        raw.color = Color.white;
-        raw.raycastTarget = false;
-
-        GameObject mark = new GameObject("Player", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        mark.transform.SetParent(imgGo.transform, false);
-        marker = mark.GetComponent<RectTransform>();
-        marker.anchorMin = new Vector2(0.5f, 0.5f);
-        marker.anchorMax = new Vector2(0.5f, 0.5f);
-        marker.sizeDelta = new Vector2(12f, 16f);
-        Image markImg = mark.GetComponent<Image>();
-        markImg.color = new Color(1f, 0.95f, 0.35f, 1f);
-        markImg.raycastTarget = false;
-
-        return raw;
+        IndustryUi.Show(marker, true);
+        float lx = (u - uv.x) / uv.width;
+        float ly = (v - uv.y) / uv.height;
+        marker.style.left = lx * w - 6f;
+        marker.style.top = (1f - ly) * h - 8f;
+        marker.style.rotate = new Rotate(Angle.Degrees(-builder.transform.eulerAngles.y));
     }
 }

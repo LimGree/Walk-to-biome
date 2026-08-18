@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: recipe_nano_wire
   m_EditorClassIdentifier: 
   id: recipe_nano_wire
-  displayName: "Нанопровод"
+  displayName: "\u041D\u0430\u043D\u043E\u043F\u0440\u043E\u0432\u043E\u0434"
   inputs:
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314202, type: 2}
     amount: 2
@@ -23,6 +23,6 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314205, type: 2}
     amount: 1
   craftTime: 4
-  requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}
+  requiredBuilding: {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
   allowedBuildingIds:
-  - fabricator
+  - constructor

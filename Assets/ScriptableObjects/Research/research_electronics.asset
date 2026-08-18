@@ -30,3 +30,4 @@ MonoBehaviour:
   unlockedRecipes:
   - {fileID: 11400000, guid: 93409f2ff3751df48b3e14c4044b4617, type: 2}
   - {fileID: 11400000, guid: 3ac3b4cddfa000240af325013c8e7343, type: 2}
+  rubyReward: 15

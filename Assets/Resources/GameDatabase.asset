@@ -93,9 +93,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bb15263748596a7b8c9d0e1f20314207, type: 2}
   researches:
   - {fileID: 11400000, guid: 246ed4fc676b61b4eb3e9df45a3e7e71, type: 2}
-  - {fileID: 11400000, guid: c8f1a2b34d5e6f708192a3b4c5d6e7f8, type: 2}
-  - {fileID: 11400000, guid: 1a34ef5082ad6414ead63fc762ae0f41, type: 2}
   - {fileID: 11400000, guid: 48c17754ce4d9a549adea9119d631c5a, type: 2}
+  - {fileID: 11400000, guid: 1a34ef5082ad6414ead63fc762ae0f41, type: 2}
+  - {fileID: 11400000, guid: c8f1a2b34d5e6f708192a3b4c5d6e7f8, type: 2}
   - {fileID: 11400000, guid: e5f60718293a4b5c6d7e8f901a2b3c4d, type: 2}
   - {fileID: 11400000, guid: 0415263748596a7b8c9d0e1f20314253, type: 2}
   - {fileID: 11400000, guid: cc15263748596a7b8c9d0e1f20314208, type: 2}

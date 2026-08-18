@@ -117,7 +117,21 @@ public class BuildSelectionController : MonoBehaviour
 
     void Update()
     {
-        if (builder == null || !builder.isBuildMode || IsBlocked())
+        if (builder == null || !builder.isBuildMode)
+        {
+            if (selectionMode || pasteActive || moveActive)
+                ExitAll();
+            return;
+        }
+
+        if (IsSelectionPanelOpen())
+        {
+            RefreshSelectedBuildings();
+            RefreshSelectionVisuals();
+            return;
+        }
+
+        if (IsBlocked())
         {
             if (selectionMode || pasteActive || moveActive)
                 ExitAll();
@@ -149,9 +163,14 @@ public class BuildSelectionController : MonoBehaviour
             return true;
         if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
             return true;
-        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+        if (IsSelectionPanelOpen())
             return true;
         return false;
+    }
+
+    static bool IsSelectionPanelOpen()
+    {
+        return SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen;
     }
 
     bool ModifierHeld()

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class InputHintUI : MonoBehaviour
 {
@@ -13,16 +12,9 @@ public class InputHintUI : MonoBehaviour
     PlayerInteractor interactor;
     BuildSelectionController selection;
 
-    readonly List<HintRow> rows = new List<HintRow>(MaxHints);
+    VisualElement bar;
     readonly StringBuilder key = new StringBuilder(256);
     string lastKey;
-
-    struct HintRow
-    {
-        public GameObject root;
-        public TextMeshProUGUI keyText;
-        public TextMeshProUGUI labelText;
-    }
 
     void Start()
     {
@@ -63,88 +55,10 @@ public class InputHintUI : MonoBehaviour
 
     void BuildUi()
     {
-        GameObject canvasGo = new GameObject("InputHintCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
-        canvasGo.transform.SetParent(transform, false);
-        Canvas canvas = canvasGo.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 80;
-        canvas.pixelPerfect = false;
-
-        CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-
-        GameObject panel = new GameObject("Hints", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
-        panel.transform.SetParent(canvasGo.transform, false);
-        RectTransform panelRt = panel.GetComponent<RectTransform>();
-        panelRt.anchorMin = new Vector2(0f, 0f);
-        panelRt.anchorMax = new Vector2(0f, 0f);
-        panelRt.pivot = new Vector2(0f, 0f);
-        panelRt.anchoredPosition = new Vector2(28f, 28f);
-        panelRt.sizeDelta = new Vector2(420f, 0f);
-
-        Image bg = panel.GetComponent<Image>();
-        UiTheme.StyleImage(bg, new Color(UiTheme.Panel.r, UiTheme.Panel.g, UiTheme.Panel.b, 0.78f));
-        bg.raycastTarget = false;
-
-        VerticalLayoutGroup layout = panel.GetComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(14, 16, 10, 10);
-        layout.spacing = 4f;
-        layout.childAlignment = TextAnchor.LowerLeft;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-        layout.childForceExpandWidth = true;
-        layout.childForceExpandHeight = false;
-
-        ContentSizeFitter fit = panel.GetComponent<ContentSizeFitter>();
-        fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        for (int i = 0; i < MaxHints; i++)
-            rows.Add(CreateRow(panel.transform));
-    }
-
-    HintRow CreateRow(Transform parent)
-    {
-        GameObject row = new GameObject("Hint", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
-        row.transform.SetParent(parent, false);
-
-        HorizontalLayoutGroup rowLayout = row.GetComponent<HorizontalLayoutGroup>();
-        rowLayout.spacing = 10f;
-        rowLayout.childAlignment = TextAnchor.MiddleLeft;
-        rowLayout.childControlWidth = true;
-        rowLayout.childControlHeight = true;
-        rowLayout.childForceExpandWidth = false;
-        rowLayout.childForceExpandHeight = false;
-
-        ContentSizeFitter fit = row.GetComponent<ContentSizeFitter>();
-        fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        Image keyBg = UiTheme.AddImage(row.transform, "Key", new Vector2(86f, 24f), UiTheme.Chip);
-        keyBg.raycastTarget = false;
-        LayoutElement keyLe = keyBg.gameObject.AddComponent<LayoutElement>();
-        keyLe.minWidth = 78f;
-        keyLe.preferredWidth = 86f;
-        keyLe.minHeight = 24f;
-
-        TextMeshProUGUI keyText = UiTheme.AddText(keyBg.transform, "KeyText", "B", 16f, UiTheme.Accent);
-        keyText.alignment = TextAlignmentOptions.Center;
-        keyText.fontStyle = FontStyles.Bold;
-        RectTransform keyRt = keyText.rectTransform;
-        keyRt.anchorMin = Vector2.zero;
-        keyRt.anchorMax = Vector2.one;
-        keyRt.offsetMin = Vector2.zero;
-        keyRt.offsetMax = Vector2.zero;
-
-        TextMeshProUGUI label = UiTheme.AddText(row.transform, "Label", "", 18f, UiTheme.Text);
-        label.alignment = TextAlignmentOptions.MidlineLeft;
-        LayoutElement labelLe = label.gameObject.AddComponent<LayoutElement>();
-        labelLe.minWidth = 180f;
-        labelLe.preferredWidth = 280f;
-
-        row.SetActive(false);
-        return new HintRow { root = row, keyText = keyText, labelText = label };
+        VisualElement root = IndustryUi.Mount(this, 90);
+        bar = IndustryUi.El("Hints", "hint-bar");
+        bar.pickingMode = PickingMode.Ignore;
+        root.Add(bar);
     }
 
     void LateUpdate()
@@ -188,6 +102,19 @@ public class InputHintUI : MonoBehaviour
         }
 
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+        {
+            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            return hints;
+        }
+
+        if (ResearchUI.Instance != null && ResearchUI.Instance.IsOpen)
+        {
+            Add(hints, KeybindStore.Hint("Research"), "закрыть исследования");
+            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            return hints;
+        }
+
+        if (BuildMenuUI.Instance != null && BuildMenuUI.Instance.IsOpen)
         {
             Add(hints, KeybindStore.Hint("Pause"), "закрыть");
             return hints;
@@ -322,19 +249,16 @@ public class InputHintUI : MonoBehaviour
             return;
         lastKey = now;
 
-        for (int i = 0; i < rows.Count; i++)
+        if (bar == null)
+            return;
+        bar.Clear();
+        for (int i = 0; i < hints.Count; i++)
         {
-            if (i >= hints.Count)
-            {
-                if (rows[i].root.activeSelf)
-                    rows[i].root.SetActive(false);
-                continue;
-            }
-
-            if (!rows[i].root.activeSelf)
-                rows[i].root.SetActive(true);
-            rows[i].keyText.text = hints[i].key;
-            rows[i].labelText.text = hints[i].label;
+            var chip = IndustryUi.El("H", "hint");
+            chip.pickingMode = PickingMode.Ignore;
+            chip.Add(IndustryUi.Text("K", hints[i].key, "hint-key"));
+            chip.Add(IndustryUi.Text("L", hints[i].label, "hint-label"));
+            bar.Add(chip);
         }
     }
 }

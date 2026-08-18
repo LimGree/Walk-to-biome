@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
+  companyName: SergeyStepanov
   productName: Walk of Industry
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -953,7 +953,7 @@ PlayerSettings:
   cloudProjectId: 7bd51125-35ab-4ab7-ba7c-dbc93a58f2a9
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Walk of Industry
+  projectName: Walk to biome
   organizationId: step20step05
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

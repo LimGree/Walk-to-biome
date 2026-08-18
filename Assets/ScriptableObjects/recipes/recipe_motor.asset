@@ -25,6 +25,6 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 7071727374757677787970a1b2c3d4eb, type: 2}
     amount: 1
   craftTime: 3
-  requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}
+  requiredBuilding: {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
   allowedBuildingIds:
-  - assembler
+  - constructor

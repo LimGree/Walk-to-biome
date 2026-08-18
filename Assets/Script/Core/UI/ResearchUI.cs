@@ -1,39 +1,64 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 public class ResearchUI : MonoBehaviour
 {
+    public static ResearchUI Instance { get; private set; }
+
     [Header("References")]
     public ResearchSystem researchSystem;
     public GameObject menuPanel;
     public Transform nodesParent;
     public GameObject nodeButtonPrefab;
 
-    private bool isOpen = false;
-    private InputSystem_Actions inputActions;
+    public bool IsOpen { get; private set; }
+
+    VisualElement overlay;
+    ScrollView list;
+    InputSystem_Actions inputActions;
 
     void Awake()
     {
+        Instance = this;
         inputActions = KeybindStore.Shared;
     }
 
     void Start()
     {
-        if (menuPanel != null)
-            menuPanel.SetActive(false);
+        Build();
+        IndustryUi.HideLegacy(this, menuPanel);
+        IndustryUi.DisableHudCanvas(this);
+        IndustryUi.Show(overlay, false);
+        IsOpen = false;
     }
 
     void OnEnable()
     {
-        inputActions.Player.Research.performed += OnResearchToggle;
+        if (inputActions != null)
+            inputActions.Player.Research.performed += OnResearchToggle;
     }
 
     void OnDisable()
     {
-        inputActions.Player.Research.performed -= OnResearchToggle;
+        if (inputActions != null)
+            inputActions.Player.Research.performed -= OnResearchToggle;
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
+    void Build()
+    {
+        VisualElement root = IndustryUi.Mount(this, 105);
+        overlay = IndustryUi.OverlayPanel("Исследования", null, Close);
+        VisualElement panel = IndustryUi.PanelOf(overlay);
+        list = IndustryUi.Scroll("Nodes");
+        panel.Add(list);
+        root.Add(overlay);
     }
 
     void OnResearchToggle(InputAction.CallbackContext ctx)
@@ -49,37 +74,83 @@ public class ResearchUI : MonoBehaviour
 
     public void ToggleMenu()
     {
-        isOpen = !isOpen;
+        if (IsOpen)
+            Close();
+        else
+            Open();
+    }
 
-        if (menuPanel != null)
-            menuPanel.SetActive(isOpen);
+    public void Open()
+    {
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+        if (overlay == null)
+            Build();
+        IsOpen = true;
+        RefreshList();
+        IndustryUi.Show(overlay, true);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
+        else
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+        }
+    }
 
-        Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = isOpen;
-
-        if (isOpen)
-            RefreshList();
+    public void Close()
+    {
+        IsOpen = false;
+        IndustryUi.Show(overlay, false);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
+        else
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.Locked;
+            UnityEngine.Cursor.visible = false;
+        }
     }
 
     void RefreshList()
     {
-        if (nodesParent == null || nodeButtonPrefab == null || researchSystem == null) return;
+        if (list == null)
+            return;
+        list.Clear();
+        ResearchSystem system = researchSystem != null ? researchSystem : ResearchSystem.Instance;
+        if (system == null)
+            return;
 
-        foreach (Transform child in nodesParent)
-            Destroy(child.gameObject);
-
-        foreach (var node in researchSystem.GetAllNodes())
+        foreach (ResearchNodeData node in system.GetAllNodes())
         {
-            GameObject btn = Instantiate(nodeButtonPrefab, nodesParent);
-
-            var text = btn.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null)
+            if (node == null)
+                continue;
+            string status = "READY";
+            bool canStart = system.CanStartResearch(node);
+            if (system.IsResearchUnlocked(node))
             {
-                string status = researchSystem.IsResearchUnlocked(node) ? " [DONE]" : "";
-                text.text = node.displayName + status;
+                status = "DONE";
+                canStart = false;
+            }
+            else if (system.CurrentResearch == node)
+            {
+                status = "ACTIVE";
+                canStart = false;
+            }
+            else if (!canStart)
+            {
+                status = "LOCKED";
             }
 
-            // Можно добавить блокировку кнопок и т.д.
+            ResearchNodeData captured = node;
+            list.Add(IndustryUi.ResearchCard(
+                node,
+                status,
+                canStart,
+                () =>
+                {
+                    if (system.SetCurrentResearch(captured))
+                        Close();
+                }));
         }
     }
 }

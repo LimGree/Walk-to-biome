@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: recipe_advanced_circuit
   m_EditorClassIdentifier: 
   id: recipe_advanced_circuit
-  displayName: "Продв. схема"
+  displayName: "\u041F\u0440\u043E\u0434\u0432. \u0441\u0445\u0435\u043C\u0430"
   inputs:
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314201, type: 2}
     amount: 2
@@ -23,6 +23,6 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314204, type: 2}
     amount: 1
   craftTime: 6
-  requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}
+  requiredBuilding: {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
   allowedBuildingIds:
-  - assembler
+  - constructor
