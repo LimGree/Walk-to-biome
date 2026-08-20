@@ -31,6 +31,8 @@ public class PlayerBuilder : MonoBehaviour
     public bool BlocksBuildInput => selection != null && selection.BlocksBuildInput;
     public bool IsLineStrokeActive => strokeActive;
     public bool HasHeldBuilding => currentBuildingData != null;
+    public GameObject CurrentGhost => currentGhost;
+    public BuildingData CurrentBuildingData => currentBuildingData;
     public BuildSelectionController Selection => selection;
 
     BuildSelectionController selection;
@@ -190,15 +192,17 @@ public class PlayerBuilder : MonoBehaviour
 
     void HandleRotateKey()
     {
-        if (TryRotatePlacedBuilding())
+        if (HasHeldBuilding)
+        {
+            currentRotationY += 90f;
+            if (currentRotationY >= 360f)
+                currentRotationY = 0f;
+            if (currentGhost != null)
+                currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
             return;
+        }
 
-        currentRotationY += 90f;
-        if (currentRotationY >= 360f)
-            currentRotationY = 0f;
-
-        if (currentGhost != null)
-            currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
+        TryRotatePlacedBuilding();
     }
 
     bool TryRotatePlacedBuilding()
@@ -208,6 +212,8 @@ public class PlayerBuilder : MonoBehaviour
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
         if (!Physics.Raycast(ray, out RaycastHit hit, maxBuildDistance, demolishLayer))
+            return false;
+        if (IsStrokeGhost(hit.transform))
             return false;
 
         BuildingBase building = hit.collider.GetComponentInParent<BuildingBase>();

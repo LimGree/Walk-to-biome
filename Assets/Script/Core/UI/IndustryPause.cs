@@ -9,6 +9,7 @@ public class IndustryPause
     VisualElement keys;
     Label zoomLabel;
     Label sizeLabel;
+    Button hintsBtn;
 
     public bool Visible => root != null && root.style.display == DisplayStyle.Flex;
 
@@ -57,6 +58,9 @@ public class IndustryPause
             Refresh();
         });
         settings.Add(size);
+        hintsBtn = IndustryUi.Btn("Подсказки управления  ·  вкл", ToggleHints);
+        settings.Add(hintsBtn);
+        RefreshHintsButton();
         settings.Add(IndustryUi.Btn("Клавиши", ShowKeys));
         settings.Add(IndustryUi.Btn("Назад", ShowHome));
         root.Add(settings);
@@ -124,11 +128,28 @@ public class IndustryPause
 
     void Refresh()
     {
-        if (WorldMapUI.Instance == null)
+        if (WorldMapUI.Instance != null)
+        {
+            if (zoomLabel != null)
+                zoomLabel.text = "Масштаб миникарты  " + Mathf.RoundToInt(WorldMapUI.Instance.MiniZoom * 100f) + "%";
+            if (sizeLabel != null)
+                sizeLabel.text = "Размер миникарты  " + Mathf.RoundToInt(WorldMapUI.Instance.MiniSize) + " px";
+        }
+        RefreshHintsButton();
+    }
+
+    void ToggleHints()
+    {
+        InputHintUI.HintsEnabled = !InputHintUI.HintsEnabled;
+        RefreshHintsButton();
+    }
+
+    void RefreshHintsButton()
+    {
+        if (hintsBtn == null)
             return;
-        if (zoomLabel != null)
-            zoomLabel.text = "Масштаб миникарты  " + Mathf.RoundToInt(WorldMapUI.Instance.MiniZoom * 100f) + "%";
-        if (sizeLabel != null)
-            sizeLabel.text = "Размер миникарты  " + Mathf.RoundToInt(WorldMapUI.Instance.MiniSize) + " px";
+        IndustryUi.SetButtonLabel(hintsBtn, InputHintUI.HintsEnabled
+            ? "Подсказки управления  ·  вкл"
+            : "Подсказки управления  ·  выкл");
     }
 }

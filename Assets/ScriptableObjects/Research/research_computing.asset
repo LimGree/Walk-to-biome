@@ -22,13 +22,13 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 43666e2ae26dca64d8d4e99e4cf3d2d7, type: 3}
   requiredItems:
   - item: {fileID: 11400000, guid: 61b810ccecfea014ebb50eda1ac4dcf9, type: 2}
-    amount: 150
+    amount: 375
   - item: {fileID: 11400000, guid: b17059ba72b2bb94c9006dc4feab4f5b, type: 2}
-    amount: 80
+    amount: 200
   - item: {fileID: 11400000, guid: 38e39d45a26d5e848b316a39c736f253, type: 2}
-    amount: 80
+    amount: 200
   - item: {fileID: 11400000, guid: c4d5e6f708193a4b5c6d7e8f901a2b4d, type: 2}
-    amount: 80
+    amount: 200
   requiredResearches:
   - {fileID: 11400000, guid: e5f60718293a4b5c6d7e8f901a2b3c4d, type: 2}
   unlockedBuildings:

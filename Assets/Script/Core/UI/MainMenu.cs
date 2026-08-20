@@ -20,6 +20,7 @@ public class MainMenu : MonoBehaviour
     Label sizeLabel;
     Slider zoomSlider;
     Slider sizeSlider;
+    Button hintsBtn;
 
     void Awake()
     {
@@ -99,6 +100,8 @@ public class MainMenu : MonoBehaviour
             RefreshLabels();
         });
         settings.Add(sizeSlider);
+        hintsBtn = IndustryUi.Btn("", ToggleHints);
+        settings.Add(hintsBtn);
         settings.Add(IndustryUi.Btn("Клавиши", ShowKeys));
         settings.Add(IndustryUi.Btn("Назад", ShowHome));
         bg.Add(settings);
@@ -246,6 +249,16 @@ public class MainMenu : MonoBehaviour
             zoomLabel.text = "Масштаб миникарты  " + Mathf.RoundToInt(zoom * 100f) + "%";
         if (sizeLabel != null)
             sizeLabel.text = "Размер миникарты  " + Mathf.RoundToInt(size) + " px";
+        if (hintsBtn != null)
+            IndustryUi.SetButtonLabel(hintsBtn, InputHintUI.HintsEnabled
+                ? "Подсказки управления  ·  вкл"
+                : "Подсказки управления  ·  выкл");
+    }
+
+    void ToggleHints()
+    {
+        InputHintUI.HintsEnabled = !InputHintUI.HintsEnabled;
+        RefreshLabels();
     }
 
     static void Quit()

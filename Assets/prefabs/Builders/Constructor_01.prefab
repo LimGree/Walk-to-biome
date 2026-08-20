@@ -204,6 +204,7 @@ MonoBehaviour:
   currentRecipe: {fileID: 0}
   craftProgress: 0
   inputBufferMultiplier: 2
+  level: 1
   showDebug: 0
 --- !u!65 &4762440048683623753
 BoxCollider:
@@ -319,7 +320,11 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 7992835233681667425, guid: 123648363c97d5b4a8be975e7d391763, type: 3}
+    - {fileID: 8343115042472502643, guid: 123648363c97d5b4a8be975e7d391763, type: 3}
+    - {fileID: 6733076321235954331, guid: 123648363c97d5b4a8be975e7d391763, type: 3}
+    - {fileID: 4553302631083127808, guid: 123648363c97d5b4a8be975e7d391763, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 123648363c97d5b4a8be975e7d391763, type: 3}

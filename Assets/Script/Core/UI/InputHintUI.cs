@@ -5,7 +5,18 @@ using UnityEngine.UIElements;
 
 public class InputHintUI : MonoBehaviour
 {
+    public const string PrefsKey = "ShowInputHints";
     const int MaxHints = 10;
+
+    public static bool HintsEnabled
+    {
+        get => PlayerPrefs.GetInt(PrefsKey, 1) != 0;
+        set
+        {
+            PlayerPrefs.SetInt(PrefsKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+    }
 
     PlayerBuilder builder;
     PlayerInventory inventory;
@@ -63,6 +74,16 @@ public class InputHintUI : MonoBehaviour
 
     void LateUpdate()
     {
+        if (!HintsEnabled)
+        {
+            if (lastKey == "off")
+                return;
+            lastKey = "off";
+            if (bar != null)
+                bar.Clear();
+            return;
+        }
+
         BindRefs();
         Apply(Collect());
     }

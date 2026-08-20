@@ -19,9 +19,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9a08b5848936ba54287bc06b81fb8dea, type: 3}
   requiredItems:
   - item: {fileID: 11400000, guid: 9d495ae5fdb87d6479f40cd1e73fed53, type: 2}
-    amount: 30
+    amount: 75
   - item: {fileID: 11400000, guid: 217f28faff3699148aee942274ec50ec, type: 2}
-    amount: 30
+    amount: 75
   requiredResearches:
   - {fileID: 11400000, guid: 48c17754ce4d9a549adea9119d631c5a, type: 2}
   unlockedBuildings:

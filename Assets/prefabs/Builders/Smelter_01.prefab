@@ -153,6 +153,7 @@ MonoBehaviour:
   currentRecipe: {fileID: 11400000, guid: b020d37925269d7479c9b83b0c017fbf, type: 2}
   craftProgress: 0
   inputBufferMultiplier: 2
+  level: 1
   showDebug: 0
 --- !u!1001 &8903586326642387972
 PrefabInstance:
@@ -200,11 +201,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8985166881134065322, guid: 08a1fcf64f93e4340b1f5585d7e96d90, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.005
       objectReference: {fileID: 0}
     - target: {fileID: 8985166881134065322, guid: 08a1fcf64f93e4340b1f5585d7e96d90, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.005
       objectReference: {fileID: 0}
     - target: {fileID: 8985166881134065322, guid: 08a1fcf64f93e4340b1f5585d7e96d90, type: 3}
       propertyPath: m_LocalPosition.z

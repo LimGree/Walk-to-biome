@@ -15,11 +15,13 @@ public class WorldMapUI : MonoBehaviour
     InputSystem_Actions input;
     VisualElement fullRoot;
     VisualElement miniFrame;
-    Image miniImage;
-    Image fullImage;
+    MapView miniImage;
+    MapView fullImage;
     VisualElement miniMarker;
     VisualElement fullMarker;
     Label tooltip;
+    Label coordLabel;
+    Label zoomLabel;
     Texture2D mapTex;
     Rect viewUv = new Rect(0f, 0f, 1f, 1f);
     Rect miniUv = new Rect(0f, 0f, 1f, 1f);
@@ -90,7 +92,7 @@ public class WorldMapUI : MonoBehaviour
         if (IsOpen)
         {
             if (fullImage != null)
-                fullImage.uv = viewUv;
+                fullImage.ViewUv = viewUv;
             UpdateMarker(fullMarker, fullImage, viewUv);
         }
     }
@@ -119,9 +121,9 @@ public class WorldMapUI : MonoBehaviour
         IndustryUi.Show(miniFrame, !open);
         if (open)
         {
-            viewUv = new Rect(0f, 0f, 1f, 1f);
             dragging = false;
             Rebuild();
+            CenterOnPlayer(0.28f);
         }
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();
@@ -157,9 +159,9 @@ public class WorldMapUI : MonoBehaviour
         mapTex.SetPixels(pixels);
         mapTex.Apply(false, false);
         if (miniImage != null)
-            miniImage.image = mapTex;
+            miniImage.MapTexture = mapTex;
         if (fullImage != null)
-            fullImage.image = mapTex;
+            fullImage.MapTexture = mapTex;
     }
 
     static void PaintBuildings(Color[] pixels, int w, int h, WorldBiomeMap map)
@@ -208,14 +210,46 @@ public class WorldMapUI : MonoBehaviour
 
         fullRoot = IndustryUi.Screen("FullMap");
         fullRoot.Add(IndustryUi.El("Dim", "dim"));
+        var chrome = IndustryUi.El("Chrome", "panel", "map-chrome");
+        var head = IndustryUi.El("Head", "header");
+        head.Add(IndustryUi.Text("Title", "Карта мира", "title"));
+        coordLabel = IndustryUi.Text("Coords", "", "muted");
+        head.Add(coordLabel);
+        head.Add(IndustryUi.Btn("✕", () => SetOpen(false), "close"));
+        chrome.Add(head);
+
+        var legend = IndustryUi.El("Legend", "map-legend");
+        AddSwatch(legend, new Color(0.13f, 0.30f, 0.16f), "лес");
+        AddSwatch(legend, new Color(0.58f, 0.74f, 0.34f), "поле");
+        AddSwatch(legend, new Color(0.28f, 0.28f, 0.30f), "гора");
+        AddSwatch(legend, new Color(0.11f, 0.32f, 0.52f), "вода");
+        AddSwatch(legend, new Color(0.72f, 0.24f, 0.18f), "жилы");
+        AddSwatch(legend, BuildingColor, "здания");
+        AddSwatch(legend, BeltColor, "ленты");
+        chrome.Add(legend);
+
         var wrap = IndustryUi.El("FullWrap", "map-frame", "map-full-wrap");
         fullImage = MakeMapImage("FullImage");
         fullImage.AddToClassList("map-full");
+        fullImage.style.width = 820;
+        fullImage.style.height = 820;
         fullMarker = IndustryUi.El("FullMark", "player-mark");
         fullMarker.pickingMode = PickingMode.Ignore;
         fullImage.Add(fullMarker);
         wrap.Add(fullImage);
-        fullRoot.Add(wrap);
+        chrome.Add(wrap);
+
+        var tools = IndustryUi.El("Tools", "map-tools");
+        tools.Add(IndustryUi.Btn("−", () => ZoomAtCenter(1.22f), "btn-small"));
+        zoomLabel = IndustryUi.Text("Zoom", "100%", "muted");
+        tools.Add(zoomLabel);
+        tools.Add(IndustryUi.Btn("+", () => ZoomAtCenter(0.82f), "btn-small"));
+        tools.Add(IndustryUi.Btn("На игроке", () => CenterOnPlayer(0.22f), "btn-small", "btn-primary"));
+        tools.Add(IndustryUi.Text("Help", "колесо — масштаб   ·   ЛКМ — двигать   ·   Esc — закрыть", "muted"));
+        chrome.Add(tools);
+
+        fullRoot.Add(chrome);
+        wrap.RegisterCallback<WheelEvent>(OnFullWheel);
         fullImage.RegisterCallback<WheelEvent>(OnFullWheel);
         fullImage.RegisterCallback<PointerDownEvent>(OnFullDown);
         fullImage.RegisterCallback<PointerMoveEvent>(OnFullMove);
@@ -235,12 +269,110 @@ public class WorldMapUI : MonoBehaviour
         root.Add(tooltip);
     }
 
-    static Image MakeMapImage(string name)
+    static void AddSwatch(VisualElement row, Color color, string name)
     {
-        var image = new Image { name = name };
-        image.scaleMode = ScaleMode.StretchToFill;
-        image.uv = new Rect(0f, 0f, 1f, 1f);
-        return image;
+        var item = IndustryUi.El("L", "row");
+        item.style.marginRight = 14;
+        var sw = IndustryUi.El("S", "map-swatch");
+        sw.style.backgroundColor = color;
+        item.Add(sw);
+        item.Add(IndustryUi.Text("N", name, "muted"));
+        row.Add(item);
+    }
+
+    static MapView MakeMapImage(string name)
+    {
+        var view = new MapView { name = name };
+        view.style.flexGrow = 1;
+        view.style.overflow = Overflow.Hidden;
+        return view;
+    }
+
+    sealed class MapView : VisualElement
+    {
+        Texture2D tex;
+        Rect uv = new Rect(0f, 0f, 1f, 1f);
+
+        public MapView()
+        {
+            generateVisualContent += Paint;
+            pickingMode = PickingMode.Position;
+        }
+
+        public Texture2D MapTexture
+        {
+            get => tex;
+            set
+            {
+                if (tex == value)
+                    return;
+                tex = value;
+                MarkDirtyRepaint();
+            }
+        }
+
+        public Rect ViewUv
+        {
+            get => uv;
+            set
+            {
+                uv = value;
+                MarkDirtyRepaint();
+            }
+        }
+
+        void Paint(MeshGenerationContext ctx)
+        {
+            if (tex == null)
+                return;
+            Rect r = contentRect;
+            if (r.width < 1f || r.height < 1f)
+                return;
+
+            float u0 = uv.x;
+            float u1 = uv.x + uv.width;
+            float v0 = uv.y;
+            float v1 = uv.y + uv.height;
+            Color32 tint = Color.white;
+            MeshWriteData mesh = ctx.Allocate(4, 6, tex);
+            mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMin, r.yMin, Vertex.nearZ), tint = tint, uv = new Vector2(u0, v1) });
+            mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMax, r.yMin, Vertex.nearZ), tint = tint, uv = new Vector2(u1, v1) });
+            mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMax, r.yMax, Vertex.nearZ), tint = tint, uv = new Vector2(u1, v0) });
+            mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMin, r.yMax, Vertex.nearZ), tint = tint, uv = new Vector2(u0, v0) });
+            mesh.SetNextIndex(0);
+            mesh.SetNextIndex(1);
+            mesh.SetNextIndex(2);
+            mesh.SetNextIndex(0);
+            mesh.SetNextIndex(2);
+            mesh.SetNextIndex(3);
+        }
+    }
+
+    void CenterOnPlayer(float zoom)
+    {
+        Vector2 p = PlayerUv();
+        zoom = Mathf.Clamp(zoom, 0.06f, 1f);
+        viewUv = new Rect(p.x - zoom * 0.5f, p.y - zoom * 0.5f, zoom, zoom);
+        ClampView();
+        if (fullImage != null)
+            fullImage.ViewUv = viewUv;
+        RefreshZoomLabel();
+    }
+
+    void ZoomAtCenter(float factor)
+    {
+        if (fullImage == null)
+            return;
+        float w = Mathf.Max(1f, fullImage.resolvedStyle.width);
+        float h = Mathf.Max(1f, fullImage.resolvedStyle.height);
+        ZoomAt(fullImage, new Vector2(w * 0.5f, h * 0.5f), factor);
+        RefreshZoomLabel();
+    }
+
+    void RefreshZoomLabel()
+    {
+        if (zoomLabel != null)
+            zoomLabel.text = Mathf.RoundToInt(100f / Mathf.Max(0.06f, viewUv.width)) + "%";
     }
 
     void ApplyMiniSize()
@@ -263,7 +395,7 @@ public class WorldMapUI : MonoBehaviour
         miniUv = new Rect(center.x - z * 0.5f, center.y - z * 0.5f, z, z);
         miniUv.x = Mathf.Clamp(miniUv.x, 0f, 1f - miniUv.width);
         miniUv.y = Mathf.Clamp(miniUv.y, 0f, 1f - miniUv.height);
-        miniImage.uv = miniUv;
+        miniImage.ViewUv = miniUv;
     }
 
     void OnMiniWheel(WheelEvent evt)
@@ -279,6 +411,7 @@ public class WorldMapUI : MonoBehaviour
         if (!IsOpen)
             return;
         ZoomAt(fullImage, evt.localMousePosition, evt.delta.y > 0f ? 0.82f : 1.22f);
+        RefreshZoomLabel();
         evt.StopPropagation();
     }
 
@@ -318,7 +451,7 @@ public class WorldMapUI : MonoBehaviour
             fullImage.ReleasePointer(evt.pointerId);
     }
 
-    void ZoomAt(Image image, Vector2 local, float factor)
+    void ZoomAt(VisualElement image, Vector2 local, float factor)
     {
         if (image == null)
             return;
@@ -364,7 +497,7 @@ public class WorldMapUI : MonoBehaviour
             (cell.y - map.MapMinZ + 0.5f) / map.MapHeight);
     }
 
-    void UpdateTooltip(Image image, Rect uv, Vector2 local, Vector2 panelPos)
+    void UpdateTooltip(VisualElement image, Rect uv, Vector2 local, Vector2 panelPos)
     {
         if (tooltip == null || image == null)
             return;
@@ -373,6 +506,9 @@ public class WorldMapUI : MonoBehaviour
             IndustryUi.Show(tooltip, false);
             return;
         }
+
+        if (coordLabel != null)
+            coordLabel.text = cell.x + ", " + cell.y;
 
         string label = LabelAt(cell);
         if (string.IsNullOrEmpty(label))
@@ -387,7 +523,7 @@ public class WorldMapUI : MonoBehaviour
         IndustryUi.Show(tooltip, true);
     }
 
-    static bool LocalToCell(Image image, Rect uv, Vector2 local, out Vector2Int cell)
+    static bool LocalToCell(VisualElement image, Rect uv, Vector2 local, out Vector2Int cell)
     {
         cell = default;
         WorldBiomeMap map = WorldBiomeMap.Instance;
@@ -428,7 +564,7 @@ public class WorldMapUI : MonoBehaviour
         return obj.name;
     }
 
-    void UpdateMarker(VisualElement marker, Image image, Rect uv)
+    void UpdateMarker(VisualElement marker, VisualElement image, Rect uv)
     {
         if (marker == null || image == null || WorldBiomeMap.Instance == null || !WorldBiomeMap.Instance.IsReady)
             return;

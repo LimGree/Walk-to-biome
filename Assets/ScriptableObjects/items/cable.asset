@@ -21,4 +21,4 @@ MonoBehaviour:
   isFuel: 0
   fuelValue: 0
   isFluid: 0
-  sellValue: 6
+  sellValue: 8

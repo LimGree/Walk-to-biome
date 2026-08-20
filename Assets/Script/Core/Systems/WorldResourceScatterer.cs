@@ -25,17 +25,18 @@ public class WorldResourceScatterer : MonoBehaviour
     public GameObject treePrefab;
 
     [Header("Deposits")]
-    public int minDepositsPerType = 4;
-    public int treeDeposits = 18;
-    public int ironDeposits = 6;
-    public int copperDeposits = 6;
-    public int stoneDeposits = 4;
-    public int coalDeposits = 3;
-    public int sulfurDeposits = 3;
-    public int nodesPerCluster = 22;
-    public int clusterRadius = 14;
+    [Tooltip("Россыпь с зазором: к каждой ноде можно подвести ленту.")]
+    public int treeDeposits = 40;
+    public int ironDeposits = 14;
+    public int copperDeposits = 14;
+    public int stoneDeposits = 12;
+    public int coalDeposits = 12;
+    public int sulfurDeposits = 8;
+    public int sandDeposits = 14;
+    public int nodesPerCluster = 20;
+    public int clusterRadius = 11;
     public int nodeGap = 2;
-    public int clusterGap = 14;
+    public int clusterGap = 9;
 
     [Header("Streaming")]
     public float visualRadius = 38f;
@@ -110,10 +111,10 @@ public class WorldResourceScatterer : MonoBehaviour
         root = new GameObject("WorldResources").transform;
 
         pendingKind = "sand";
-        SpawnBiomeDeposits(WorldBiome.Beach, sandPrefab, minDepositsPerType, clusterGap);
+        SpawnBiomeDeposits(WorldBiome.Beach, sandPrefab, sandDeposits, clusterGap);
         pendingKind = "tree";
-        SpawnBiomeDeposits(WorldBiome.Forest, treePrefab, treeDeposits, 9);
-        SpawnBiomeDeposits(WorldBiome.Woodland, treePrefab, Mathf.Max(8, treeDeposits / 2), 9);
+        SpawnBiomeDeposits(WorldBiome.Forest, treePrefab, treeDeposits, 6);
+        SpawnBiomeDeposits(WorldBiome.Woodland, treePrefab, Mathf.Max(12, treeDeposits / 2), 7);
         SpawnMountainOres(map);
         HideAllVisuals();
         IsScattered = true;
@@ -140,11 +141,12 @@ public class WorldResourceScatterer : MonoBehaviour
         Shuffle(cells);
 
         int made = 0;
+        int want = Mathf.Max(10, nodesPerCluster);
         for (int i = 0; i < cells.Count && made < deposits; i++)
         {
             if (!CanStartCluster(cells[i], gap))
                 continue;
-            if (SpawnCluster(cells[i], cells, prefab) >= 15)
+            if (SpawnScatter(cells[i], cells, prefab, want) >= 5)
                 made++;
         }
         return made;
@@ -193,18 +195,13 @@ public class WorldResourceScatterer : MonoBehaviour
         AssignOre(infos, assigned, MountainOre.Iron, needsPeak: true, limit: ironDeposits, preferSmaller: false);
         AssignOre(infos, assigned, MountainOre.Copper, needsPeak: true, limit: copperDeposits, preferSmaller: false);
         AssignOre(infos, assigned, MountainOre.Sulfur, needsPeak: false, limit: sulfurDeposits, preferSmaller: true);
+        FillLeftoverMountains(infos, assigned);
 
         for (int i = 0; i < infos.Count; i++)
         {
             if (!assigned[i])
                 continue;
-            MountainOre ore = infos[i].ore;
-            int clusters = 1;
-            if (ore == MountainOre.Iron || ore == MountainOre.Copper)
-                clusters = 3;
-            else if (ore == MountainOre.Stone)
-                clusters = 1;
-            SpawnMountain(map, infos[i], clusters);
+            SpawnMountain(map, infos[i]);
         }
     }
 
@@ -232,7 +229,29 @@ public class WorldResourceScatterer : MonoBehaviour
         }
     }
 
-    void SpawnMountain(WorldBiomeMap map, MountainInfo info, int clusters)
+    void FillLeftoverMountains(List<MountainInfo> infos, bool[] assigned)
+    {
+        for (int i = 0; i < infos.Count; i++)
+        {
+            if (assigned[i] || infos[i].cells.Count < 12)
+                continue;
+
+            MountainOre ore;
+            if (infos[i].peaks >= 4)
+                ore = (i % 2 == 0) ? MountainOre.Iron : MountainOre.Copper;
+            else if (infos[i].slopes >= 8)
+                ore = (i % 3 == 0) ? MountainOre.Stone : (i % 3 == 1) ? MountainOre.Coal : MountainOre.Sulfur;
+            else
+                ore = (i % 2 == 0) ? MountainOre.Coal : MountainOre.Sulfur;
+
+            MountainInfo info = infos[i];
+            info.ore = ore;
+            infos[i] = info;
+            assigned[i] = true;
+        }
+    }
+
+    void SpawnMountain(WorldBiomeMap map, MountainInfo info)
     {
         GameObject prefab = PrefabOf(info.ore);
         if (prefab == null)
@@ -247,7 +266,6 @@ public class WorldResourceScatterer : MonoBehaviour
         }
 
         Shuffle(valid);
-        clusters = Mathf.Max(1, clusters);
 
         pendingKind = info.ore == MountainOre.Coal ? "coal"
             : info.ore == MountainOre.Copper ? "copper"
@@ -255,14 +273,33 @@ public class WorldResourceScatterer : MonoBehaviour
             : info.ore == MountainOre.Sulfur ? "sulfur"
             : "stone";
 
+        int want = Mathf.Max(12, nodesPerCluster);
+        if (info.ore == MountainOre.Iron || info.ore == MountainOre.Copper)
+            want = Mathf.Max(18, nodesPerCluster);
+        else if (info.ore == MountainOre.Stone)
+            want = Mathf.Max(12, nodesPerCluster - 4);
+
+        int clusters = 2;
+        if (info.cells.Count > 80)
+            clusters = 4;
+        else if (info.cells.Count > 40)
+            clusters = 3;
+        if (info.ore == MountainOre.Iron || info.ore == MountainOre.Copper)
+            clusters = Mathf.Max(clusters, 3);
+
+        int minAccept = 5;
         int made = 0;
+        int localGap = Mathf.Max(6, clusterGap);
         for (int i = 0; i < valid.Count && made < clusters; i++)
         {
-            if (!CanStartCluster(valid[i], clusterGap))
+            if (!CanStartCluster(valid[i], localGap))
                 continue;
-            if (SpawnCluster(valid[i], valid, prefab) >= 15)
+            if (SpawnScatter(valid[i], valid, prefab, want) >= minAccept)
                 made++;
         }
+
+        if (made == 0 && valid.Count >= 4)
+            SpawnScatter(valid[0], valid, prefab, want);
     }
 
     static bool OreAllows(MountainOre ore, WorldBiome biome)
@@ -307,40 +344,35 @@ public class WorldResourceScatterer : MonoBehaviour
         return true;
     }
 
-    int SpawnCluster(Vector2Int center, List<Vector2Int> pool, GameObject prefab)
+    int SpawnScatter(Vector2Int center, List<Vector2Int> pool, GameObject prefab, int want)
     {
-        const int minVeins = 15;
-        int want = Mathf.Max(minVeins, nodesPerCluster);
-        List<Vector2Int> pick = null;
+        if (prefab == null)
+            return 0;
 
-        for (int radius = clusterRadius; radius <= clusterRadius + 16; radius += 4)
+        int radius = Mathf.Max(4, clusterRadius);
+        var pick = new List<Vector2Int>(want);
+        var reserved = new HashSet<Vector2Int>();
+
+        var candidates = new List<Vector2Int>(64);
+        for (int i = 0; i < pool.Count; i++)
         {
-            var candidates = new List<Vector2Int>(128);
-            for (int i = 0; i < pool.Count; i++)
-            {
-                if (Chebyshev(pool[i], center) <= radius)
-                    candidates.Add(pool[i]);
-            }
-            Shuffle(candidates);
+            if (Chebyshev(pool[i], center) <= radius)
+                candidates.Add(pool[i]);
+        }
+        Shuffle(candidates);
 
-            pick = new List<Vector2Int>(want);
-            var reserved = new HashSet<Vector2Int>();
-            for (int i = 0; i < candidates.Count && pick.Count < want; i++)
-            {
-                Vector2Int cell = candidates[i];
-                if (used.Contains(cell) || reserved.Contains(cell) || ResourceNode.HasNode(cell))
-                    continue;
-                if (!FarFromUsed(cell, nodeGap) || !FarFromSet(cell, reserved, nodeGap))
-                    continue;
-                pick.Add(cell);
-                reserved.Add(cell);
-            }
-
-            if (pick.Count >= minVeins)
-                break;
+        for (int i = 0; i < candidates.Count && pick.Count < want; i++)
+        {
+            Vector2Int cell = candidates[i];
+            if (used.Contains(cell) || reserved.Contains(cell) || ResourceNode.HasNode(cell))
+                continue;
+            if (!FarFromUsed(cell, nodeGap) || !FarFromSet(cell, reserved, nodeGap))
+                continue;
+            pick.Add(cell);
+            reserved.Add(cell);
         }
 
-        if (pick == null || pick.Count < minVeins)
+        if (pick.Count < 5)
             return 0;
 
         for (int i = 0; i < pick.Count; i++)
@@ -352,9 +384,10 @@ public class WorldResourceScatterer : MonoBehaviour
 
     static bool FarFromSet(Vector2Int cell, HashSet<Vector2Int> set, int gap)
     {
-        for (int z = -gap + 1; z < gap; z++)
+        int g = Mathf.Max(1, gap);
+        for (int z = -g + 1; z < g; z++)
         {
-            for (int x = -gap + 1; x < gap; x++)
+            for (int x = -g + 1; x < g; x++)
             {
                 if (x == 0 && z == 0)
                     continue;
@@ -367,9 +400,10 @@ public class WorldResourceScatterer : MonoBehaviour
 
     bool FarFromUsed(Vector2Int cell, int gap)
     {
-        for (int z = -gap + 1; z < gap; z++)
+        int g = Mathf.Max(1, gap);
+        for (int z = -g + 1; z < g; z++)
         {
-            for (int x = -gap + 1; x < gap; x++)
+            for (int x = -g + 1; x < g; x++)
             {
                 if (x == 0 && z == 0)
                     continue;

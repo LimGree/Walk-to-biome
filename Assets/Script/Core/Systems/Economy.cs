@@ -2,11 +2,11 @@ using UnityEngine;
 
 public static class Economy
 {
-    public const int StartingCoins = 250;
+    public const int StartingCoins = 1000;
     public const int StartingRubies = 0;
     public const int CoinsPerRuby = 50;
-    public const int BeltBaseGears = 10;
-    public const float BeltCostGrowth = 1.1f;
+    public const int BeltBaseGears = 50;
+    public const float BeltCostGrowth = 1.5f;
     public const float BeltSpeedPerLevel = 0.15f;
 
     public static int SellValue(ItemData item)

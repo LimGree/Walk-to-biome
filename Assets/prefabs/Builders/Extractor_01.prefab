@@ -190,7 +190,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5211508934338447298, guid: d3769676142cfd840830a4989768ffad, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5701545714216831223, guid: d3769676142cfd840830a4989768ffad, type: 3}
       propertyPath: m_Layer
@@ -204,6 +204,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 8904695661023784028, guid: d3769676142cfd840830a4989768ffad, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 91e692c110619084a907d37b88e60003, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -222,6 +226,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2566710878645634629}
     m_Modifications:
+    - target: {fileID: 1424739372802030937, guid: f10ca866f3d6c1548b865efbb27aa314, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 1a03e1bbc684a7f4dba3004da4780e19, type: 2}
     - target: {fileID: 2307138976641504967, guid: f10ca866f3d6c1548b865efbb27aa314, type: 3}
       propertyPath: m_Name
       value: extractor_level_1

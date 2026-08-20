@@ -173,9 +173,12 @@ public class ResearchSystem : MonoBehaviour
         if (!countedForResearch && Economy.IsGear(item) && BeltSpeedSystem.Instance != null)
             BeltSpeedSystem.Instance.SubmitGear();
 
-        int coins = Economy.SellValue(item);
-        if (coins > 0 && PlayerWallet.Instance != null)
-            PlayerWallet.Instance.AddCoins(coins);
+        if (!countedForResearch)
+        {
+            int coins = Economy.SellValue(item);
+            if (coins > 0 && PlayerWallet.Instance != null)
+                PlayerWallet.Instance.AddCoins(coins);
+        }
 
         return true;
     }

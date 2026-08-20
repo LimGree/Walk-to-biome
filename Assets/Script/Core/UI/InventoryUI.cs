@@ -152,8 +152,8 @@ public class InventoryUI : MonoBehaviour
 
         bag = IndustryUi.El("Bag", "bag");
         var panel = IndustryUi.El("BagPanel", "panel", "bag-panel");
-        panel.Add(IndustryUi.Text("T", "ИНВЕНТАРЬ ЗДАНИЙ", "title"));
-        panel.Add(IndustryUi.Text("H", "ЛКМ — в свободный слот   перетащи в хотбар   ПКМ по слоту — убрать", "muted"));
+        panel.Add(IndustryUi.Text("T", "ИНВЕНТАРЬ ЗДАНИЙ", "bag-title"));
+        panel.Add(IndustryUi.Text("H", "ЛКМ — в свободный слот   ·   перетащи в хотбар   ·   ПКМ — убрать", "bag-hint"));
         var scroll = IndustryUi.Scroll("BagScroll");
         bagGrid = IndustryUi.El("Grid", "bag-grid");
         scroll.Add(bagGrid);

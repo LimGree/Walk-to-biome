@@ -20,11 +20,11 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 3b232f52a0fc6bb43af02265e5c10f5d, type: 3}
   requiredItems:
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314201, type: 2}
-    amount: 50
+    amount: 125
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314203, type: 2}
-    amount: 50
+    amount: 125
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314204, type: 2}
-    amount: 50
+    amount: 125
   requiredResearches:
   - {fileID: 11400000, guid: 0415263748596a7b8c9d0e1f20314253, type: 2}
   unlockedBuildings: []

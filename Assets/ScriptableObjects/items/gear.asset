@@ -20,4 +20,4 @@ MonoBehaviour:
   maxStack: 100
   isFuel: 0
   fuelValue: 0
-  sellValue: 4
+  sellValue: 6

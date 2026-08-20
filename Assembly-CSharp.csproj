@@ -93,6 +93,7 @@
     <Compile Include="Assets\Script\Core\UI\InputHintUI.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Assembler.cs" />
     <Compile Include="Assets\Script\Core\UI\GameHudIcons.cs" />
+    <Compile Include="Assets\Script\Core\Systems\BuildIoArrowVisualizer.cs" />
     <Compile Include="Assets\Script\Core\Logistics\Conveyor.cs" />
     <Compile Include="Assets\Script\Core\Player\BuildSelectionController.cs" />
     <Compile Include="Assets\Script\Core\Buildings\BuildingSocket.cs" />

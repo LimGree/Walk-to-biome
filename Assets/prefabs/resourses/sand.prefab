@@ -121,6 +121,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64528dd1bb6fce34db0c12a2c78229d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resource: {fileID: 11400000, guid: e7230629525cd7949b7de909c563bd03, type: 2}
+  resource: {fileID: 11400000, guid: 9bb6b85117cb79e4f94d5ff91ad70187, type: 2}
   infinite: 1
   remainingAmount: 9999
