@@ -212,27 +212,26 @@ public class WorldMapUI : MonoBehaviour
         fullRoot.Add(IndustryUi.El("Dim", "dim"));
         var chrome = IndustryUi.El("Chrome", "panel", "map-chrome");
         var head = IndustryUi.El("Head", "header");
-        head.Add(IndustryUi.Text("Title", "Карта мира", "title"));
+        head.Add(IndustryUi.Text("Title", UiLocale.T("overlay.map"), "title"));
         coordLabel = IndustryUi.Text("Coords", "", "muted");
         head.Add(coordLabel);
         head.Add(IndustryUi.Btn("✕", () => SetOpen(false), "close"));
         chrome.Add(head);
 
         var legend = IndustryUi.El("Legend", "map-legend");
-        AddSwatch(legend, new Color(0.13f, 0.30f, 0.16f), "лес");
-        AddSwatch(legend, new Color(0.58f, 0.74f, 0.34f), "поле");
-        AddSwatch(legend, new Color(0.28f, 0.28f, 0.30f), "гора");
-        AddSwatch(legend, new Color(0.11f, 0.32f, 0.52f), "вода");
-        AddSwatch(legend, new Color(0.72f, 0.24f, 0.18f), "жилы");
-        AddSwatch(legend, BuildingColor, "здания");
-        AddSwatch(legend, BeltColor, "ленты");
+        AddSwatch(legend, new Color(0.13f, 0.30f, 0.16f), UiLocale.T("map.forest"));
+        AddSwatch(legend, new Color(0.58f, 0.74f, 0.34f), UiLocale.T("map.field"));
+        AddSwatch(legend, new Color(0.28f, 0.28f, 0.30f), UiLocale.T("map.mountain"));
+        AddSwatch(legend, new Color(0.11f, 0.32f, 0.52f), UiLocale.T("map.water"));
+        AddSwatch(legend, new Color(0.72f, 0.24f, 0.18f), UiLocale.T("map.veins"));
+        AddSwatch(legend, BuildingColor, UiLocale.T("map.buildings"));
+        AddSwatch(legend, BeltColor, UiLocale.T("map.belts"));
         chrome.Add(legend);
 
         var wrap = IndustryUi.El("FullWrap", "map-frame", "map-full-wrap");
         fullImage = MakeMapImage("FullImage");
         fullImage.AddToClassList("map-full");
-        fullImage.style.width = 820;
-        fullImage.style.height = 820;
+        fullImage.style.flexGrow = 1;
         fullMarker = IndustryUi.El("FullMark", "player-mark");
         fullMarker.pickingMode = PickingMode.Ignore;
         fullImage.Add(fullMarker);
@@ -244,8 +243,7 @@ public class WorldMapUI : MonoBehaviour
         zoomLabel = IndustryUi.Text("Zoom", "100%", "muted");
         tools.Add(zoomLabel);
         tools.Add(IndustryUi.Btn("+", () => ZoomAtCenter(0.82f), "btn-small"));
-        tools.Add(IndustryUi.Btn("На игроке", () => CenterOnPlayer(0.22f), "btn-small", "btn-primary"));
-        tools.Add(IndustryUi.Text("Help", "колесо — масштаб   ·   ЛКМ — двигать   ·   Esc — закрыть", "muted"));
+        tools.Add(IndustryUi.Btn(UiLocale.T("map.center"), () => CenterOnPlayer(0.22f), "btn-small", "btn-primary"));
         chrome.Add(tools);
 
         fullRoot.Add(chrome);

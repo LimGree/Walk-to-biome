@@ -117,6 +117,8 @@ public class InventoryUI : MonoBehaviour
         IsBagOpen = open;
         if (open)
             RefreshBag();
+        else
+            PlayerPrefs.SetInt("UiBagHintSeen", 1);
         IndustryUi.Show(bag, open);
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();
@@ -145,15 +147,17 @@ public class InventoryUI : MonoBehaviour
         }
 
         emptySlot = MakeSlot(-1, "0", true);
-        emptySlot.Add(IndustryUi.Text("EmptyLabel", "выбор", "muted"));
+        emptySlot.AddToClassList("is-empty");
+        UiTooltip.Bind(emptySlot, "Пустой инструмент", "Снять выбор здания");
         bar.Add(emptySlot);
         hotbarRoot.Add(bar);
         root.Add(hotbarRoot);
 
         bag = IndustryUi.El("Bag", "bag");
         var panel = IndustryUi.El("BagPanel", "panel", "bag-panel");
-        panel.Add(IndustryUi.Text("T", "ИНВЕНТАРЬ ЗДАНИЙ", "bag-title"));
-        panel.Add(IndustryUi.Text("H", "ЛКМ — в свободный слот   ·   перетащи в хотбар   ·   ПКМ — убрать", "bag-hint"));
+        panel.Add(IndustryUi.Text("T", UiLocale.T("overlay.inventory"), "bag-title"));
+        if (PlayerPrefs.GetInt("UiBagHintSeen", 0) == 0)
+            panel.Add(IndustryUi.Text("H", UiLocale.T("bag.hint"), "bag-hint"));
         var scroll = IndustryUi.Scroll("BagScroll");
         bagGrid = IndustryUi.El("Grid", "bag-grid");
         scroll.Add(bagGrid);
@@ -228,9 +232,13 @@ public class InventoryUI : MonoBehaviour
     void UpdateSelection(int selectedIndex)
     {
         for (int i = 0; i < slots.Count; i++)
+        {
             IndustryUi.SetOn(slots[i], i == selectedIndex, "slot-on");
+            IndustryUi.SetOn(slots[i], i == selectedIndex, "is-selected");
+        }
         bool emptyOn = inventory != null && inventory.IsEmptyToolSelected;
         IndustryUi.SetOn(emptySlot, emptyOn, "slot-on");
+        IndustryUi.SetOn(emptySlot, emptyOn, "is-selected");
     }
 
     void RefreshBag()
@@ -244,8 +252,8 @@ public class InventoryUI : MonoBehaviour
             BuildingData building = unlocked[i];
             int slot = inventory.IndexOf(building);
             bool onBar = slot >= 0;
-            string subtitle = onBar ? "хотбар  " + (slot + 1) : "в свободный слот";
-            VisualElement card = IndustryUi.BuildingCard(building, true, subtitle, onBar, null);
+            string subtitle = onBar ? "слот " + (slot + 1) : "";
+            VisualElement card = IndustryUi.BuildingCard(building, true, subtitle, onBar, null, compact: true);
             BuildingData captured = building;
             card.RegisterCallback<PointerDownEvent>(evt => OnBagDown(evt, captured));
             card.RegisterCallback<PointerMoveEvent>(OnPointerMove);
@@ -318,8 +326,11 @@ public class InventoryUI : MonoBehaviour
 
         if (dragging && ghost != null)
         {
-            ghost.style.left = pos.x - 32f;
-            ghost.style.top = pos.y - 32f;
+            ghost.style.left = pos.x - 24f;
+            ghost.style.top = pos.y - 24f;
+            int dest = HitHotbar(pos);
+            for (int i = 0; i < slots.Count; i++)
+                IndustryUi.SetOn(slots[i], i == dest, "is-drop-ok");
         }
     }
 
@@ -335,6 +346,8 @@ public class InventoryUI : MonoBehaviour
         else if (evt.target is VisualElement target && target.HasPointerCapture(evt.pointerId))
             target.ReleasePointer(evt.pointerId);
         IndustryUi.Show(ghost, false);
+        for (int i = 0; i < slots.Count; i++)
+            IndustryUi.SetOn(slots[i], false, "is-drop-ok");
 
         if (dragging && dragBuilding != null && inventory != null)
         {

@@ -84,7 +84,7 @@ public class SelectionActionsUI : MonoBehaviour
     void Build()
     {
         VisualElement root = IndustryUi.Mount(this, 85);
-        overlay = IndustryUi.OverlayPanel("Выделенные здания", null, () => SetOpen(false));
+        overlay = IndustryUi.OverlayPanel(UiLocale.T("overlay.selected"), null, () => SetOpen(false));
         VisualElement panel = IndustryUi.PanelOf(overlay);
         summary = IndustryUi.Text("Summary", "", "muted");
         panel.Add(summary);
@@ -96,9 +96,9 @@ public class SelectionActionsUI : MonoBehaviour
 
         recipeView = IndustryUi.El("Recipes", "col", "grow");
         var recHead = IndustryUi.El("RH", "row");
-        recipeTitle = IndustryUi.Text("RT", "Рецепт", "title", "grow");
+        recipeTitle = IndustryUi.Text("RT", UiLocale.T("select.recipe_title"), "title", "grow");
         recHead.Add(recipeTitle);
-        recHead.Add(IndustryUi.Btn("Назад", ShowMain, "btn-small"));
+        recHead.Add(IndustryUi.Btn(UiLocale.T("menu.back"), ShowMain, "btn-small"));
         recipeView.Add(recHead);
         recipeList = new ScrollView();
         recipeView.Add(recipeList);
@@ -161,8 +161,8 @@ public class SelectionActionsUI : MonoBehaviour
 
         order.Sort();
         summary.text = buildings.Count == 0
-            ? "Ничего не выделено. Выдели здания в режиме редактирования и нажми O."
-            : "Выделено " + buildings.Count + "   ·   групп " + groups.Count;
+            ? UiLocale.T("select.empty")
+            : UiLocale.T("select.count", buildings.Count, groups.Count);
 
         for (int i = 0; i < order.Count; i++)
             AddGroupCard(groups[order[i]]);
@@ -200,31 +200,38 @@ public class SelectionActionsUI : MonoBehaviour
         else if (node != null)
             icon = node.icon;
 
-        string title = (data != null ? data.displayName : "Здание") + "  ·  ур. " + level + "  ×" + bucket.Count;
-        string detail = recipe != null ? recipe.displayName : crafter != null ? "Рецепт не выбран" : node != null ? "Нода: " + node.displayName : "Уровень " + level;
+        string title = (data != null ? data.displayName : "Здание").ToUpperInvariant() + "  ×" + bucket.Count;
+        string detail = "ур. " + level + (recipe != null ? "  ·  " + recipe.displayName : crafter != null ? "  ·  рецепт не выбран" : node != null ? "  ·  " + node.displayName : "");
 
         var card = IndustryUi.El("G", "card");
-        card.Add(IndustryUi.Icon(icon, "card-icon"));
+        card.Add(IndustryUi.Icon(icon, "icon-48"));
         var col = IndustryUi.El("C", "col", "grow");
-        col.Add(IndustryUi.Text("T", title, "body-text"));
-        col.Add(IndustryUi.Text("D", detail, "muted"));
+        col.Add(IndustryUi.Text("T", title, "heading-3"));
+        col.Add(IndustryUi.Text("D", detail, "caption"));
         var actions = IndustryUi.El("A", "row");
-        bool canUpgrade = bucket[0].CanUpgradeBuilding;
+        int upgradeable = 0;
         int cost = 0;
-        if (canUpgrade)
+        for (int i = 0; i < bucket.Count; i++)
         {
-            for (int i = 0; i < bucket.Count; i++)
+            if (bucket[i] != null && bucket[i].CanUpgradeBuilding)
+            {
+                upgradeable++;
                 cost += Economy.UpgradeCost(bucket[i]);
+            }
         }
 
-        bool canPay = canUpgrade && (PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost));
-        actions.Add(IndustryUi.Btn(canPay ? "Прокачать  " + cost : "Ур. " + level, () =>
+        bool canPay = upgradeable > 0 && (PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost));
+        string upLabel = upgradeable > 0
+            ? UiLocale.T("select.upgrade", upgradeable, IndustryUi.Money(cost))
+            : UiLocale.T("select.max");
+        actions.Add(IndustryUi.Btn(upLabel, () =>
         {
             if (canPay)
                 UpgradeGroup(bucket);
         }, "btn-small", canPay ? "btn-primary" : "btn-ghost"));
         if (crafter != null)
-            actions.Add(IndustryUi.Btn("Сменить рецепт", () => OpenRecipes(bucket), "btn-small"));
+            actions.Add(IndustryUi.Btn(UiLocale.T("select.recipe"), () => OpenRecipes(bucket), "btn-small"));
+        col.Add(IndustryUi.Text("Hint", UiLocale.T("select.dismantle"), "caption"));
         col.Add(actions);
         card.Add(col);
         list.Add(card);
@@ -274,7 +281,7 @@ public class SelectionActionsUI : MonoBehaviour
             col.Add(IndustryUi.Text("N", recipe.displayName, "body-text"));
             col.Add(IndustryUi.Text("I", RecipeLine(recipe), "muted"));
             card.Add(col);
-            card.Add(IndustryUi.Btn("Выбрать", () => ApplyRecipe(captured), "btn-small", "btn-primary"));
+            card.Add(IndustryUi.Btn(UiLocale.T("select.choose"), () => ApplyRecipe(captured), "btn-small", "btn-primary"));
             recipeList.Add(card);
         }
     }

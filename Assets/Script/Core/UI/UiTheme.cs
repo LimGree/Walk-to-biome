@@ -4,25 +4,25 @@ using UnityEngine.UI;
 
 public static class UiTheme
 {
-    public static readonly Color Primary = Rgb(170, 255, 195);
-    public static readonly Color Secondary = Rgb(152, 255, 152);
-    public static readonly Color Accent = Rgb(127, 255, 212);
-    public static readonly Color Highlight = Rgb(102, 205, 170);
-    public static readonly Color Muted = Rgb(60, 179, 113);
+    public static readonly Color Primary = Rgb(228, 232, 234);
+    public static readonly Color Secondary = Rgb(168, 178, 184);
+    public static readonly Color Accent = Rgb(214, 148, 62);
+    public static readonly Color Highlight = Rgb(232, 168, 78);
+    public static readonly Color Muted = Rgb(118, 130, 138);
 
-    public static readonly Color Overlay = new Color(0.05f, 0.11f, 0.08f, 0.48f);
-    public static readonly Color Panel = new Color(0.09f, 0.18f, 0.13f, 0.96f);
-    public static readonly Color PanelEdge = Muted;
-    public static readonly Color Card = new Color(0.13f, 0.27f, 0.19f, 1f);
-    public static readonly Color CardAlt = new Color(0.16f, 0.33f, 0.23f, 1f);
-    public static readonly Color Chip = new Color(0.08f, 0.20f, 0.14f, 1f);
-    public static readonly Color AccentDim = new Color(Highlight.r, Highlight.g, Highlight.b, 0.32f);
+    public static readonly Color Overlay = new Color(0.04f, 0.05f, 0.07f, 0.78f);
+    public static readonly Color Panel = new Color(0.07f, 0.09f, 0.11f, 0.94f);
+    public static readonly Color PanelEdge = Rgb(48, 58, 68);
+    public static readonly Color Card = Rgb(18, 23, 29);
+    public static readonly Color CardAlt = Rgb(24, 30, 38);
+    public static readonly Color Chip = Rgb(14, 18, 23);
+    public static readonly Color AccentDim = new Color(Accent.r, Accent.g, Accent.b, 0.16f);
     public static readonly Color Text = Primary;
-    public static readonly Color TextDim = Highlight;
-    public static readonly Color Ok = Secondary;
-    public static readonly Color Warn = new Color(0.95f, 0.78f, 0.38f, 1f);
-    public static readonly Color Locked = new Color(0.18f, 0.28f, 0.21f, 1f);
-    public static readonly Color Danger = new Color(0.78f, 0.28f, 0.30f, 0.92f);
+    public static readonly Color TextDim = Secondary;
+    public static readonly Color Ok = Rgb(92, 176, 118);
+    public static readonly Color Warn = Rgb(214, 164, 64);
+    public static readonly Color Locked = Rgb(82, 92, 98);
+    public static readonly Color Danger = Rgb(186, 72, 68);
 
     static Sprite roundSprite;
 

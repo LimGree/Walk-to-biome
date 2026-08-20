@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -40,6 +41,13 @@ public class MachineUI : MonoBehaviour
     VisualElement armGrid;
     VisualElement armScroll;
     Label armSummary;
+    Button upgradeBtn;
+    VisualElement recipeSearchHost;
+    TextField recipeSearch;
+    VisualElement filterSearchHost;
+    TextField filterSearch;
+    string upgradeTipTitle = "";
+    string upgradeTipBody = "";
     readonly List<VisualElement> storageSlots = new List<VisualElement>();
 
     BuildingBase currentBuilding;
@@ -92,8 +100,24 @@ public class MachineUI : MonoBehaviour
         VisualElement root = IndustryUi.Mount(this, 110);
         overlay = IndustryUi.OverlayPanel("Building", null, Close);
         VisualElement panel = IndustryUi.PanelOf(overlay);
-        statusLabel = IndustryUi.Text("Status", "", "muted");
-        panel.Add(statusLabel);
+        VisualElement header = overlay.Q("Header");
+        Button close = overlay.Q<Button>("Close");
+        upgradeBtn = IndustryUi.Btn(UiLocale.T("machine.upgrade"), OnUpgradeClicked, "btn-small", "btn-primary", "upgrade-btn");
+        if (header != null)
+        {
+            if (close != null)
+                header.Insert(header.IndexOf(close), upgradeBtn);
+            else
+                header.Add(upgradeBtn);
+        }
+        IndustryUi.Show(upgradeBtn, false);
+        upgradeBtn.RegisterCallback<PointerEnterEvent>(OnUpgradeHover);
+        upgradeBtn.RegisterCallback<PointerLeaveEvent>(_ => UiTooltip.Hide());
+        var statusRow = IndustryUi.El("StatusRow", "status-row");
+        statusRow.Add(IndustryUi.El("Dot", "status-dot"));
+        statusLabel = IndustryUi.Text("Status", "", "body-small", "grow");
+        statusRow.Add(statusLabel);
+        panel.Add(statusRow);
         progress = IndustryUi.ProgressBar("Progress");
         panel.Add(progress);
 
@@ -107,6 +131,20 @@ public class MachineUI : MonoBehaviour
         panel.Add(tabRow);
 
         bodyHost = IndustryUi.El("Body", "col", "grow");
+        recipeSearchHost = IndustryUi.El("RecipeSearchHost", "search-host");
+        recipeSearchHost.Add(IndustryUi.Text("RL", UiLocale.T("machine.search_recipe"), "label-caps"));
+        recipeSearch = new TextField { name = "RecipeSearch" };
+        recipeSearch.AddToClassList("field");
+        recipeSearch.AddToClassList("search-field");
+        recipeSearch.RegisterValueChangedCallback(_ =>
+        {
+            if (currentBuilding is CrafterBuilding crafter)
+                RefreshRecipeList(crafter);
+        });
+        recipeSearchHost.Add(recipeSearch);
+        recipeSearchHost.pickingMode = PickingMode.Position;
+        bodyHost.Add(recipeSearchHost);
+
         bodyList = IndustryUi.Scroll("BodyList");
         bodyHost.Add(bodyList);
 
@@ -127,6 +165,18 @@ public class MachineUI : MonoBehaviour
         storageGrid = IndustryUi.El("StorageGrid", "grid");
         storageScroll.Add(storageGrid);
         armSummary = IndustryUi.Text("ArmSum", "", "body-text");
+        filterSearchHost = IndustryUi.El("FilterSearchHost", "search-host");
+        filterSearchHost.Add(IndustryUi.Text("FL", UiLocale.T("machine.search_filter"), "label-caps"));
+        filterSearch = new TextField { name = "FilterSearch" };
+        filterSearch.AddToClassList("field");
+        filterSearch.AddToClassList("search-field");
+        filterSearch.RegisterValueChangedCallback(_ =>
+        {
+            if (currentBuilding is RoboticArm arm)
+                RefreshArmFilter(arm);
+        });
+        filterSearchHost.Add(filterSearch);
+        filterSearchHost.pickingMode = PickingMode.Position;
         armScroll = IndustryUi.Scroll("ArmScroll");
         armGrid = IndustryUi.El("ArmGrid", "col");
         armScroll.Add(armGrid);
@@ -137,6 +187,7 @@ public class MachineUI : MonoBehaviour
         bodyHost.Add(storageSummary);
         bodyHost.Add(storageScroll);
         bodyHost.Add(armSummary);
+        bodyHost.Add(filterSearchHost);
         bodyHost.Add(armScroll);
         panel.Add(bodyHost);
 
@@ -209,6 +260,7 @@ public class MachineUI : MonoBehaviour
             IndustryUi.Show(bodyList, true);
         }
 
+        BindUpgrade(building);
         IndustryUi.Show(overlay, true);
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();
@@ -224,6 +276,7 @@ public class MachineUI : MonoBehaviour
     {
         IsOpen = false;
         currentBuilding = null;
+        IndustryUi.Show(upgradeBtn, false);
         IndustryUi.Show(overlay, false);
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();
@@ -239,6 +292,15 @@ public class MachineUI : MonoBehaviour
     {
         Sprite icon = building != null && building.data != null ? building.data.icon : null;
         IndustryUi.SetHeader(overlay, title, icon);
+    }
+
+    void SetStatus(string text, UiStatus status)
+    {
+        if (statusLabel != null)
+            statusLabel.text = text ?? "";
+        VisualElement row = statusLabel != null ? statusLabel.parent : null;
+        if (row != null)
+            UiStatusUtil.Apply(row, status);
     }
 
     static void SetPlayerControl(bool enabled)
@@ -261,9 +323,16 @@ public class MachineUI : MonoBehaviour
         IndustryUi.Show(storageScroll, false);
         IndustryUi.Show(armSummary, false);
         IndustryUi.Show(armScroll, false);
+        IndustryUi.Show(recipeSearchHost, false);
+        IndustryUi.Show(filterSearchHost, false);
         IndustryUi.Show(progress, false);
         if (statusLabel != null)
+        {
             statusLabel.text = "";
+            VisualElement row = statusLabel.parent;
+            if (row != null)
+                UiStatusUtil.Apply(row, UiStatus.Neutral);
+        }
     }
 
     void ShowOilExtractorUI(OilExtractor oil)
@@ -309,36 +378,15 @@ public class MachineUI : MonoBehaviour
             ? "Mining  " + extractor.resource.displayName
             : "No resource node";
         bodyList.Add(IndustryUi.RecipeCard(title, null, outputs, true, null));
-
-        string stats = $"{extractor.CurrentInterval:0.##} с / цикл  ·  {extractor.CurrentItemsPerCycle} шт";
-        if (extractor.CanUpgrade)
-        {
-            string next = $"{extractor.upgradedExtractInterval:0.##} с / цикл  ·  {Mathf.Max(1, extractor.upgradedItemsPerCycle)} шт";
-            int cost = Economy.UpgradeCost(extractor);
-            bool canPay = PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost);
-            bodyList.Add(IndustryUi.ActionCard(
-                "Прокачать  →  ур. 2  ·  " + cost + " монет",
-                "Сейчас: " + stats + "   |   После: " + next,
-                canPay,
-                () =>
-                {
-                    if (TryPaidUpgrade(extractor))
-                    {
-                        SetHeader("Extractor  ·  ур. " + extractor.level, extractor);
-                        ShowExtractorUI(extractor);
-                    }
-                }));
-        }
-        else
-        {
-            bodyList.Add(IndustryUi.ActionCard("Улучшено до ур. 2", stats, false, null));
-        }
     }
 
     void ShowCrafterUI(CrafterBuilding crafter)
     {
+        IndustryUi.Show(recipeSearchHost, true);
         IndustryUi.Show(bodyList, true);
         IndustryUi.Show(progress, true);
+        if (recipeSearch != null)
+            recipeSearch.value = "";
         RefreshRecipeList(crafter);
     }
 
@@ -353,6 +401,7 @@ public class MachineUI : MonoBehaviour
         RecipeData[] catalog = GameDatabase.AllRecipes();
         BuildingData thisBuildingData = crafter.data;
         RecipeData selected = crafter.currentRecipe;
+        string query = recipeSearch != null ? recipeSearch.value : "";
 
         if (catalog != null)
         {
@@ -364,6 +413,8 @@ public class MachineUI : MonoBehaviour
                 if (!recipe.AllowsBuilding(thisBuildingData))
                     continue;
                 if (ResearchSystem.Instance != null && !ResearchSystem.Instance.IsRecipeUnlocked(recipe))
+                    continue;
+                if (!MatchesRecipe(recipe, query))
                     continue;
 
                 RecipeData captured = recipe;
@@ -378,39 +429,9 @@ public class MachineUI : MonoBehaviour
             }
         }
 
-        if (statusLabel != null)
-            statusLabel.text = selected != null ? "Selected: " + selected.displayName : "Select a recipe";
-        AddCrafterUpgradeButton(crafter);
-    }
-
-    void AddCrafterUpgradeButton(CrafterBuilding crafter)
-    {
-        if (bodyList == null || crafter == null)
-            return;
-
-        string speed = "×" + crafter.CraftSpeed.ToString("0.##");
-        if (crafter.CanUpgradeBuilding)
-        {
-            int cost = Economy.UpgradeCost(crafter);
-            bool canPay = PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost);
-            bodyList.Add(IndustryUi.ActionCard(
-                "Прокачать  →  ур. 2  ·  " + cost + " монет",
-                "Скорость крафта " + speed + "  →  ×2",
-                canPay,
-                () =>
-                {
-                    if (TryPaidUpgrade(crafter))
-                    {
-                        string title = crafter.data != null ? crafter.data.displayName : crafter.GetType().Name;
-                        SetHeader(title + "  ·  ур. " + crafter.ReadLevel(), crafter);
-                        RefreshRecipeList(crafter);
-                    }
-                }));
-        }
-        else if (crafter.ReadLevel() >= 2)
-        {
-            bodyList.Add(IndustryUi.ActionCard("Улучшено до ур. 2", "Скорость крафта " + speed, false, null));
-        }
+        SetStatus(
+            selected != null ? selected.displayName : "Select a recipe",
+            selected != null ? UiStatus.Running : UiStatus.Ready);
     }
 
     static bool TryPaidUpgrade(BuildingBase building)
@@ -425,6 +446,86 @@ public class MachineUI : MonoBehaviour
         if (PlayerWallet.Instance != null)
             PlayerWallet.Instance.AddCoins(cost);
         return false;
+    }
+
+    void BindUpgrade(BuildingBase building)
+    {
+        bool can = building != null && building.CanUpgradeBuilding;
+        IndustryUi.Show(upgradeBtn, can);
+        if (!can || upgradeBtn == null)
+            return;
+
+        int cost = Economy.UpgradeCost(building);
+        string money = IndustryUi.Money(cost);
+        bool canPay = PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost);
+        IndustryUi.SetButtonLabel(upgradeBtn, UiLocale.T("machine.upgrade"));
+        upgradeTipTitle = UiLocale.T("machine.upgrade_cost", money);
+        if (building is Extractor extractor)
+        {
+            string now = extractor.CurrentInterval.ToString("0.##") + " с / " + extractor.CurrentItemsPerCycle;
+            string next = extractor.upgradedExtractInterval.ToString("0.##") + " с / "
+                + Mathf.Max(1, extractor.upgradedItemsPerCycle);
+            upgradeTipBody = UiLocale.T("machine.upgrade_ext", now, next);
+        }
+        else if (building is CrafterBuilding crafter)
+        {
+            upgradeTipBody = UiLocale.T("machine.upgrade_craft", "×" + crafter.CraftSpeed.ToString("0.##"));
+        }
+        else
+            upgradeTipBody = "";
+
+        if (!canPay)
+            upgradeTipBody = string.IsNullOrEmpty(upgradeTipBody)
+                ? UiLocale.T("machine.upgrade_need")
+                : upgradeTipBody + "  ·  " + UiLocale.T("machine.upgrade_need");
+    }
+
+    void OnUpgradeClicked()
+    {
+        if (currentBuilding == null || !currentBuilding.CanUpgradeBuilding)
+            return;
+        if (!TryPaidUpgrade(currentBuilding))
+            return;
+        Open(currentBuilding);
+    }
+
+    void OnUpgradeHover(PointerEnterEvent evt)
+    {
+        if (upgradeBtn == null || upgradeBtn.style.display == DisplayStyle.None)
+            return;
+        UiTooltip.Show(upgradeBtn, upgradeTipTitle, upgradeTipBody, (Vector2)evt.position);
+    }
+
+    static bool MatchesRecipe(RecipeData recipe, string query)
+    {
+        if (string.IsNullOrEmpty(query))
+            return true;
+        if (MatchesQuery(recipe.displayName, query) || MatchesQuery(recipe.id, query))
+            return true;
+        if (MatchesStacks(recipe.inputs, query) || MatchesStacks(recipe.outputs, query))
+            return true;
+        return false;
+    }
+
+    static bool MatchesStacks(IList<ItemStack> stacks, string query)
+    {
+        if (stacks == null)
+            return false;
+        for (int i = 0; i < stacks.Count; i++)
+        {
+            ItemData item = stacks[i] != null ? stacks[i].item : null;
+            if (item != null && (MatchesQuery(item.displayName, query) || MatchesQuery(item.id, query)))
+                return true;
+        }
+        return false;
+    }
+
+    static bool MatchesQuery(string value, string query)
+    {
+        if (string.IsNullOrEmpty(query))
+            return true;
+        return !string.IsNullOrEmpty(value)
+            && value.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     void ShowStorageUI(StorageContainer storage)
@@ -464,7 +565,10 @@ public class MachineUI : MonoBehaviour
     void ShowRoboticArmUI(RoboticArm arm)
     {
         IndustryUi.Show(armSummary, true);
+        IndustryUi.Show(filterSearchHost, true);
         IndustryUi.Show(armScroll, true);
+        if (filterSearch != null)
+            filterSearch.value = "";
         RefreshArmFilter(arm);
     }
 
@@ -474,16 +578,20 @@ public class MachineUI : MonoBehaviour
             return;
 
         armGrid.Clear();
-        armGrid.Add(IndustryUi.FilterCard(
-            null,
-            "Любые предметы",
-            arm.filter == null ? "выбрано" : "без фильтра",
-            arm.filter == null,
-            () =>
-            {
-                arm.SetFilter(null);
-                RefreshArmFilter(arm);
-            }));
+        string query = filterSearch != null ? filterSearch.value : "";
+        if (MatchesQuery(UiLocale.T("machine.filter_any"), query))
+        {
+            armGrid.Add(IndustryUi.FilterCard(
+                null,
+                UiLocale.T("machine.filter_any"),
+                arm.filter == null ? UiLocale.T("machine.filter_on") : UiLocale.T("machine.filter_off"),
+                arm.filter == null,
+                () =>
+                {
+                    arm.SetFilter(null);
+                    RefreshArmFilter(arm);
+                }));
+        }
 
         var seen = new HashSet<string>();
         ItemData[] items = GameDatabase.AllItems();
@@ -494,12 +602,14 @@ public class MachineUI : MonoBehaviour
                 ItemData item = items[i];
                 if (item == null || string.IsNullOrEmpty(item.id) || !seen.Add(item.id))
                     continue;
+                if (!MatchesQuery(item.displayName, query) && !MatchesQuery(item.id, query))
+                    continue;
                 ItemData captured = item;
                 bool selected = arm.filter == item;
                 armGrid.Add(IndustryUi.FilterCard(
                     item.icon,
                     item.displayName,
-                    selected ? "фильтр" : "брать только это",
+                    selected ? UiLocale.T("machine.filter_set") : UiLocale.T("machine.filter_only"),
                     selected,
                     () =>
                     {
@@ -744,13 +854,13 @@ public class MachineUI : MonoBehaviour
                 ? ResearchSystem.Instance.GetCurrentProgress01()
                 : 0f;
             IndustryUi.SetProgress(progress, t);
-            if (statusLabel != null)
-            {
-                string name = ResearchSystem.Instance != null && ResearchSystem.Instance.CurrentResearch != null
-                    ? ResearchSystem.Instance.CurrentResearch.displayName
-                    : "None";
-                statusLabel.text = $"{name}: {(t * 100f):0}%";
-            }
+            string name = ResearchSystem.Instance != null && ResearchSystem.Instance.CurrentResearch != null
+                ? ResearchSystem.Instance.CurrentResearch.displayName
+                : "None";
+            SetStatus(name + "  " + (t * 100f).ToString("0") + "%",
+                ResearchSystem.Instance != null && ResearchSystem.Instance.CurrentResearch != null
+                    ? UiStatus.Running
+                    : UiStatus.Ready);
 
             if (labTab == 2 && Time.unscaledTime >= nextStatsRefresh)
                 RebuildStatsList();

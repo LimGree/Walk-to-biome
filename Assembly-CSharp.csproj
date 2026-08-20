@@ -87,6 +87,8 @@
     <Compile Include="Assets\Script\Core\Systems\GridOccupancy.cs" />
     <Compile Include="Assets\Script\Core\Buildings\CrafterBuilding.cs" />
     <Compile Include="Assets\Script\Core\Systems\PlayerWallet.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiMotion.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiLocale.cs" />
     <Compile Include="Assets\Script\Core\Buildings\ChemicalPlant.cs" />
     <Compile Include="Assets\Script\Core\UI\MachineUI.cs" />
     <Compile Include="Assets\Script\Core\Buildings\ResourceNode.cs" />
@@ -96,10 +98,12 @@
     <Compile Include="Assets\Script\Core\Systems\BuildIoArrowVisualizer.cs" />
     <Compile Include="Assets\Script\Core\Logistics\Conveyor.cs" />
     <Compile Include="Assets\Script\Core\Player\BuildSelectionController.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiNotification.cs" />
     <Compile Include="Assets\Script\Core\Buildings\BuildingSocket.cs" />
     <Compile Include="Assets\Script\Core\Data\BuildingData.cs" />
     <Compile Include="Assets\Script\Core\Player\PlayerBuilder.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Smelter.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiRuntime.cs" />
     <Compile Include="Assets\Script\Core\Systems\ResearchSystem.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Constructor.cs" />
     <Compile Include="Assets\Script\Core\Buildings\splitter.cs" />
@@ -111,10 +115,13 @@
     <Compile Include="Assets\Script\Core\Buildings\RoboticArm.cs" />
     <Compile Include="Assets\Script\Core\Buildings\StorageContainer.cs" />
     <Compile Include="Assets\Script\Core\UI\IndustryUi.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiStatus.cs" />
     <Compile Include="Assets\Script\Core\Systems\GameDatabase.cs" />
     <Compile Include="Assets\Script\Core\UI\BuildMenuUI.cs" />
     <Compile Include="Assets\Script\Core\Data\ItemData.cs" />
     <Compile Include="Assets\Script\Core\UI\GameBranding.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiTooltip.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiAudio.cs" />
     <Compile Include="Assets\Script\Core\UI\IndustryPause.cs" />
     <Compile Include="Assets\Script\Core\Logistics\Pipe.cs" />
     <Compile Include="Assets\Script\Core\Logistics\BuildingLinker.cs" />
@@ -124,6 +131,7 @@
     <Compile Include="Assets\Script\Core\UI\ResearchUI.cs" />
     <Compile Include="Assets\Script\Core\UI\InventoryUI.cs" />
     <Compile Include="Assets\Script\Core\Buildings\BuildingBase.cs" />
+    <Compile Include="Assets\Script\Core\UI\UiModal.cs" />
     <Compile Include="Assets\Script\Core\Systems\GridFootprint.cs" />
     <Compile Include="Assets\Script\Core\Systems\WorldCatalog.cs" />
     <Compile Include="Assets\Script\Core\Buildings\Refinery.cs" />
@@ -141,6 +149,7 @@
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
     <None Include="Assets\UI Toolkit\Research.uxml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile-2-Pass.shader" />
+    <None Include="Assets\Resources\UI\IndustryTokens.uss" />
     <None Include="Assets\UI Toolkit\Selection.uxml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
     <None Include="Assets\UI Toolkit\Pause.uxml" />
@@ -149,6 +158,7 @@
     <None Include="Assets\UI Toolkit\Overlay.uxml" />
     <None Include="Assets\Resources\UI\Wallet.uxml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF SSD.shader" />
+    <None Include="Assets\UI Toolkit\IndustryTokens.uss" />
     <None Include="Assets\UI Toolkit\Machine.uxml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface-Mobile.shader" />
     <None Include="Assets\UI Toolkit\Inventory.uxml" />

@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 
 public class IndustryPause
 {
+    MonoBehaviour host;
     VisualElement root;
     VisualElement home;
     VisualElement settings;
@@ -10,11 +11,18 @@ public class IndustryPause
     Label zoomLabel;
     Label sizeLabel;
     Button hintsBtn;
+    bool listening;
 
     public bool Visible => root != null && root.style.display == DisplayStyle.Flex;
 
-    public void Build(MonoBehaviour host)
+    public void Build(MonoBehaviour owner)
     {
+        host = owner;
+        if (!listening)
+        {
+            UiLocale.Changed += Relocalize;
+            listening = true;
+        }
         if (root != null)
             return;
         VisualElement mount = IndustryUi.Mount(host, 500);
@@ -23,19 +31,34 @@ public class IndustryPause
         mount.Add(root);
 
         home = IndustryUi.El("Home", "panel", "panel-menu");
-        home.Add(IndustryUi.Text("T", "ПАУЗА", "title-hero"));
-        home.Add(IndustryUi.Btn("Продолжить", () => GameManager.Instance.SetPaused(false), "btn-primary"));
-        home.Add(IndustryUi.Btn("Настройки", ShowSettings));
-        home.Add(IndustryUi.Btn("Сохранить", () =>
+        home.Add(IndustryUi.Text("T", UiLocale.T("pause.title"), "title-hero"));
+        home.Add(IndustryUi.Btn(UiLocale.T("pause.resume"), () => GameManager.Instance.SetPaused(false), "btn-primary"));
+        home.Add(IndustryUi.Btn(UiLocale.T("pause.save"), () =>
         {
             if (SaveSystem.Instance != null)
                 SaveSystem.Instance.SaveGame();
+            UiNotification.Push(UiLocale.T("pause.saved"), "", UiStatus.Completed);
         }));
-        home.Add(IndustryUi.Btn("В меню", () => MainMenu.LoadMenu()));
+        home.Add(IndustryUi.El("Div1", "divider"));
+        home.Add(IndustryUi.Btn(UiLocale.T("menu.settings"), ShowSettings));
+        home.Add(IndustryUi.Btn(UiLocale.T("pause.controls"), ShowKeys));
+        home.Add(IndustryUi.El("Div2", "divider"));
+        home.Add(IndustryUi.Btn(UiLocale.T("pause.exit"), () =>
+        {
+            UiModal.Confirm(
+                UiLocale.T("pause.exit_title"),
+                UiLocale.T("pause.exit_body"),
+                UiLocale.T("pause.exit"),
+                () => MainMenu.LoadMenu());
+        }, "btn-danger"));
+        home.Add(IndustryUi.Text("Esc", UiLocale.T("pause.esc"), "esc-hint"));
         root.Add(home);
 
         settings = IndustryUi.El("Settings", "panel", "panel-menu");
-        settings.Add(IndustryUi.Text("T", "НАСТРОЙКИ", "title-hero"));
+        settings.Add(IndustryUi.Text("T", UiLocale.T("settings.title"), "title-hero"));
+        settings.Add(IndustryUi.Text("G0", UiLocale.T("settings.general"), "settings-group"));
+        settings.Add(UiLocale.LanguageRow());
+        settings.Add(IndustryUi.Text("G", UiLocale.T("settings.gameplay"), "settings-group"));
         zoomLabel = IndustryUi.Text("Z", "", "muted");
         settings.Add(zoomLabel);
         var zoom = new Slider(0.06f, 1f);
@@ -61,36 +84,14 @@ public class IndustryPause
         hintsBtn = IndustryUi.Btn("Подсказки управления  ·  вкл", ToggleHints);
         settings.Add(hintsBtn);
         RefreshHintsButton();
-        settings.Add(IndustryUi.Btn("Клавиши", ShowKeys));
-        settings.Add(IndustryUi.Btn("Назад", ShowHome));
+        settings.Add(IndustryUi.Text("G2", UiLocale.T("settings.controls"), "settings-group"));
+        settings.Add(IndustryUi.Btn(UiLocale.T("settings.keybinds"), ShowKeys));
+        settings.Add(IndustryUi.Btn(UiLocale.T("menu.back"), ShowHome, "btn-ghost"));
         root.Add(settings);
 
         keys = IndustryUi.El("Keys", "panel", "panel-menu");
         keys.style.width = 720;
-        keys.Add(IndustryUi.Text("T", "КЛАВИШИ", "title-hero"));
-        var scroll = new ScrollView();
-        scroll.style.maxHeight = 380;
-        keys.Add(scroll);
-        var entries = KeybindStore.BuildEntries();
-        for (int i = 0; i < entries.Count; i++)
-        {
-            var entry = entries[i];
-            var row = IndustryUi.El("R", "card");
-            row.Add(IndustryUi.Text("L", entry.label, "body-text", "grow"));
-            var key = IndustryUi.Btn(KeybindStore.Format(entry), null, "btn-small");
-            key.clicked += () =>
-            {
-                var lab = key.Q<Label>(className: "btn-label");
-                if (lab != null) lab.text = "...";
-                KeybindStore.StartRebind(entry, () =>
-                {
-                    if (lab != null) lab.text = KeybindStore.Format(entry);
-                });
-            };
-            row.Add(key);
-            scroll.Add(row);
-        }
-        keys.Add(IndustryUi.Btn("Назад", ShowSettings));
+        KeybindSettingsUI.Fill(keys, ShowSettings);
         root.Add(keys);
 
         IndustryUi.Show(root, false);
@@ -131,9 +132,9 @@ public class IndustryPause
         if (WorldMapUI.Instance != null)
         {
             if (zoomLabel != null)
-                zoomLabel.text = "Масштаб миникарты  " + Mathf.RoundToInt(WorldMapUI.Instance.MiniZoom * 100f) + "%";
+                zoomLabel.text = UiLocale.T("settings.minimap_zoom", Mathf.RoundToInt(WorldMapUI.Instance.MiniZoom * 100f));
             if (sizeLabel != null)
-                sizeLabel.text = "Размер миникарты  " + Mathf.RoundToInt(WorldMapUI.Instance.MiniSize) + " px";
+                sizeLabel.text = UiLocale.T("settings.minimap_size", Mathf.RoundToInt(WorldMapUI.Instance.MiniSize));
         }
         RefreshHintsButton();
     }
@@ -149,7 +150,30 @@ public class IndustryPause
         if (hintsBtn == null)
             return;
         IndustryUi.SetButtonLabel(hintsBtn, InputHintUI.HintsEnabled
-            ? "Подсказки управления  ·  вкл"
-            : "Подсказки управления  ·  выкл");
+            ? UiLocale.T("settings.hints_on")
+            : UiLocale.T("settings.hints_off"));
+    }
+
+    void Relocalize()
+    {
+        if (host == null)
+            return;
+        bool vis = Visible;
+        bool onSettings = settings != null && settings.resolvedStyle.display == DisplayStyle.Flex;
+        bool onKeys = keys != null && keys.resolvedStyle.display == DisplayStyle.Flex;
+        root = null;
+        home = null;
+        settings = null;
+        keys = null;
+        Build(host);
+        SetVisible(vis);
+        if (!vis)
+            return;
+        if (onKeys)
+            ShowKeys();
+        else if (onSettings)
+            ShowSettings();
+        else
+            ShowHome();
     }
 }

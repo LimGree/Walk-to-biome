@@ -32,11 +32,13 @@ public class InputHintUI : MonoBehaviour
         BindRefs();
         BuildUi();
         KeybindStore.Changed += OnBindsChanged;
+        UiLocale.Changed += OnBindsChanged;
     }
 
     void OnDestroy()
     {
         KeybindStore.Changed -= OnBindsChanged;
+        UiLocale.Changed -= OnBindsChanged;
     }
 
     void OnBindsChanged()
@@ -94,139 +96,139 @@ public class InputHintUI : MonoBehaviour
 
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
         {
-            Add(hints, KeybindStore.Hint("Pause"), "продолжить");
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.resume"));
             return hints;
         }
 
         if (InventoryUI.Instance != null && InventoryUI.Instance.IsBagOpen)
         {
-            Add(hints, KeybindStore.Hint("Inventory"), "закрыть инвентарь");
-            Add(hints, "ЛКМ", "в свободный слот");
-            Add(hints, "перетащи", "в хотбар / обратно");
-            Add(hints, "ПКМ", "убрать из хотбара");
-            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            Add(hints, KeybindStore.Hint("Inventory"), UiLocale.T("hint.close_inv"));
+            Add(hints, UiLocale.T("mouse.lmb"), UiLocale.T("hint.free_slot"));
+            Add(hints, UiLocale.T("hint.drag"), UiLocale.T("hint.drag_bar"));
+            Add(hints, UiLocale.T("mouse.rmb"), UiLocale.T("hint.remove_bar"));
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close"));
             return hints;
         }
 
         if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
         {
-            Add(hints, ShopHint(), "закрыть магазин");
-            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            Add(hints, ShopHint(), UiLocale.T("hint.close_shop"));
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close"));
             return hints;
         }
 
         if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
         {
-            Add(hints, SelectionHint(), "закрыть выделенные");
-            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            Add(hints, SelectionHint(), UiLocale.T("hint.close_sel"));
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close"));
             return hints;
         }
 
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
         {
-            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close"));
             return hints;
         }
 
         if (ResearchUI.Instance != null && ResearchUI.Instance.IsOpen)
         {
-            Add(hints, KeybindStore.Hint("Research"), "закрыть исследования");
-            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            Add(hints, KeybindStore.Hint("Research"), UiLocale.T("hint.close_research"));
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close"));
             return hints;
         }
 
         if (BuildMenuUI.Instance != null && BuildMenuUI.Instance.IsOpen)
         {
-            Add(hints, KeybindStore.Hint("Pause"), "закрыть");
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close"));
             return hints;
         }
 
         if (WorldMapUI.Instance != null && WorldMapUI.Instance.IsOpen)
         {
-            Add(hints, "колесо", "масштаб");
-            Add(hints, "ЛКМ", "двигать карту");
-            Add(hints, KeybindStore.Hint("MoveSelection"), "закрыть карту");
-            Add(hints, KeybindStore.Hint("Pause"), "закрыть карту");
+            Add(hints, UiLocale.T("mouse.wheel"), UiLocale.T("hint.zoom"));
+            Add(hints, UiLocale.T("mouse.lmb"), UiLocale.T("hint.pan_map"));
+            Add(hints, KeybindStore.Hint("MoveSelection"), UiLocale.T("hint.close_map"));
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close_map"));
             return hints;
         }
 
         if (builder == null || !builder.isBuildMode)
         {
-            Add(hints, KeybindStore.Hint("BuildMode"), "режим строительства");
-            Add(hints, KeybindStore.Hint("MoveSelection"), "карта");
-            Add(hints, ShopHint(), "магазин");
-            Add(hints, "колесо на карте", "масштаб");
+            Add(hints, KeybindStore.Hint("BuildMode"), UiLocale.T("hint.build_mode"));
+            Add(hints, KeybindStore.Hint("MoveSelection"), UiLocale.T("hint.map"));
+            Add(hints, ShopHint(), UiLocale.T("hint.shop"));
+            Add(hints, UiLocale.T("mouse.wheel"), UiLocale.T("hint.zoom_map"));
             if (interactor != null && interactor.HasInteractableTarget)
                 Add(hints, KeybindStore.Hint("Interact"), interactor.InteractableHint);
-            Add(hints, KeybindStore.Hint("Pause"), "пауза");
+            Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.pause"));
             return hints;
         }
 
         if (selection != null && selection.IsPasteActive)
         {
-            Add(hints, KeybindStore.Hint("Place"), "подтвердить вставку");
-            Add(hints, KeybindStore.Hint("Rotate"), "повернуть группу");
-            Add(hints, Combo("Modifier", "Rotate"), "повернуть на месте");
-            Add(hints, KeybindStore.Hint("ClearSelection"), "отмена");
-            Add(hints, "взгляд в сторону", "отмена");
+            Add(hints, KeybindStore.Hint("Place"), UiLocale.T("hint.confirm_paste"));
+            Add(hints, KeybindStore.Hint("Rotate"), UiLocale.T("hint.rotate_group"));
+            Add(hints, Combo("Modifier", "Rotate"), UiLocale.T("hint.rotate_in_place"));
+            Add(hints, KeybindStore.Hint("ClearSelection"), UiLocale.T("hint.cancel"));
+            Add(hints, UiLocale.T("hint.look_away"), UiLocale.T("hint.cancel"));
             return hints;
         }
 
         if (selection != null && selection.IsMoveActive)
         {
-            Add(hints, KeybindStore.Hint("Place"), "подтвердить перенос");
-            Add(hints, KeybindStore.Hint("Rotate"), "повернуть группу");
-            Add(hints, Combo("Modifier", "Rotate"), "повернуть на месте");
-            Add(hints, KeybindStore.Hint("ClearSelection"), "отмена");
-            Add(hints, "взгляд в сторону", "отмена");
+            Add(hints, KeybindStore.Hint("Place"), UiLocale.T("hint.confirm_move"));
+            Add(hints, KeybindStore.Hint("Rotate"), UiLocale.T("hint.rotate_group"));
+            Add(hints, Combo("Modifier", "Rotate"), UiLocale.T("hint.rotate_in_place"));
+            Add(hints, KeybindStore.Hint("ClearSelection"), UiLocale.T("hint.cancel"));
+            Add(hints, UiLocale.T("hint.look_away"), UiLocale.T("hint.cancel"));
             return hints;
         }
 
         if (builder.IsLineStrokeActive)
         {
-            Add(hints, "отпусти " + KeybindStore.Hint("Place"), "поставить линию");
-            Add(hints, "взгляд в сторону", "отмена");
+            Add(hints, UiLocale.T("hint.release_place", KeybindStore.Hint("Place")), UiLocale.T("hint.place_line"));
+            Add(hints, UiLocale.T("hint.look_away"), UiLocale.T("hint.cancel"));
             return hints;
         }
 
         if (selection != null && selection.IsSelectionMode)
         {
-            Add(hints, KeybindStore.Hint("Place"), "выделить клетки");
+            Add(hints, KeybindStore.Hint("Place"), UiLocale.T("hint.select_cells"));
             if (selection.HasSelectedBuildings)
             {
-                Add(hints, KeybindStore.Hint("Copy"), "копировать");
-                Add(hints, KeybindStore.Hint("MoveSelection"), "переместить");
-                Add(hints, KeybindStore.Hint("Rotate"), "повернуть вокруг центра");
-                Add(hints, Combo("Modifier", "Rotate"), "повернуть на месте");
-                Add(hints, KeybindStore.Hint("Delete"), "удалить");
-                Add(hints, SelectionHint(), "настройки выделенных");
-                Add(hints, KeybindStore.Hint("ClearSelection"), "сбросить выделение");
+                Add(hints, KeybindStore.Hint("Copy"), UiLocale.T("hint.copy"));
+                Add(hints, KeybindStore.Hint("MoveSelection"), UiLocale.T("hint.move"));
+                Add(hints, KeybindStore.Hint("Rotate"), UiLocale.T("hint.rotate_center"));
+                Add(hints, Combo("Modifier", "Rotate"), UiLocale.T("hint.rotate_in_place"));
+                Add(hints, KeybindStore.Hint("Delete"), UiLocale.T("hint.delete"));
+                Add(hints, SelectionHint(), UiLocale.T("hint.sel_settings"));
+                Add(hints, KeybindStore.Hint("ClearSelection"), UiLocale.T("hint.clear_sel"));
             }
             if (selection.HasClipboard)
-                Add(hints, KeybindStore.Hint("Paste"), "вставить");
-            Add(hints, KeybindStore.Hint("SelectMode"), "выйти из редактирования");
-            Add(hints, KeybindStore.Hint("BuildMode"), "выйти из стройки");
+                Add(hints, KeybindStore.Hint("Paste"), UiLocale.T("hint.paste"));
+            Add(hints, KeybindStore.Hint("SelectMode"), UiLocale.T("hint.exit_edit"));
+            Add(hints, KeybindStore.Hint("BuildMode"), UiLocale.T("hint.exit_build"));
             return hints;
         }
 
-        Add(hints, KeybindStore.Hint("BuildMode"), "выйти из стройки");
-        Add(hints, KeybindStore.Hint("Inventory"), "инвентарь зданий");
+        Add(hints, KeybindStore.Hint("BuildMode"), UiLocale.T("hint.exit_build"));
+        Add(hints, KeybindStore.Hint("Inventory"), UiLocale.T("hint.inventory"));
         if (builder.HasHeldBuilding)
         {
-            Add(hints, KeybindStore.Hint("Place"), "установить");
-            Add(hints, KeybindStore.Hint("Rotate"), "повернуть");
+            Add(hints, KeybindStore.Hint("Place"), UiLocale.T("hint.place"));
+            Add(hints, KeybindStore.Hint("Rotate"), UiLocale.T("hint.rotate"));
         }
         else
         {
-            Add(hints, KeybindStore.Hint("SelectMode"), "режим редактирования");
+            Add(hints, KeybindStore.Hint("SelectMode"), UiLocale.T("hint.edit_mode"));
             if (selection != null && selection.HasClipboard)
-                Add(hints, KeybindStore.Hint("Paste"), "вставить");
+                Add(hints, KeybindStore.Hint("Paste"), UiLocale.T("hint.paste"));
         }
 
-        Add(hints, KeybindStore.Hint("Demolish"), "снести");
-        Add(hints, ShopHint(), "магазин");
-        Add(hints, "колесо", "хотбар");
-        Add(hints, KeybindStore.Hint("Pause"), "пауза");
+        Add(hints, KeybindStore.Hint("Demolish"), UiLocale.T("hint.demolish"));
+        Add(hints, ShopHint(), UiLocale.T("hint.shop"));
+        Add(hints, UiLocale.T("mouse.wheel"), UiLocale.T("hint.hotbar"));
+        Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.pause"));
         return hints;
     }
 
@@ -277,7 +279,10 @@ public class InputHintUI : MonoBehaviour
         {
             var chip = IndustryUi.El("H", "hint");
             chip.pickingMode = PickingMode.Ignore;
-            chip.Add(IndustryUi.Text("K", hints[i].key, "hint-key"));
+            var cap = IndustryUi.El("K", "keycap");
+            cap.pickingMode = PickingMode.Ignore;
+            cap.Add(IndustryUi.Text("KT", hints[i].key, "hint-key"));
+            chip.Add(cap);
             chip.Add(IndustryUi.Text("L", hints[i].label, "hint-label"));
             bar.Add(chip);
         }

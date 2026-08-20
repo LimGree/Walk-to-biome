@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 public static class KeybindSettingsUI
@@ -11,20 +10,29 @@ public static class KeybindSettingsUI
             return;
 
         parent.Clear();
-        parent.Add(IndustryUi.Text("T", "КЛАВИШИ", "title-hero"));
-        parent.Add(IndustryUi.Text("H", "Нажмите клавишу в списке, затем новую кнопку", "muted"));
+        parent.Add(IndustryUi.Text("T", UiLocale.T("keys.title"), "title-hero"));
+        parent.Add(IndustryUi.Text("H", UiLocale.T("keys.hint"), "muted"));
         var scroll = IndustryUi.Scroll("Keys");
         scroll.style.maxHeight = 420;
         parent.Add(scroll);
 
         var entries = KeybindStore.BuildEntries();
         var keyLabels = new List<Label>(entries.Count);
+        string lastGroup = null;
         for (int i = 0; i < entries.Count; i++)
         {
             KeybindStore.Entry entry = entries[i];
-            var row = IndustryUi.El("R", "card");
+            string group = GroupOf(entry.actionName);
+            if (group != lastGroup)
+            {
+                scroll.Add(IndustryUi.Text("G" + group, group, "key-group"));
+                lastGroup = group;
+            }
+
+            var row = IndustryUi.El("R", "key-row");
             row.Add(IndustryUi.Text("L", entry.label, "body-text", "grow"));
             Button key = IndustryUi.Btn(KeybindStore.Format(entry), null, "btn-small");
+            key.AddToClassList("keycap");
             Label lab = key.Q<Label>(className: "btn-label");
             keyLabels.Add(lab);
             key.clicked += () =>
@@ -34,25 +42,60 @@ public static class KeybindSettingsUI
                 KeybindStore.StartRebind(entry, () => Refresh(entries, keyLabels));
             };
             row.Add(key);
-            Button reset = IndustryUi.Btn("↻", () =>
+            Button reset = IndustryUi.Btn("↺", () =>
             {
                 if (KeybindStore.IsListening)
                     return;
                 KeybindStore.ResetBinding(entry);
                 Refresh(entries, keyLabels);
-            }, "btn-small");
+            }, "btn-small", "btn-ghost");
             row.Add(reset);
             scroll.Add(row);
         }
 
-        parent.Add(IndustryUi.Btn("Сбросить всё", () =>
+        parent.Add(IndustryUi.El("Div", "divider"));
+        parent.Add(IndustryUi.Btn(UiLocale.T("keys.reset_all"), () =>
         {
-            KeybindStore.ResetAll();
-            Refresh(entries, keyLabels);
-        }));
+            UiModal.Confirm(
+                UiLocale.T("keys.reset_title"),
+                UiLocale.T("keys.reset_body"),
+                UiLocale.T("keys.reset"),
+                () =>
+                {
+                    KeybindStore.ResetAll();
+                    Refresh(entries, keyLabels);
+                });
+        }, "btn-ghost"));
         if (onBack != null)
-            parent.Add(IndustryUi.Btn("Назад", onBack));
+            parent.Add(IndustryUi.Btn(UiLocale.T("menu.back"), onBack, "btn-ghost"));
         Refresh(entries, keyLabels);
+    }
+
+    static string GroupOf(string action)
+    {
+        switch (action)
+        {
+            case "Move":
+            case "Jump":
+            case "Sprint":
+                return UiLocale.T("keys.movement");
+            case "Place":
+            case "Demolish":
+            case "Rotate":
+            case "BuildMode":
+            case "SelectMode":
+            case "ClearSelection":
+            case "Copy":
+            case "Paste":
+            case "MoveSelection":
+            case "Modifier":
+            case "Delete":
+                return UiLocale.T("keys.build");
+            case "Pause":
+                return UiLocale.T("keys.system");
+            default:
+                return UiLocale.T("keys.game");
+        }
     }
 
     static void Refresh(List<KeybindStore.Entry> entries, List<Label> labels)
@@ -74,9 +117,7 @@ public static class KeybindSettingsUI
             string path = KeybindStore.EffectivePath(entries[i]);
             bool conflict = !string.IsNullOrEmpty(path) && counts.TryGetValue(path, out int n) && n > 1;
             labels[i].text = KeybindStore.Format(entries[i]);
-            labels[i].style.color = conflict
-                ? new Color(0.86f, 0.59f, 0.27f)
-                : new Color(0.91f, 0.65f, 0.29f);
+            labels[i].EnableInClassList("warn", conflict);
         }
     }
 }

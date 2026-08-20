@@ -1,9 +1,15 @@
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 public class BuildMenuUI : MonoBehaviour
 {
     public static BuildMenuUI Instance { get; private set; }
+
+    static readonly string[] Categories =
+    {
+        "All", "Logistics", "Production", "Storage", "Extraction", "Research"
+    };
 
     [Header("References")]
     public PlayerInventory inventory;
@@ -19,6 +25,9 @@ public class BuildMenuUI : MonoBehaviour
 
     VisualElement overlay;
     ScrollView grid;
+    TextField search;
+    string category = "All";
+    VisualElement catRow;
 
     void Awake()
     {
@@ -61,14 +70,38 @@ public class BuildMenuUI : MonoBehaviour
     void Build()
     {
         VisualElement root = IndustryUi.Mount(this, 100);
-        overlay = IndustryUi.OverlayPanel("Строительство", null, () => CloseMenu(true));
+        overlay = IndustryUi.OverlayPanel(UiLocale.T("overlay.build"), null, () => CloseMenu(true));
         VisualElement panel = IndustryUi.PanelOf(overlay);
+        var searchHost = IndustryUi.El("SearchHost", "search-host");
+        searchHost.Add(IndustryUi.Text("SL", UiLocale.T("build.search"), "label-caps"));
+        search = new TextField { name = "Search" };
+        search.AddToClassList("field");
+        search.AddToClassList("search-field");
+        search.RegisterValueChangedCallback(_ => CreateButtons());
+        searchHost.Add(search);
+        panel.Add(searchHost);
+        catRow = IndustryUi.El("Cats", "cat-row");
+        for (int i = 0; i < Categories.Length; i++)
+        {
+            string cat = Categories[i];
+            Button chip = IndustryUi.Btn(CatLabel(cat), () =>
+            {
+                category = cat;
+                RefreshCats();
+                CreateButtons();
+            }, "cat-chip");
+            chip.RemoveFromClassList("btn");
+            chip.userData = cat;
+            catRow.Add(chip);
+        }
+        panel.Add(catRow);
         grid = IndustryUi.Scroll("BuildGrid");
         var wrap = IndustryUi.El("Grid", "grid");
         wrap.name = "Cards";
         grid.Add(wrap);
         panel.Add(grid);
         root.Add(overlay);
+        RefreshCats();
     }
 
     void CreateButtons()
@@ -84,16 +117,57 @@ public class BuildMenuUI : MonoBehaviour
         if (catalog == null)
             return;
 
+        string query = search != null ? search.value : "";
         for (int i = 0; i < catalog.Length; i++)
         {
             BuildingData data = catalog[i];
             if (data == null)
                 continue;
+            if (!Matches(data, query, category))
+                continue;
             bool unlocked = ResearchSystem.Instance == null
                 || ResearchSystem.Instance.IsBuildingUnlocked(data);
             BuildingData captured = data;
-            wrap.Add(IndustryUi.BuildingCard(data, unlocked, null, false, () => SelectBuilding(captured)));
+            wrap.Add(IndustryUi.BuildingCard(data, unlocked, null, false, unlocked ? () => SelectBuilding(captured) : null));
         }
+    }
+
+    void RefreshCats()
+    {
+        if (catRow == null)
+            return;
+        for (int i = 0; i < catRow.childCount; i++)
+        {
+            VisualElement child = catRow[i];
+            string cat = child.userData as string;
+            IndustryUi.SetOn(child, cat == category, "is-selected");
+        }
+    }
+
+    static string CatLabel(string cat)
+    {
+        switch (cat)
+        {
+            case "Logistics": return UiLocale.T("cat.logistics");
+            case "Production": return UiLocale.T("cat.production");
+            case "Storage": return UiLocale.T("cat.storage");
+            case "Extraction": return UiLocale.T("cat.extraction");
+            case "Research": return UiLocale.T("cat.research");
+            default: return UiLocale.T("cat.all");
+        }
+    }
+
+    static bool Matches(BuildingData building, string query, string cat)
+    {
+        if (building == null)
+            return false;
+        if (cat != "All" && IndustryUi.BuildingCategory(building) != cat)
+            return false;
+        return string.IsNullOrEmpty(query)
+            || (building.displayName != null
+                && building.displayName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+            || (building.id != null
+                && building.id.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0);
     }
 
     BuildingData[] ResolveCatalog()
@@ -125,6 +199,7 @@ public class BuildMenuUI : MonoBehaviour
         if (overlay == null)
             Build();
         CreateButtons();
+        IndustryUi.SetHeader(overlay, UiLocale.T("overlay.build"), null);
         IndustryUi.Show(overlay, true);
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();

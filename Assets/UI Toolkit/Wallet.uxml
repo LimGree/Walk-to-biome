@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="Industry.uss" />
-    <ui:VisualElement name="Chip" class="hud-chip col" />
+    <ui:VisualElement name="Chip" class="hud-chip" />
     <ui:VisualElement name="Overlay" class="screen" picking-mode="Position">
         <ui:VisualElement name="Dim" class="dim" picking-mode="Position" />
         <ui:VisualElement name="Panel" class="panel panel-wide">

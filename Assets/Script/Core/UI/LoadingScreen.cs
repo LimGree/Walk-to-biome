@@ -107,7 +107,7 @@ public class LoadingScreen : MonoBehaviour
         screen.style.alignItems = Align.Center;
         var box = IndustryUi.El("Box", "col");
         box.style.width = 720;
-        box.Add(IndustryUi.Text("Title", GameBranding.TitleCaps, "title-hero"));
+        box.Add(IndustryUi.Text("Title", "WALK OF INDUSTRY", "display"));
         box.Add(IndustryUi.Text("Tag", GameBranding.Tagline, "tagline"));
         status = IndustryUi.Text("Status", "Загрузка…", "body-text");
         box.Add(status);

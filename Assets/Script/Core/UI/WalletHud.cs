@@ -85,20 +85,22 @@ public class WalletHud : MonoBehaviour
     void Build()
     {
         VisualElement root = IndustryUi.Mount(this, 80);
-        var chip = IndustryUi.El("Chip", "hud-chip", "col");
+        var chip = IndustryUi.El("Chip", "hud-chip");
         var coinLine = IndustryUi.El("Coins", "hud-line");
-        coinLine.Add(IndustryUi.Icon(GameHudIcons.Coin, "icon-24"));
+        coinLine.Add(IndustryUi.Icon(GameHudIcons.Coin, "resource-chip__icon"));
         coinsText = IndustryUi.Text("C", "0", "gold");
         coinLine.Add(coinsText);
+        UiTooltip.Bind(coinLine, UiLocale.T("shop.coins"), UiLocale.T("shop.coins_tip"));
         var rubyLine = IndustryUi.El("Rubies", "hud-line");
-        rubyLine.Add(IndustryUi.Icon(GameHudIcons.Ruby, "icon-24"));
+        rubyLine.Add(IndustryUi.Icon(GameHudIcons.Ruby, "resource-chip__icon"));
         rubiesText = IndustryUi.Text("R", "0", "ruby");
         rubyLine.Add(rubiesText);
+        UiTooltip.Bind(rubyLine, UiLocale.T("shop.rubies"), UiLocale.T("shop.rubies_tip"));
         chip.Add(coinLine);
         chip.Add(rubyLine);
         root.Add(chip);
 
-        shop = IndustryUi.OverlayPanel("Магазин", GameHudIcons.Ruby, () => SetShopOpen(false));
+        shop = IndustryUi.OverlayPanel(UiLocale.T("overlay.shop"), GameHudIcons.Ruby, () => SetShopOpen(false));
         IndustryUi.Show(shop, false);
         VisualElement panel = IndustryUi.PanelOf(shop);
         var balances = IndustryUi.El("Bal", "card");
@@ -135,7 +137,7 @@ public class WalletHud : MonoBehaviour
         var label = IndustryUi.Text("L", "", "body-text", "grow");
         card.Add(label);
         card.Add(IndustryUi.Icon(GameHudIcons.Coin, "icon-32"));
-        card.Add(IndustryUi.Btn("Обменять", onClick, "btn-small", "btn-primary"));
+        card.Add(IndustryUi.Btn(UiLocale.T("shop.exchange"), onClick, "btn-small", "btn-primary"));
         panel.Add(card);
         return label;
     }
@@ -168,13 +170,15 @@ public class WalletHud : MonoBehaviour
         PlayerWallet wallet = PlayerWallet.Instance;
         int coins = wallet != null ? wallet.Coins : 0;
         int rubies = wallet != null ? wallet.Rubies : 0;
-        if (coinsText != null) coinsText.text = coins.ToString();
-        if (rubiesText != null) rubiesText.text = rubies.ToString();
-        if (shopCoins != null) shopCoins.text = coins + " монет";
-        if (shopRubies != null) shopRubies.text = rubies + " рубинов";
-        if (offer1 != null) offer1.text = "1 рубин  →  " + Economy.CoinsPerRuby + " монет";
-        if (offer5 != null) offer5.text = "5 рубинов  →  " + (5 * Economy.CoinsPerRuby) + " монет";
+        if (coinsText != null) coinsText.text = IndustryUi.Money(coins);
+        if (rubiesText != null) rubiesText.text = IndustryUi.Money(rubies);
+        if (shopCoins != null) shopCoins.text = IndustryUi.Money(coins);
+        if (shopRubies != null) shopRubies.text = IndustryUi.Money(rubies);
+        if (offer1 != null) offer1.text = UiLocale.T("shop.offer1", Economy.CoinsPerRuby);
+        if (offer5 != null) offer5.text = UiLocale.T("shop.offer5", 5 * Economy.CoinsPerRuby);
         if (offerAll != null)
-            offerAll.text = rubies <= 0 ? "Нет рубинов" : "Все " + rubies + "  →  " + (rubies * Economy.CoinsPerRuby) + " монет";
+            offerAll.text = rubies <= 0
+                ? UiLocale.T("shop.none")
+                : UiLocale.T("shop.all", rubies, rubies * Economy.CoinsPerRuby);
     }
 }
