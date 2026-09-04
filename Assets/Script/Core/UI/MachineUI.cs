@@ -66,18 +66,24 @@ public class MachineUI : MonoBehaviour
     {
         if (BeltSpeedSystem.Instance != null)
             BeltSpeedSystem.Instance.OnChanged += OnBeltChanged;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.OnChanged += OnBeltChanged;
     }
 
     void OnDisable()
     {
         if (BeltSpeedSystem.Instance != null)
             BeltSpeedSystem.Instance.OnChanged -= OnBeltChanged;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.OnChanged -= OnBeltChanged;
     }
 
     void OnDestroy()
     {
         if (BeltSpeedSystem.Instance != null)
             BeltSpeedSystem.Instance.OnChanged -= OnBeltChanged;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.OnChanged -= OnBeltChanged;
         if (Instance == this)
             Instance = null;
     }
@@ -463,7 +469,7 @@ public class MachineUI : MonoBehaviour
         if (building is Extractor extractor)
         {
             string now = extractor.CurrentInterval.ToString("0.##") + " с / " + extractor.CurrentItemsPerCycle;
-            string next = extractor.upgradedExtractInterval.ToString("0.##") + " с / "
+            string next = (extractor.upgradedExtractInterval * Economy.ExtractTimeMul).ToString("0.##") + " с / "
                 + Mathf.Max(1, extractor.upgradedItemsPerCycle);
             upgradeTipBody = UiLocale.T("machine.upgrade_ext", now, next);
         }
@@ -485,7 +491,11 @@ public class MachineUI : MonoBehaviour
         if (currentBuilding == null || !currentBuilding.CanUpgradeBuilding)
             return;
         if (!TryPaidUpgrade(currentBuilding))
+        {
+            UiAudio.PlayError();
             return;
+        }
+        GameAudio.World("world_upgrade", currentBuilding.transform.position);
         Open(currentBuilding);
     }
 
@@ -646,6 +656,8 @@ public class MachineUI : MonoBehaviour
 
     void OpenLabTab(int tab)
     {
+        if (labTab != tab)
+            UiAudio.PlayTab();
         labTab = tab;
         IndustryUi.Show(researchPage, tab == 0);
         IndustryUi.Show(beltPage, tab == 1);
@@ -712,35 +724,61 @@ public class MachineUI : MonoBehaviour
         BeltSpeedSystem belts = BeltSpeedSystem.Instance;
         int level = belts != null ? belts.Level : 0;
         int have = belts != null ? belts.GearsTowardNext : 0;
+        int max = Economy.BeltMaxLevel;
         ItemData gear = GameDatabase.FindItem("gear");
         Sprite gearIcon = gear != null ? gear.icon : null;
 
-        beltList.Add(IndustryUi.Text("Head", "Дерево прокачки конвейеров", "title"));
-        beltList.Add(IndustryUi.Text(
-            "Hint",
-            "Сдавайте шестерёнки в лабораторию. Лишние (не нужные исследованию) идут в это дерево. Уже стоящие ленты тоже ускоряются.",
-            "muted"));
+        beltList.Add(IndustryUi.Text("Head", UiLocale.T("belt.title"), "title"));
+        beltList.Add(IndustryUi.Text("Hint", UiLocale.T("belt.hint"), "muted"));
 
-        int lastShown = level + 1;
+        if (belts != null && belts.IsMaxed)
+        {
+            beltList.Add(IndustryUi.Text("Max", UiLocale.T("belt.maxed", belts.Multiplier.ToString("0.##")), "gold"));
+        }
+        else
+        {
+            int gearCost = belts != null ? belts.NextGearCost : Economy.BeltGearCost(1);
+            int coinCost = belts != null ? belts.NextCoinCost : Economy.BeltCoinCost(1);
+            int left = Mathf.Max(0, gearCost - have);
+            bool gearsReady = belts != null && belts.GearsReady;
+            bool canBuy = belts != null && belts.CanBuyNext;
+            string buyLabel = canBuy
+                ? UiLocale.T("belt.buy", IndustryUi.Money(coinCost))
+                : !gearsReady
+                    ? UiLocale.T("belt.need_gears", left)
+                    : UiLocale.T("belt.need_coins");
+            Button buy = IndustryUi.Btn(buyLabel, () =>
+            {
+                if (BeltSpeedSystem.Instance != null && BeltSpeedSystem.Instance.TryBuyNext())
+                    UiAudio.PlayConfirm();
+            }, "btn-primary");
+            buy.SetEnabled(canBuy);
+            beltList.Add(buy);
+            beltList.Add(IndustryUi.Text("Pay", UiLocale.T("belt.coins", IndustryUi.Money(coinCost)), "gold"));
+        }
+
+        int lastShown = Mathf.Min(max, level + 1);
         for (int i = 0; i <= lastShown; i++)
         {
             bool unlocked = i <= level;
-            bool next = i == level + 1;
+            bool next = i == level + 1 && i <= max;
             float speedNow = Economy.BeltMultiplier(i);
             float speedPrev = i == 0 ? speedNow : Economy.BeltMultiplier(i - 1);
-            int cost = i == 0 ? 0 : Economy.BeltUpgradeCost(i);
-            string state = unlocked ? (i == level ? "текущий" : "открыт") : "следующий";
+            int cost = i == 0 ? 0 : Economy.BeltGearCost(i);
+            string state = unlocked
+                ? (i == level ? UiLocale.T("belt.current") : UiLocale.T("belt.open"))
+                : UiLocale.T("belt.next");
             string speedText = i == 0
-                ? "Скорость ×" + speedNow.ToString("0.##")
-                : "Скорость ×" + speedPrev.ToString("0.##") + "  →  ×" + speedNow.ToString("0.##");
+                ? UiLocale.T("belt.speed", speedNow.ToString("0.##"))
+                : UiLocale.T("belt.speed_to", speedPrev.ToString("0.##"), speedNow.ToString("0.##"));
             string costText = i == 0
-                ? "Цена: старт"
+                ? UiLocale.T("belt.start")
                 : next
-                    ? "Цена: " + have + " / " + cost + " шестерёнок"
-                    : "Цена: " + cost + " шестерёнок";
+                    ? UiLocale.T("belt.gears", have, cost)
+                    : UiLocale.T("belt.gears_cost", cost);
 
             beltList.Add(BeltNode(
-                "Ур. " + i + "  ·  " + state,
+                UiLocale.T("belt.level", i) + "  ·  " + state,
                 speedText,
                 costText,
                 gearIcon,
@@ -836,8 +874,9 @@ public class MachineUI : MonoBehaviour
         if (currentBuilding is CrafterBuilding crafter)
         {
             float t = 0f;
-            if (crafter.currentRecipe != null && crafter.currentRecipe.craftTime > 0f)
-                t = crafter.craftProgress / crafter.currentRecipe.craftTime;
+            float need = Economy.CraftNeed(crafter.currentRecipe);
+            if (need > 0f)
+                t = crafter.craftProgress / need;
             IndustryUi.SetProgress(progress, t);
         }
         else if (currentBuilding is StorageContainer storage)

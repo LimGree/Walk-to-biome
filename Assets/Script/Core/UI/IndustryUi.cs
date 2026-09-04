@@ -101,7 +101,7 @@ public static class IndustryUi
         el.style.unityFont = face;
     }
 
-    static VisualTreeAsset LoadTree(string typeName)
+    public static VisualTreeAsset LoadTree(string typeName)
     {
         VisualTreeAsset tree = Resources.Load<VisualTreeAsset>("UI/" + typeName);
         if (tree != null)

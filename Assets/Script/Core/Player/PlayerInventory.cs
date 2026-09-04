@@ -255,6 +255,7 @@ public class PlayerInventory : MonoBehaviour
 
         selectedIndex = index;
         OnSelectionChanged?.Invoke(selectedIndex);
+        GameAudio.Ui("ui_select");
     }
 
     public void SelectEmptyTool()

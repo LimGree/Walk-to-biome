@@ -217,8 +217,36 @@
 .panel-menu {
     width: 480px;
     max-width: 90%;
+    max-height: 86%;
     align-self: center;
     padding: 40px 40px 32px 40px;
+}
+
+.settings-shell {
+    width: 720px;
+    max-width: 94%;
+}
+
+.settings-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.settings-page {
+    flex-grow: 1;
+    min-height: 240px;
+}
+
+.volume-row {
+    flex-shrink: 0;
+    margin-bottom: 6px;
+}
+
+.volume-row .unity-base-slider {
+    height: 16px;
+    margin-bottom: 4px;
 }
 
 .panel-header,
@@ -999,10 +1027,14 @@ TextField {
 
 /* ===== MAP ===== */
 
-.mini-map {
+.mini-host {
     position: absolute;
     right: 24px;
     top: 24px;
+}
+
+.mini-map {
+    flex-shrink: 0;
 }
 
 .map-frame {
@@ -1057,11 +1089,115 @@ TextField {
     flex-shrink: 0;
 }
 
-.player-mark {
-    width: 10px;
-    height: 14px;
-    background-color: rgb(255, 220, 80);
+.mini-clip {
+    overflow: hidden;
+    position: relative;
+    flex-grow: 1;
+}
+
+.map-overlay {
     position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.player-mark {
+    width: 22px;
+    height: 22px;
+    background-color: rgba(0, 0, 0, 0);
+    position: absolute;
+}
+
+.map-pin {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgb(12, 14, 16);
+}
+
+.map-pin-name {
+    position: absolute;
+    left: 12px;
+    top: -5px;
+    font-size: 11px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgb(0, 0, 0);
+}
+
+.measure-label {
+    position: absolute;
+    background-color: rgba(12, 16, 20, 0.82);
+    padding: 2px 6px;
+    font-size: 12px;
+    color: rgb(255, 230, 120);
+}
+
+.mini-info {
+    margin-top: 6px;
+    font-size: 12px;
+    color: rgb(220, 228, 232);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.compass-letter {
+    position: absolute;
+    font-size: 13px;
+    color: rgb(255, 230, 120);
+    -unity-font-style: bold;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgb(0, 0, 0);
+}
+
+.map-body {
+    flex-direction: row;
+    flex-grow: 1;
+    min-height: 360px;
+}
+
+.map-side {
+    width: 260px;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.map-wp-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 4px;
+    margin-bottom: 4px;
+}
+
+.map-edit {
+    margin-top: 8px;
+    padding: 10px;
+    background-color: var(--surface-overlay);
+    border-width: 1px;
+    border-color: var(--border-subtle);
+}
+
+.map-compass {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    font-size: 18px;
+    color: rgb(255, 230, 120);
+    -unity-font-style: bold;
+}
+
+.map-pin-dist {
+    position: absolute;
+    left: 12px;
+    top: -2px;
+    font-size: 10px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
 }
 
 /* ===== TOOLTIP / TOAST / MODAL ===== */
@@ -1157,8 +1293,20 @@ TextField {
 
 .modal-actions {
     flex-direction: row;
+    align-items: center;
     justify-content: flex-end;
     margin-top: 24px;
+}
+
+.modal-actions .btn,
+.modal-actions .btn-small,
+.modal-actions .btn-danger,
+.modal-actions .btn-primary,
+.modal-actions .btn-ghost {
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 8px;
+    height: 32px;
 }
 
 /* ===== RESEARCH TREE ===== */

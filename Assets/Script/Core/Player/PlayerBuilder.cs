@@ -199,6 +199,8 @@ public class PlayerBuilder : MonoBehaviour
                 currentRotationY = 0f;
             if (currentGhost != null)
                 currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
+            if (playerCamera != null)
+                GameAudio.World("world_rotate", playerCamera.transform.position);
             return;
         }
 
@@ -246,6 +248,7 @@ public class PlayerBuilder : MonoBehaviour
         }
 
         building.OnRotated();
+        GameAudio.World("world_rotate", building.transform.position);
         return true;
     }
 
@@ -889,6 +892,8 @@ public class PlayerBuilder : MonoBehaviour
 
         if (!lineOk)
         {
+            if (playerCamera != null)
+                GameAudio.World("world_invalid", playerCamera.transform.position);
             EndStroke();
             return;
         }
@@ -914,11 +919,18 @@ public class PlayerBuilder : MonoBehaviour
 
         int cost = Economy.BuildCost(currentBuildingData);
         if (PlayerWallet.Instance != null && !PlayerWallet.Instance.TrySpendCoins(cost))
+        {
+            GameAudio.World("world_invalid", placePos);
             return;
+        }
 
         GameObject go = Instantiate(currentBuildingData.prefab, placePos, placeRot);
         go.name = go.name + $"{indexBuilding}";
         indexBuilding += 1;
+        if (currentBuildingData.IsConveyor)
+            GameAudio.World("world_place_belt", placePos);
+        else
+            GameAudio.World("world_place", placePos);
 
         BuildingBase buildingBase = go.GetComponent<BuildingBase>();
         if (buildingBase != null)
@@ -954,6 +966,7 @@ public class PlayerBuilder : MonoBehaviour
         if (building == null)
             return;
 
+        GameAudio.World("world_demolish", building.transform.position);
         building.OnRemoved();
         Destroy(building.gameObject);
     }

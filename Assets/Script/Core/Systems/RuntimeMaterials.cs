@@ -52,7 +52,24 @@ public static class RuntimeMaterials
             mat.SetColor("_Color", color);
         if (mat.HasProperty("_BaseColor"))
             mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_LightTint"))
+            mat.SetColor("_LightTint", Color.white);
+        if (mat.HasProperty("_WalkUvFog"))
+            mat.SetFloat("_WalkUvFog", 0f);
         mat.color = color;
+        ApplyWorldGfx(mat);
         return mat;
+    }
+
+    public static void ApplyWorldGfx(Material mat)
+    {
+        if (mat == null)
+            return;
+
+        Color light = Shader.GetGlobalColor("_WalkLightTint");
+        if (light.a < 0.01f && light.r + light.g + light.b < 0.01f)
+            light = Color.white * Mathf.Clamp(GameSettings.WorldLight * GameSettings.Brightness, 0.12f, 2.5f);
+        if (mat.HasProperty("_WalkLightTint"))
+            mat.SetColor("_WalkLightTint", light);
     }
 }

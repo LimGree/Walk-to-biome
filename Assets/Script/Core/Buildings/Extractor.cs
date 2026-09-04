@@ -28,7 +28,7 @@ public class Extractor : BuildingBase, IInteractable
 
     public bool CanUpgrade => level < 2;
     public override bool CanUpgradeBuilding => CanUpgrade;
-    public float CurrentInterval => Mathf.Max(0.05f, extractInterval);
+    public float CurrentInterval => Mathf.Max(0.05f, extractInterval * Economy.ExtractTimeMul);
     public int CurrentItemsPerCycle => Mathf.Max(1, itemsPerCycle);
 
     void Awake()
@@ -174,11 +174,19 @@ public class Extractor : BuildingBase, IInteractable
 
     void Update()
     {
-        if (resource == null) return;
+        if (resource == null)
+        {
+            GameAudio.Loop(this, "bld_extractor_loop", false);
+            return;
+        }
 
+        bool working = boundNode != null && HasOutputSpace(1);
+        GameAudio.Loop(this, "bld_extractor_loop", working);
+
+        float interval = CurrentInterval;
         timer += Time.deltaTime;
-        if (timer < extractInterval) return;
-        timer -= extractInterval;
+        if (timer < interval) return;
+        timer -= interval;
 
         if (!HasOutputSpace(itemsPerCycle) && !CanPushAnyNow())
         {

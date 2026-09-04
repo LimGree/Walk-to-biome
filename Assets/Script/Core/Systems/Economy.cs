@@ -5,13 +5,32 @@ public static class Economy
     public const int StartingCoins = 1000;
     public const int StartingRubies = 0;
     public const int CoinsPerRuby = 50;
-    public const int BeltBaseGears = 50;
-    public const float BeltCostGrowth = 1.5f;
-    public const float BeltSpeedPerLevel = 0.15f;
+
+    public const int BeltMaxLevel = 10;
+    public const int BeltFirstGears = 200;
+    public const int BeltLastGears = 500000;
+    public const int BeltFirstCoins = 180;
+    public const int BeltLastCoins = 16000;
+
+    public const float CraftTimeMul = 1.8f;
+    public const float ExtractTimeMul = 1.25f;
 
     public static int SellValue(ItemData item)
     {
-        return item != null ? Mathf.Max(0, item.sellValue) : 0;
+        if (item == null)
+            return 0;
+        int v = Mathf.Max(0, item.sellValue);
+        if (v <= 1)
+            return v;
+        if (v == 2)
+            return 4;
+        if (v <= 4)
+            return v * 3;
+        if (v <= 8)
+            return Mathf.RoundToInt(v * 2.6f);
+        if (v <= 16)
+            return Mathf.RoundToInt(v * 2.1f);
+        return Mathf.RoundToInt(v * 1.55f);
     }
 
     public static int BuildCost(BuildingData data)
@@ -42,17 +61,51 @@ public static class Economy
         return Mathf.Max(5, 4 + items / 8);
     }
 
+    public static float CraftNeed(RecipeData recipe)
+    {
+        if (recipe == null)
+            return 0f;
+        return Mathf.Max(0.05f, recipe.craftTime) * CraftTimeMul;
+    }
+
     public static int BeltUpgradeCost(int nextLevel)
     {
-        float cost = BeltBaseGears;
-        for (int i = 1; i < Mathf.Max(1, nextLevel); i++)
-            cost *= BeltCostGrowth;
+        return BeltGearCost(nextLevel);
+    }
+
+    public static int BeltGearCost(int nextLevel)
+    {
+        return GeometricCost(nextLevel, BeltFirstGears, BeltLastGears);
+    }
+
+    public static int BeltCoinCost(int nextLevel)
+    {
+        return GeometricCost(nextLevel, BeltFirstCoins, BeltLastCoins);
+    }
+
+    static int GeometricCost(int nextLevel, int first, int last)
+    {
+        int level = Mathf.Clamp(nextLevel, 1, BeltMaxLevel);
+        if (level <= 1)
+            return first;
+        if (level >= BeltMaxLevel)
+            return last;
+        float t = (level - 1) / (float)(BeltMaxLevel - 1);
+        float cost = first * Mathf.Pow(last / (float)first, t);
         return Mathf.Max(1, Mathf.RoundToInt(cost));
     }
 
     public static float BeltMultiplier(int level)
     {
-        return 1f + Mathf.Max(0, level) * BeltSpeedPerLevel;
+        int lv = Mathf.Clamp(level, 0, BeltMaxLevel);
+        if (lv <= 0)
+            return 1f;
+        if (lv >= BeltMaxLevel)
+            return 9.5f;
+        const float first = 1.2f;
+        const float last = 9.5f;
+        float t = (lv - 1) / (float)(BeltMaxLevel - 1);
+        return first * Mathf.Pow(last / first, t);
     }
 
     public static bool IsGear(ItemData item)

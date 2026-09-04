@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -42,27 +43,48 @@ public class GameManager : MonoBehaviour
             gameObject.AddComponent<ProductionStats>();
         if (GetComponent<BeltSpeedSystem>() == null)
             gameObject.AddComponent<BeltSpeedSystem>();
+        if (GetComponent<MapMarkerSystem>() == null)
+            gameObject.AddComponent<MapMarkerSystem>();
+        if (GetComponent<MapExploration>() == null)
+            gameObject.AddComponent<MapExploration>();
         if (GetComponent<WalletHud>() == null)
             gameObject.AddComponent<WalletHud>();
         if (GetComponent<SelectionActionsUI>() == null)
             gameObject.AddComponent<SelectionActionsUI>();
+        if (GetComponent<CrosshairHud>() == null)
+            gameObject.AddComponent<CrosshairHud>();
+        GameAudio.Ensure();
+        GameSettings.Apply();
     }
 
     void OnEnable()
     {
         inputActions.Player.Pause.performed += OnPausePerformed;
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     void OnDisable()
     {
         if (inputActions != null)
             inputActions.Player.Pause.performed -= OnPausePerformed;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        GameSettings.Apply();
     }
 
     void OnPausePerformed(InputAction.CallbackContext context)
     {
         if (KeybindStore.BlocksGameplayInput)
             return;
+
+        if (UiModal.IsOpen)
+        {
+            UiModal.Hide();
+            return;
+        }
 
         if (InventoryUI.Instance != null && InventoryUI.Instance.IsBagOpen)
         {
@@ -119,6 +141,11 @@ public class GameManager : MonoBehaviour
         isPaused = paused;
         Time.timeScale = paused ? 0f : 1f;
         AudioListener.pause = paused;
+        if (paused)
+            UiAudio.PlayPause();
+        else
+            UiAudio.PlayUnpause();
+        GameAudio.SetPaused(paused);
         if (paused && WorldMapUI.Instance != null && WorldMapUI.Instance.IsOpen)
             WorldMapUI.Instance.SetOpen(false);
         if (paused && InventoryUI.Instance != null && InventoryUI.Instance.IsBagOpen)

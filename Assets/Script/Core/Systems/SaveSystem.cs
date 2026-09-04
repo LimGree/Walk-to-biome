@@ -95,6 +95,10 @@ public class SaveSystem : MonoBehaviour
             PlayerWallet.Instance.CaptureSave(data);
         if (BeltSpeedSystem.Instance != null)
             BeltSpeedSystem.Instance.CaptureSave(data);
+        if (MapMarkerSystem.Instance != null)
+            MapMarkerSystem.Instance.CaptureSave(data);
+        if (MapExploration.Instance != null)
+            MapExploration.Instance.CaptureSave(data);
         if (ProductionStats.Instance != null)
             ProductionStats.Instance.CaptureSave(data);
 
@@ -127,6 +131,10 @@ public class SaveSystem : MonoBehaviour
                 PlayerWallet.Instance.ResetToNewWorld();
             if (BeltSpeedSystem.Instance != null)
                 BeltSpeedSystem.Instance.ResetToNewWorld();
+            if (MapMarkerSystem.Instance != null)
+                MapMarkerSystem.Instance.ResetToNewWorld();
+            if (MapExploration.Instance != null)
+                MapExploration.Instance.ResetToNewWorld();
             if (ProductionStats.Instance != null)
                 ProductionStats.Instance.ResetAll();
             return;
@@ -176,6 +184,10 @@ public class SaveSystem : MonoBehaviour
             PlayerWallet.Instance.ApplySave(data);
         if (BeltSpeedSystem.Instance != null)
             BeltSpeedSystem.Instance.ApplySave(data);
+        if (MapMarkerSystem.Instance != null)
+            MapMarkerSystem.Instance.ApplySave(data);
+        if (MapExploration.Instance != null)
+            MapExploration.Instance.ApplySave(data);
         if (ProductionStats.Instance != null)
             ProductionStats.Instance.ApplySave(data);
 

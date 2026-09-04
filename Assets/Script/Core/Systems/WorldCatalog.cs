@@ -79,6 +79,7 @@ public static class WorldCatalog
     }
 
     public static string ActiveSavePath => SavePath(Active);
+    public static string WorldsFolder => Root;
 
     public static List<WorldInfo> ListWorlds()
     {

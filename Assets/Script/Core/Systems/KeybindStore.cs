@@ -76,6 +76,7 @@ public static class KeybindStore
         AddKeyboard(list, "Interact", UiLocale.T("bind.interact"));
         AddKeyboard(list, "Jump", UiLocale.T("bind.jump"));
         AddKeyboard(list, "Sprint", UiLocale.T("bind.sprint"));
+        AddKeyboard(list, "Zoom", UiLocale.T("bind.zoom"));
         AddKeyboard(list, "Pause", UiLocale.T("bind.pause"));
         AddKeyboard(list, "Rotate", UiLocale.T("bind.rotate"));
         AddKeyboard(list, "BuildMode", UiLocale.T("bind.build_mode"));
@@ -225,14 +226,35 @@ public static class KeybindStore
         if (reference == null || reference.asset == null)
         {
             reference = new InputSystem_Actions();
+            EnsureZoomAction(reference.asset);
             ApplySaved(reference.asset);
         }
+        else
+            EnsureZoomAction(reference.asset);
 
         if (!sharedEnabled && !IsListening)
         {
             reference.Enable();
             sharedEnabled = true;
         }
+    }
+
+    public static InputAction GetAction(string actionName)
+    {
+        return Find(actionName);
+    }
+
+    static void EnsureZoomAction(InputActionAsset asset)
+    {
+        if (asset == null || asset.FindAction("Player/Zoom", false) != null)
+            return;
+        InputActionMap map = asset.FindActionMap("Player", false);
+        if (map == null)
+            return;
+        InputAction zoom = map.AddAction("Zoom", InputActionType.Button);
+        zoom.AddBinding("<Keyboard>/c", groups: KeyboardGroup);
+        if (asset.enabled)
+            zoom.Enable();
     }
 
     static InputAction Find(string actionName)

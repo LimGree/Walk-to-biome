@@ -71,8 +71,20 @@ public class WorldBiomeMap : MonoBehaviour
         Generate();
     }
 
+    void OnEnable()
+    {
+        GameSettings.Changed += RefreshOverlayGfx;
+        RefreshOverlayGfx();
+    }
+
+    void OnDisable()
+    {
+        GameSettings.Changed -= RefreshOverlayGfx;
+    }
+
     void OnDestroy()
     {
+        GameSettings.Changed -= RefreshOverlayGfx;
         if (Instance == this)
             Instance = null;
     }
@@ -489,5 +501,16 @@ public class WorldBiomeMap : MonoBehaviour
         overlay.transform.localScale = new Vector3(size.x, size.z, 1f);
 
         overlay.sharedMaterial = RuntimeMaterials.Create(tex, Color.white);
+        RefreshOverlayGfx();
+    }
+
+    void RefreshOverlayGfx()
+    {
+        if (overlay == null)
+            return;
+        Material mat = overlay.sharedMaterial;
+        RuntimeMaterials.ApplyWorldGfx(mat);
+        if (mat != null && mat.HasProperty("_WalkUvFog"))
+            mat.SetFloat("_WalkUvFog", 1f);
     }
 }

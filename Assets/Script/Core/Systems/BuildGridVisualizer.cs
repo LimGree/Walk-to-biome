@@ -91,7 +91,7 @@ public class BuildGridVisualizer : MonoBehaviour
 
         gridTexture = CreateCellBorderTexture(64);
         gridMaterial.mainTexture = gridTexture;
-        gridMaterial.color = Color.white;
+        gridMaterial.color = gridLineColor;
 
         validCellMat = CreateTransparentMaterial(validCellColor);
         validCellMat.renderQueue = 3100;

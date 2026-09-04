@@ -9,6 +9,9 @@ public static class BeltItemView
             AttachFallbackCube(root, itemScale);
 
         DisableColliders(root);
+        int layer = LayerMask.NameToLayer("buildings");
+        if (layer >= 0)
+            SetLayer(root, layer);
         return root.transform;
     }
 
@@ -135,6 +138,19 @@ public static class BeltItemView
         {
             if (cols[i] != null)
                 cols[i].enabled = false;
+        }
+    }
+
+    static void SetLayer(GameObject go, int layer)
+    {
+        if (go == null)
+            return;
+        go.layer = layer;
+        Transform[] kids = go.GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < kids.Length; i++)
+        {
+            if (kids[i] != null)
+                kids[i].gameObject.layer = layer;
         }
     }
 }

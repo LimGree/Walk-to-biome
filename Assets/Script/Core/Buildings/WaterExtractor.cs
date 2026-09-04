@@ -12,7 +12,7 @@ public class WaterExtractor : BuildingBase, IInteractable
 
     float timer;
 
-    public float CurrentInterval => Mathf.Max(0.05f, extractInterval);
+    public float CurrentInterval => Mathf.Max(0.05f, extractInterval * Economy.ExtractTimeMul);
     public int CurrentItemsPerCycle => Mathf.Max(1, itemsPerCycle);
 
     void Awake()
@@ -40,7 +40,12 @@ public class WaterExtractor : BuildingBase, IInteractable
     {
         ResolveResource();
         if (resource == null)
+        {
+            GameAudio.Loop(this, "bld_water_loop", false);
             return;
+        }
+
+        GameAudio.Loop(this, "bld_water_loop", HasOutputSpace(1));
 
         timer += Time.deltaTime;
         if (timer < CurrentInterval)

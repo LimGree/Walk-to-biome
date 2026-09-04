@@ -160,8 +160,10 @@ public class WalletHud : MonoBehaviour
 
     void Exchange(int rubies)
     {
-        if (PlayerWallet.Instance != null)
-            PlayerWallet.Instance.TryExchangeRubies(rubies);
+        if (PlayerWallet.Instance != null && PlayerWallet.Instance.TryExchangeRubies(rubies))
+            UiAudio.PlayConfirm();
+        else
+            UiAudio.PlayError();
         Refresh();
     }
 

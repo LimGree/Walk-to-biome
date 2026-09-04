@@ -11,16 +11,12 @@ public class MainMenu : MonoBehaviour
 
     VisualElement home;
     VisualElement settings;
-    VisualElement keys;
     VisualElement worlds;
     VisualElement create;
     ScrollView worldList;
     TextField nameField;
-    Label zoomLabel;
-    Label sizeLabel;
-    Slider zoomSlider;
-    Slider sizeSlider;
-    Button hintsBtn;
+    string settingsTab = "general";
+    bool rebuildQueued;
 
     void Awake()
     {
@@ -28,13 +24,29 @@ public class MainMenu : MonoBehaviour
         AudioListener.pause = false;
         UnityEngine.Cursor.lockState = CursorLockMode.None;
         UnityEngine.Cursor.visible = true;
+        GameAudio.Ensure();
+        GameSettings.Apply();
+        GameAudio.PlayMusic("music/mus_menu");
         BuildUi();
-        UiLocale.Changed += BuildUi;
+        UiLocale.Changed += QueueRebuild;
     }
 
     void OnDestroy()
     {
-        UiLocale.Changed -= BuildUi;
+        UiLocale.Changed -= QueueRebuild;
+    }
+
+    void QueueRebuild()
+    {
+        rebuildQueued = true;
+    }
+
+    void LateUpdate()
+    {
+        if (!rebuildQueued)
+            return;
+        rebuildQueued = false;
+        BuildUi();
     }
 
     public static void LoadGame()
@@ -93,39 +105,9 @@ public class MainMenu : MonoBehaviour
         bg.Add(create);
 
         settings = MenuPanel("Settings");
-        settings.Add(IndustryUi.Text("Title", UiLocale.T("settings.title"), "title-hero"));
-        settings.Add(IndustryUi.Text("G0", UiLocale.T("settings.general"), "settings-group"));
-        settings.Add(UiLocale.LanguageRow());
-        settings.Add(IndustryUi.Text("G1", UiLocale.T("settings.gameplay"), "settings-group"));
-        zoomLabel = IndustryUi.Text("ZoomL", "", "muted");
-        settings.Add(zoomLabel);
-        zoomSlider = new Slider(0.06f, 1f) { value = PlayerPrefs.GetFloat("MiniMapZoom", 0.18f) };
-        zoomSlider.RegisterValueChangedCallback(evt =>
-        {
-            PlayerPrefs.SetFloat("MiniMapZoom", evt.newValue);
-            RefreshLabels();
-        });
-        settings.Add(zoomSlider);
-        sizeLabel = IndustryUi.Text("SizeL", "", "muted");
-        settings.Add(sizeLabel);
-        sizeSlider = new Slider(140f, 360f) { value = PlayerPrefs.GetFloat("MiniMapSize", 220f) };
-        sizeSlider.RegisterValueChangedCallback(evt =>
-        {
-            PlayerPrefs.SetFloat("MiniMapSize", evt.newValue);
-            RefreshLabels();
-        });
-        settings.Add(sizeSlider);
-        hintsBtn = IndustryUi.Btn("", ToggleHints);
-        settings.Add(hintsBtn);
-        settings.Add(IndustryUi.Text("G2", UiLocale.T("settings.controls"), "settings-group"));
-        settings.Add(IndustryUi.Btn(UiLocale.T("settings.keybinds"), ShowKeys));
-        settings.Add(IndustryUi.Btn(UiLocale.T("menu.back"), ShowHome, "btn-ghost"));
+        settings.AddToClassList("settings-shell");
+        SettingsHub.Fill(settings, ShowHome, SettingsHub.CurrentTab);
         bg.Add(settings);
-
-        keys = MenuPanel("Keys");
-        keys.style.width = 720;
-        KeybindSettingsUI.Fill(keys, ShowSettings);
-        bg.Add(keys);
 
         if (page == "settings")
             ShowSettings();
@@ -133,11 +115,8 @@ public class MainMenu : MonoBehaviour
             ShowWorlds();
         else if (page == "create")
             ShowCreate();
-        else if (page == "keys")
-            ShowKeys();
         else
             ShowHome();
-        RefreshLabels();
     }
 
     string CurrentPage()
@@ -148,8 +127,6 @@ public class MainMenu : MonoBehaviour
             return "worlds";
         if (create != null && create.resolvedStyle.display == DisplayStyle.Flex)
             return "create";
-        if (keys != null && keys.resolvedStyle.display == DisplayStyle.Flex)
-            return "keys";
         return "home";
     }
 
@@ -163,14 +140,8 @@ public class MainMenu : MonoBehaviour
     void ShowSettings()
     {
         HideAll();
+        SettingsHub.Fill(settings, ShowHome, SettingsHub.CurrentTab);
         IndustryUi.Show(settings, true);
-        RefreshLabels();
-    }
-
-    void ShowKeys()
-    {
-        HideAll();
-        IndustryUi.Show(keys, true);
     }
 
     void ShowHome()
@@ -198,7 +169,6 @@ public class MainMenu : MonoBehaviour
     {
         IndustryUi.Show(home, false);
         IndustryUi.Show(settings, false);
-        IndustryUi.Show(keys, false);
         IndustryUi.Show(worlds, false);
         IndustryUi.Show(create, false);
     }
@@ -264,26 +234,6 @@ public class MainMenu : MonoBehaviour
             return;
         }
         PlayWorld(list[0]);
-    }
-
-    void RefreshLabels()
-    {
-        float zoom = PlayerPrefs.GetFloat("MiniMapZoom", 0.18f);
-        float size = PlayerPrefs.GetFloat("MiniMapSize", 220f);
-        if (zoomLabel != null)
-            zoomLabel.text = UiLocale.T("settings.minimap_zoom", Mathf.RoundToInt(zoom * 100f));
-        if (sizeLabel != null)
-            sizeLabel.text = UiLocale.T("settings.minimap_size", Mathf.RoundToInt(size));
-        if (hintsBtn != null)
-            IndustryUi.SetButtonLabel(hintsBtn, InputHintUI.HintsEnabled
-                ? UiLocale.T("settings.hints_on")
-                : UiLocale.T("settings.hints_off"));
-    }
-
-    void ToggleHints()
-    {
-        InputHintUI.HintsEnabled = !InputHintUI.HintsEnabled;
-        RefreshLabels();
     }
 
     static void Quit()

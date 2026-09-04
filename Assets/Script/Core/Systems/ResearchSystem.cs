@@ -243,6 +243,7 @@ public class ResearchSystem : MonoBehaviour
             if (rubies > 0 && PlayerWallet.Instance != null)
                 PlayerWallet.Instance.AddRubies(rubies);
             Debug.Log($"[Research] Completed: {node.displayName}  +{rubies} ruby");
+            UiAudio.PlayNotify();
         }
         else
         {

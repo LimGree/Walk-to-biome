@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 5;
 
     public int version = CurrentVersion;
     public string worldName;
@@ -27,6 +27,10 @@ public class SaveData
     public int statsCoinsGained;
     public int statsCoinsSpent;
     public int statsRubiesGained;
+    public List<MapMarkerSave> markers = new List<MapMarkerSave>();
+    public int exploreWidth;
+    public int exploreHeight;
+    public string exploredBits;
     public List<SaveKeyValue> extras = new List<SaveKeyValue>();
 
     public static SaveData Normalize(SaveData data)
@@ -48,6 +52,8 @@ public class SaveData
             data.statsProduced = new List<ItemAmountSave>();
         if (data.statsConsumed == null)
             data.statsConsumed = new List<ItemAmountSave>();
+        if (data.markers == null)
+            data.markers = new List<MapMarkerSave>();
 
         for (int i = 0; i < data.buildings.Count; i++)
         {
@@ -121,6 +127,20 @@ public class SaveKeyValue
 {
     public string key;
     public string value;
+}
+
+[Serializable]
+public class MapMarkerSave
+{
+    public int id;
+    public int x;
+    public int z;
+    public string label;
+    public float r = 1f;
+    public float g = 0.85f;
+    public float b = 0.25f;
+    public int hidden;
+    public string createdAt;
 }
 
 public static class SaveItems

@@ -9,9 +9,24 @@ public class BeltSpeedSystem : MonoBehaviour
 
     public event System.Action OnChanged;
 
-    public int NextCost => Economy.BeltUpgradeCost(Level + 1);
+    public int MaxLevel => Economy.BeltMaxLevel;
+    public bool IsMaxed => Level >= MaxLevel;
+    public int NextGearCost => IsMaxed ? 0 : Economy.BeltGearCost(Level + 1);
+    public int NextCoinCost => IsMaxed ? 0 : Economy.BeltCoinCost(Level + 1);
+    public int NextCost => NextGearCost;
     public float Multiplier => Economy.BeltMultiplier(Level);
-    public float Progress01 => NextCost > 0 ? Mathf.Clamp01((float)GearsTowardNext / NextCost) : 0f;
+    public float Progress01 => NextGearCost > 0 ? Mathf.Clamp01((float)GearsTowardNext / NextGearCost) : 1f;
+    public bool GearsReady => !IsMaxed && GearsTowardNext >= NextGearCost;
+
+    public bool CanBuyNext
+    {
+        get
+        {
+            if (IsMaxed || !GearsReady)
+                return false;
+            return PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(NextCoinCost);
+        }
+    }
 
     void Awake()
     {
@@ -41,12 +56,21 @@ public class BeltSpeedSystem : MonoBehaviour
     public bool SubmitGear()
     {
         GearsTowardNext++;
-        while (GearsTowardNext >= NextCost)
-        {
-            GearsTowardNext -= NextCost;
-            Level++;
-        }
+        OnChanged?.Invoke();
+        return true;
+    }
 
+    public bool TryBuyNext()
+    {
+        if (IsMaxed || !GearsReady)
+            return false;
+        int gears = NextGearCost;
+        int coins = NextCoinCost;
+        if (PlayerWallet.Instance != null && !PlayerWallet.Instance.TrySpendCoins(coins))
+            return false;
+
+        GearsTowardNext -= gears;
+        Level++;
         OnChanged?.Invoke();
         return true;
     }
@@ -67,7 +91,7 @@ public class BeltSpeedSystem : MonoBehaviour
             return;
         }
 
-        Level = Mathf.Max(0, save.beltLevel);
+        Level = Mathf.Clamp(save.beltLevel, 0, MaxLevel);
         GearsTowardNext = Mathf.Max(0, save.beltGears);
         OnChanged?.Invoke();
     }

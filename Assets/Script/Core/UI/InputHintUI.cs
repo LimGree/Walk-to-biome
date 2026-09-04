@@ -147,6 +147,8 @@ public class InputHintUI : MonoBehaviour
         {
             Add(hints, UiLocale.T("mouse.wheel"), UiLocale.T("hint.zoom"));
             Add(hints, UiLocale.T("mouse.lmb"), UiLocale.T("hint.pan_map"));
+            Add(hints, UiLocale.T("mouse.lmb"), UiLocale.T("hint.measure_map"));
+            Add(hints, UiLocale.T("mouse.rmb"), UiLocale.T("hint.marker_map"));
             Add(hints, KeybindStore.Hint("MoveSelection"), UiLocale.T("hint.close_map"));
             Add(hints, KeybindStore.Hint("Pause"), UiLocale.T("hint.close_map"));
             return hints;
@@ -157,6 +159,7 @@ public class InputHintUI : MonoBehaviour
             Add(hints, KeybindStore.Hint("BuildMode"), UiLocale.T("hint.build_mode"));
             Add(hints, KeybindStore.Hint("MoveSelection"), UiLocale.T("hint.map"));
             Add(hints, ShopHint(), UiLocale.T("hint.shop"));
+            Add(hints, KeybindStore.Hint("Zoom"), UiLocale.T("hint.zoom_hold"));
             Add(hints, UiLocale.T("mouse.wheel"), UiLocale.T("hint.zoom_map"));
             if (interactor != null && interactor.HasInteractableTarget)
                 Add(hints, KeybindStore.Hint("Interact"), interactor.InteractableHint);

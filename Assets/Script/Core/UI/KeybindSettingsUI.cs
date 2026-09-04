@@ -4,17 +4,24 @@ using UnityEngine.UIElements;
 
 public static class KeybindSettingsUI
 {
-    public static void Fill(VisualElement parent, Action onBack)
+    public static void Fill(VisualElement parent, Action onBack, bool page = false)
     {
         if (parent == null)
             return;
 
-        parent.Clear();
-        parent.Add(IndustryUi.Text("T", UiLocale.T("keys.title"), "title-hero"));
+        if (!page)
+            parent.Clear();
+        if (!page)
+            parent.Add(IndustryUi.Text("T", UiLocale.T("keys.title"), "title-hero"));
         parent.Add(IndustryUi.Text("H", UiLocale.T("keys.hint"), "muted"));
-        var scroll = IndustryUi.Scroll("Keys");
-        scroll.style.maxHeight = 420;
-        parent.Add(scroll);
+        VisualElement list = parent;
+        if (!page)
+        {
+            var scroll = IndustryUi.Scroll("Keys");
+            scroll.style.maxHeight = 420;
+            parent.Add(scroll);
+            list = scroll;
+        }
 
         var entries = KeybindStore.BuildEntries();
         var keyLabels = new List<Label>(entries.Count);
@@ -25,7 +32,7 @@ public static class KeybindSettingsUI
             string group = GroupOf(entry.actionName);
             if (group != lastGroup)
             {
-                scroll.Add(IndustryUi.Text("G" + group, group, "key-group"));
+                list.Add(IndustryUi.Text("G" + group, group, "key-group"));
                 lastGroup = group;
             }
 
@@ -50,7 +57,7 @@ public static class KeybindSettingsUI
                 Refresh(entries, keyLabels);
             }, "btn-small", "btn-ghost");
             row.Add(reset);
-            scroll.Add(row);
+            list.Add(row);
         }
 
         parent.Add(IndustryUi.El("Div", "divider"));
@@ -66,7 +73,7 @@ public static class KeybindSettingsUI
                     Refresh(entries, keyLabels);
                 });
         }, "btn-ghost"));
-        if (onBack != null)
+        if (!page && onBack != null)
             parent.Add(IndustryUi.Btn(UiLocale.T("menu.back"), onBack, "btn-ghost"));
         Refresh(entries, keyLabels);
     }
@@ -78,6 +85,7 @@ public static class KeybindSettingsUI
             case "Move":
             case "Jump":
             case "Sprint":
+            case "Zoom":
                 return UiLocale.T("keys.movement");
             case "Place":
             case "Demolish":

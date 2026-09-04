@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Refinery : CrafterBuilding
 {
+    protected override string WorkClip => "bld_refinery_loop";
     static readonly Vector2Int[] Cardinals =
     {
         new Vector2Int(0, 1),

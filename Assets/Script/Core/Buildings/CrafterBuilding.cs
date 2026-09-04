@@ -21,6 +21,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
 
     public virtual float CraftSpeed => level >= 2 ? 2f : 1f;
     public override bool CanUpgradeBuilding => level < 2;
+    protected virtual string WorkClip => "bld_assembler_loop";
 
     public override int ReadLevel()
     {
@@ -46,7 +47,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
         if (currentRecipe == null)
             return 0f;
         float speed = Mathf.Max(0.01f, CraftSpeed);
-        return currentRecipe.craftTime / speed;
+        return Economy.CraftNeed(currentRecipe) / speed;
     }
 
     public override void OnPlaced()
@@ -58,26 +59,30 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
 
     protected virtual void Update()
     {
+        bool working = currentRecipe != null && HasEnoughInputs() && HasSpaceForRecipeOutputs();
+        GameAudio.Loop(this, WorkClip, working);
+
         if (currentRecipe == null)
             return;
 
         if (!HasEnoughInputs())
             return;
 
+        float need = Economy.CraftNeed(currentRecipe);
         if (!HasSpaceForRecipeOutputs())
         {
-            craftProgress = Mathf.Min(craftProgress, currentRecipe.craftTime);
+            craftProgress = Mathf.Min(craftProgress, need);
             return;
         }
 
         craftProgress += Time.deltaTime * CraftSpeed;
 
-        if (craftProgress >= currentRecipe.craftTime)
+        if (craftProgress >= need)
         {
             if (TryCraft())
                 craftProgress = 0f;
             else
-                craftProgress = currentRecipe.craftTime;
+                craftProgress = need;
         }
     }
 
@@ -212,7 +217,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
         currentRecipe = GameDatabase.FindRecipe(save.recipeId);
         craftProgress = Mathf.Max(0f, save.craftProgress);
         SaveItems.ToCounts(save.inputBuffer, inputBuffer);
-        if (currentRecipe != null && currentRecipe.craftTime > 0f)
-            craftProgress = Mathf.Min(craftProgress, currentRecipe.craftTime);
+        if (currentRecipe != null)
+            craftProgress = Mathf.Min(craftProgress, Economy.CraftNeed(currentRecipe));
     }
 }

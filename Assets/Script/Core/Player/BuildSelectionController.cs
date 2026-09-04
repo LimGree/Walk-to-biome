@@ -262,6 +262,8 @@ public class BuildSelectionController : MonoBehaviour
         }
 
         ClearSelectionOnly();
+        if (builder != null)
+            GameAudio.World("world_copy", builder.transform.position);
     }
 
     void OnPaste(InputAction.CallbackContext ctx)
@@ -279,6 +281,7 @@ public class BuildSelectionController : MonoBehaviour
         previewAnchor = cell;
         BuildPreviewFromClipboard();
         TickPreview();
+        GameAudio.World("world_paste", builder.transform.position);
     }
 
     void OnMove(InputAction.CallbackContext ctx)

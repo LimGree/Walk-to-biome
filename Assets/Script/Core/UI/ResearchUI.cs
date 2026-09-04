@@ -267,6 +267,7 @@ public class ResearchUI : MonoBehaviour
             return;
         if (system.SetCurrentResearch(selected))
         {
+            UiAudio.PlayConfirm();
             UiNotification.Push(UiLocale.T("research.started"), selected.displayName, UiStatus.Running);
             Close();
         }

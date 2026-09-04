@@ -1,0 +1,7 @@
+# InventoryUI
+
+**Файл:** `Assets/Script/Core/UI/InventoryUI.cs`
+
+«Сумка зданий» (не лут с лент). Сетка всех открытых построек, перетаскивание в хотбар, ПКМ убрать из слота.
+
+Связи: [[PlayerInventory]], [[HotbarSlotView]], [[GameDatabase]].

@@ -74,6 +74,22 @@ public class WorldResourceScatterer : MonoBehaviour
         Instance = this;
     }
 
+    void OnEnable()
+    {
+        GameSettings.Changed += SyncVisualRadius;
+        SyncVisualRadius();
+    }
+
+    void OnDisable()
+    {
+        GameSettings.Changed -= SyncVisualRadius;
+    }
+
+    void SyncVisualRadius()
+    {
+        visualRadius = GameSettings.RenderDistance;
+    }
+
     void Start()
     {
         if (WorldBiomeMap.Instance != null && WorldBiomeMap.Instance.IsReady)
@@ -82,6 +98,7 @@ public class WorldResourceScatterer : MonoBehaviour
 
     void OnDestroy()
     {
+        GameSettings.Changed -= SyncVisualRadius;
         if (Instance == this)
             Instance = null;
     }

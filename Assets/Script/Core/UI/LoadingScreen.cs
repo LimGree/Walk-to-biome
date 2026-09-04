@@ -16,6 +16,8 @@ public class LoadingScreen : MonoBehaviour
         AudioListener.pause = false;
         UnityEngine.Cursor.lockState = CursorLockMode.None;
         UnityEngine.Cursor.visible = true;
+        GameAudio.Ensure();
+        GameAudio.PlayMusic("music/mus_menu");
         BuildUi();
         StartCoroutine(LoadGame());
     }

@@ -322,6 +322,7 @@ public class InventoryUI : MonoBehaviour
             dragging = true;
             IndustryUi.SetIcon(ghostIcon, dragBuilding.icon);
             IndustryUi.Show(ghost, true);
+            GameAudio.Ui("ui_drag_start");
         }
 
         if (dragging && ghost != null)
@@ -353,9 +354,15 @@ public class InventoryUI : MonoBehaviour
         {
             int dest = HitHotbar(pos);
             if (dest >= 0)
+            {
                 inventory.SwapOrPlace(dragBuilding, dest);
+                GameAudio.Ui("ui_drag_drop");
+            }
             else if (dragHotbar >= 0 && HitBag(pos))
+            {
                 inventory.UnequipSlot(dragHotbar);
+                GameAudio.Ui("ui_drag_drop");
+            }
         }
         else if (!dragging && inventory != null)
         {
