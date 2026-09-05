@@ -133,7 +133,7 @@ public class ChemicalPlant : CrafterBuilding
                 Conveyor belt = other as Conveyor;
                 if (belt == null || belt is Pipe)
                     continue;
-                if (belt.TryAcceptTransfer(item, null))
+                if (belt.TryAcceptTransfer(item, null, this))
                     return true;
             }
         }

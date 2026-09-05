@@ -2,15 +2,15 @@ using UnityEngine;
 
 public static class Economy
 {
-    public const int StartingCoins = 1000;
-    public const int StartingRubies = 0;
+    public const int StartingCoins = 2500;
+    public const int StartingRubies = 10;
     public const int CoinsPerRuby = 50;
 
     public const int BeltMaxLevel = 10;
-    public const int BeltFirstGears = 200;
-    public const int BeltLastGears = 500000;
-    public const int BeltFirstCoins = 180;
-    public const int BeltLastCoins = 16000;
+    public const int BeltFirstGears = 1000;
+    public const int BeltLastGears = 2500000;
+    public const int BeltFirstCoins = 900;
+    public const int BeltLastCoins = 80000;
 
     public const float CraftTimeMul = 1.8f;
     public const float ExtractTimeMul = 1.25f;
@@ -19,6 +19,16 @@ public static class Economy
     {
         if (item == null)
             return 0;
+        int v = RawSellValue(item);
+        if (IsExtractorResource(item))
+            return v;
+        if (v <= 0)
+            return 1;
+        return Mathf.Max(1, Mathf.RoundToInt(v / 5f));
+    }
+
+    static int RawSellValue(ItemData item)
+    {
         int v = Mathf.Max(0, item.sellValue);
         if (v <= 1)
             return v;
@@ -33,9 +43,31 @@ public static class Economy
         return Mathf.RoundToInt(v * 1.55f);
     }
 
+    public static bool IsExtractorResource(ItemData item)
+    {
+        if (item == null || string.IsNullOrEmpty(item.id))
+            return false;
+        string id = item.id.Trim().ToLowerInvariant();
+        return id == "log" || id == "sand" || id == "stone" || id == "coal_ore"
+            || id == "cooper_ore" || id == "copper_ore" || id == "iron_ore" || id == "sulfur"
+            || id == "crude_oil" || id == "water";
+    }
+
     public static int BuildCost(BuildingData data)
     {
         return data != null ? Mathf.Max(0, data.buildCost) : 0;
+    }
+
+    public static int RefundCoins(BuildingData data)
+    {
+        return Mathf.Max(0, Mathf.RoundToInt(BuildCost(data) * 0.75f));
+    }
+
+    public static void PayRefund(BuildingBase building)
+    {
+        int coins = RefundCoins(building != null ? building.data : null);
+        if (coins > 0 && PlayerWallet.Instance != null)
+            PlayerWallet.Instance.AddCoins(coins);
     }
 
     public static int UpgradeCost(BuildingBase building)

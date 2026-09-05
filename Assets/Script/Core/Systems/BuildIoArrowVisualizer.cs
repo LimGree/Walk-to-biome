@@ -30,6 +30,7 @@ public class BuildIoArrowVisualizer : MonoBehaviour
     readonly List<MeshRenderer> arrows = new List<MeshRenderer>(PoolSize);
     readonly List<Transform> transforms = new List<Transform>(PoolSize);
     readonly Dictionary<int, List<SocketHint>> prefabHints = new Dictionary<int, List<SocketHint>>();
+    readonly List<BuildingBase> placedBuffer = new List<BuildingBase>(256);
 
     void Awake()
     {
@@ -61,8 +62,8 @@ public class BuildIoArrowVisualizer : MonoBehaviour
 
     void LateUpdate()
     {
-        if (builder == null)
-            builder = FindFirstObjectByType<PlayerBuilder>();
+        if (builder == null && GameManager.Instance != null)
+            builder = GameManager.Instance.playerBuilder;
         if (builder == null || grid == null || !builder.isBuildMode)
         {
             HideAll();
@@ -71,11 +72,16 @@ public class BuildIoArrowVisualizer : MonoBehaviour
 
         int used = 0;
         GameObject ghost = builder.CurrentGhost;
-        BuildingBase[] buildings = FindObjectsByType<BuildingBase>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        for (int i = 0; i < buildings.Length; i++)
+        BuildingLinker.CollectPlaced(placedBuffer);
+        float arrowRange = GameSettings.RenderDistance + 8f;
+        for (int i = 0; i < placedBuffer.Count; i++)
         {
-            BuildingBase building = buildings[i];
-            if (ghost != null && building != null && building.transform.IsChildOf(ghost.transform))
+            BuildingBase building = placedBuffer[i];
+            if (building == null)
+                continue;
+            if (ghost != null && building.transform.IsChildOf(ghost.transform))
+                continue;
+            if (!WorldView.InRange(building.transform.position, arrowRange))
                 continue;
             used = DrawBuilding(building, used);
         }

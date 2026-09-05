@@ -15,6 +15,8 @@
 
 Все станки, ленты, склады **наследуют** этот класс.
 
+Добыча, ленты и лаба **не останавливаются** вдали. За радиусом [[GameSettings.RenderDistance]] гасятся только модельки и коллайдеры ([[WorldView]]); при входе в зону они снова включаются.
+
 ## Связи
 
 Дети: [[CrafterBuilding]], [[Conveyor]], [[Extractor]], [[OilExtractor]], [[WaterExtractor]], [[StorageContainer]], [[RoboticArm]], [[Splitter]], [[ResearchLab]], [[PowerGenerator]]

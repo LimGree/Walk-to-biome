@@ -9,9 +9,7 @@ public static class BeltItemView
             AttachFallbackCube(root, itemScale);
 
         DisableColliders(root);
-        int layer = LayerMask.NameToLayer("buildings");
-        if (layer >= 0)
-            SetLayer(root, layer);
+        ApplyWorldCullLayer(root);
         return root.transform;
     }
 
@@ -21,6 +19,7 @@ public static class BeltItemView
             return;
         visual.SetParent(null, true);
         DisableColliders(visual.gameObject);
+        ApplyWorldCullLayer(visual.gameObject);
     }
 
     public static void Update(Transform visual, Vector3 position, Vector3 look)
@@ -33,7 +32,7 @@ public static class BeltItemView
         SpriteRenderer sprite = visual.GetComponent<SpriteRenderer>();
         if (sprite != null)
         {
-            Camera cam = Camera.main;
+            Camera cam = WorldView.Cam;
             if (cam != null)
             {
                 Vector3 toCam = visual.position - cam.transform.position;
@@ -139,6 +138,13 @@ public static class BeltItemView
             if (cols[i] != null)
                 cols[i].enabled = false;
         }
+    }
+
+    public static void ApplyWorldCullLayer(GameObject go)
+    {
+        int layer = LayerMask.NameToLayer("buildings");
+        if (layer >= 0)
+            SetLayer(go, layer);
     }
 
     static void SetLayer(GameObject go, int layer)

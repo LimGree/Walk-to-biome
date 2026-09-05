@@ -64,26 +64,17 @@ public class MachineUI : MonoBehaviour
 
     void OnEnable()
     {
-        if (BeltSpeedSystem.Instance != null)
-            BeltSpeedSystem.Instance.OnChanged += OnBeltChanged;
-        if (PlayerWallet.Instance != null)
-            PlayerWallet.Instance.OnChanged += OnBeltChanged;
+        BindLiveEvents();
     }
 
     void OnDisable()
     {
-        if (BeltSpeedSystem.Instance != null)
-            BeltSpeedSystem.Instance.OnChanged -= OnBeltChanged;
-        if (PlayerWallet.Instance != null)
-            PlayerWallet.Instance.OnChanged -= OnBeltChanged;
+        UnbindLiveEvents();
     }
 
     void OnDestroy()
     {
-        if (BeltSpeedSystem.Instance != null)
-            BeltSpeedSystem.Instance.OnChanged -= OnBeltChanged;
-        if (PlayerWallet.Instance != null)
-            PlayerWallet.Instance.OnChanged -= OnBeltChanged;
+        UnbindLiveEvents();
         if (Instance == this)
             Instance = null;
     }
@@ -91,8 +82,36 @@ public class MachineUI : MonoBehaviour
     void Start()
     {
         Build();
+        BindLiveEvents();
         IndustryUi.HideLegacy(this, machinePanel, extractorContent, smelterContent, assemblerContent, researchLabContent);
         IndustryUi.DisableHudCanvas(this);
+    }
+
+    void BindLiveEvents()
+    {
+        UnbindLiveEvents();
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.OnChanged += OnLiveChanged;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.OnChanged += OnLiveChanged;
+        if (ResearchSystem.Instance != null)
+        {
+            ResearchSystem.Instance.OnUnlocksChanged += OnLiveChanged;
+            ResearchSystem.Instance.OnResearchProgressChanged += OnLiveChanged;
+        }
+    }
+
+    void UnbindLiveEvents()
+    {
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.OnChanged -= OnLiveChanged;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.OnChanged -= OnLiveChanged;
+        if (ResearchSystem.Instance != null)
+        {
+            ResearchSystem.Instance.OnUnlocksChanged -= OnLiveChanged;
+            ResearchSystem.Instance.OnResearchProgressChanged -= OnLiveChanged;
+        }
     }
 
     void Update()
@@ -204,6 +223,7 @@ public class MachineUI : MonoBehaviour
 
     public void Open(BuildingBase building)
     {
+        BindLiveEvents();
         if (building == null)
             return;
         if (!gameObject.activeSelf)
@@ -648,10 +668,19 @@ public class MachineUI : MonoBehaviour
         OpenLabTab(labTab);
     }
 
-    void OnBeltChanged()
+    void OnLiveChanged()
     {
-        if (IsOpen && currentBuilding is ResearchLab && labTab == 1)
+        if (!IsOpen || currentBuilding == null)
+            return;
+        BindUpgrade(currentBuilding);
+        if (!(currentBuilding is ResearchLab))
+            return;
+        if (labTab == 0)
+            FillResearchTab();
+        else if (labTab == 1)
             RebuildBeltTree();
+        else
+            RebuildStatsList();
     }
 
     void OpenLabTab(int tab)

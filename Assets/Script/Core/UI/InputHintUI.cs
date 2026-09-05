@@ -48,22 +48,14 @@ public class InputHintUI : MonoBehaviour
 
     void BindRefs()
     {
-        if (builder == null)
-            builder = GameManager.Instance != null
-                ? GameManager.Instance.playerBuilder
-                : FindFirstObjectByType<PlayerBuilder>();
-        if (builder == null)
-            builder = FindFirstObjectByType<PlayerBuilder>();
+        if (builder == null && GameManager.Instance != null)
+            builder = GameManager.Instance.playerBuilder;
         if (inventory == null && builder != null)
             inventory = builder.inventory;
-        if (inventory == null)
-            inventory = FindFirstObjectByType<PlayerInventory>();
-        if (interactor == null)
-            interactor = FindFirstObjectByType<PlayerInteractor>();
+        if (interactor == null && builder != null)
+            interactor = builder.GetComponent<PlayerInteractor>();
         if (selection == null && builder != null)
             selection = builder.Selection;
-        if (selection == null)
-            selection = FindFirstObjectByType<BuildSelectionController>();
     }
 
     void BuildUi()

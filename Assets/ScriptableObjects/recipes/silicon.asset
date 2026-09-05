@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d24a77eadee1144d9eb73d31dc37649, type: 3}
   m_Name: silicon
   m_EditorClassIdentifier: 
-  id: 'silicon '
-  displayName: "\u041A\u0440\u0435\u043C\u043D\u0438\u0439 "
+  id: silicon
+  displayName: "\u041A\u0440\u0435\u043C\u043D\u0438\u0439"
   inputs:
   - item: {fileID: 11400000, guid: 9bb6b85117cb79e4f94d5ff91ad70187, type: 2}
     amount: 4

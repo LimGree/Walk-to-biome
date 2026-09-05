@@ -18,6 +18,11 @@ public abstract class BuildingBase : MonoBehaviour
     public bool drawFootprintGizmo = true;
 
     private readonly Queue<ItemData> outputBuffer = new Queue<ItemData>();
+    Renderer[] cullRenderers;
+    Collider[] cullColliders;
+    bool[] cullColliderOn;
+    bool worldPlaced;
+    bool worldShown = true;
 
     public int OutputBufferCount => outputBuffer.Count;
     public int OutputBufferFree => Mathf.Max(0, maxOutputBuffer - outputBuffer.Count);
@@ -33,6 +38,7 @@ public abstract class BuildingBase : MonoBehaviour
 
     public virtual void OnPlaced()
     {
+        worldPlaced = true;
         RegisterOnGrid();
         if (!BuildingLinker.SuppressRelink)
             BuildingLinker.RelinkAround(this);
@@ -40,6 +46,7 @@ public abstract class BuildingBase : MonoBehaviour
 
     public virtual void OnRemoved()
     {
+        worldPlaced = false;
         List<BuildingBase> neighbors = new List<BuildingBase>(8);
         BuildingLinker.CollectNeighbors(this, neighbors);
         DisconnectAllSockets();
@@ -225,6 +232,48 @@ public abstract class BuildingBase : MonoBehaviour
     {
         if (outputBuffer.Count > 0)
             FlushOutputBuffer();
+        ApplyWorldCull();
+    }
+
+    void ApplyWorldCull()
+    {
+        if (!worldPlaced)
+            return;
+
+        bool show = WorldView.InRange(transform.position);
+        if (show == worldShown && cullRenderers != null)
+            return;
+
+        if (cullRenderers == null)
+            CaptureCull();
+
+        worldShown = show;
+        if (cullRenderers != null)
+        {
+            for (int i = 0; i < cullRenderers.Length; i++)
+            {
+                if (cullRenderers[i] != null)
+                    cullRenderers[i].enabled = show;
+            }
+        }
+
+        if (cullColliders != null)
+        {
+            for (int i = 0; i < cullColliders.Length; i++)
+            {
+                if (cullColliders[i] != null)
+                    cullColliders[i].enabled = show && cullColliderOn[i];
+            }
+        }
+    }
+
+    void CaptureCull()
+    {
+        cullRenderers = GetComponentsInChildren<Renderer>(true);
+        cullColliders = GetComponentsInChildren<Collider>(true);
+        cullColliderOn = new bool[cullColliders.Length];
+        for (int i = 0; i < cullColliders.Length; i++)
+            cullColliderOn[i] = cullColliders[i] != null && cullColliders[i].enabled;
     }
 
 #if UNITY_EDITOR

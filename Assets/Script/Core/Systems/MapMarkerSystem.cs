@@ -170,13 +170,7 @@ public class MapMarkerSystem : MonoBehaviour
     void UpdateHolos()
     {
         if (cam == null)
-            cam = Camera.main;
-        if (cam == null)
-        {
-            PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
-            if (player != null)
-                cam = player.GetComponentInChildren<Camera>();
-        }
+            cam = WorldView.Cam;
         if (cam == null)
             return;
 

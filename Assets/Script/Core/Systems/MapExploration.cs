@@ -78,15 +78,15 @@ public class MapExploration : MonoBehaviour
         if (mask == null)
             return;
 
+        if (!WorldView.HasPlayer)
+            return;
         if (player == null)
-        {
-            PlayerMovement move = FindFirstObjectByType<PlayerMovement>();
-            if (move != null)
-                player = move.transform;
-        }
+            player = GameManager.Instance != null && GameManager.Instance.playerBuilder != null
+                ? GameManager.Instance.playerBuilder.transform
+                : null;
         if (player != null)
         {
-            Vector2Int cell = WorldToCell(player.position);
+            Vector2Int cell = WorldToCell(WorldView.PlayerPos);
             if (cell != lastCell)
             {
                 lastCell = cell;

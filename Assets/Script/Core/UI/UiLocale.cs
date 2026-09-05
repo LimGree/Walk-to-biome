@@ -212,6 +212,8 @@ public static class UiLocale
             { "bind.shop", ("Магазин", "Shop") },
             { "bind.selected", ("Выделенные", "Selection") },
 
+            { "hud.build_cost", ("{0}  ·  {1}", "{0}  ·  {1}") },
+            { "hud.build_line", ("{0} × {1}  =  {2}", "{0} × {1}  =  {2}") },
             { "overlay.build", ("Строительство", "Build") },
             { "overlay.research", ("Исследования", "Research") },
             { "overlay.shop", ("Магазин", "Shop") },
@@ -317,6 +319,16 @@ public static class UiLocale
             { "belt.maxed", ("Максимум  ·  ×{0}", "Max  ·  ×{0}") },
 
             { "load.loading", ("Загрузка…", "Loading…") },
+            { "load.world", ("Подготовка мира…", "Preparing world…") },
+            { "load.scene", ("Загрузка сцены…", "Loading scene…") },
+            { "load.start", ("Запуск мира…", "Starting world…") },
+            { "load.biomes", ("Сборка биомов…", "Building biomes…") },
+            { "load.resources", ("Расстановка ресурсов…", "Placing resources…") },
+            { "load.save", ("Восстановление завода…", "Restoring factory…") },
+            { "load.done", ("Готово", "Ready") },
+            { "load.back", ("Возврат в меню…", "Returning to menu…") },
+            { "load.fail_biomes", ("Мир не собрал биомы.", "World failed to build biomes.") },
+            { "load.fail_resources", ("Мир не разбросал ресурсы.", "World failed to scatter resources.") },
             { "modal.cancel", ("Отмена", "Cancel") },
             { "modal.ok", ("ОК", "OK") },
 

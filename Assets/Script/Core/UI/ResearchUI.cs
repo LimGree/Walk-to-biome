@@ -40,6 +40,13 @@ public class ResearchUI : MonoBehaviour
         IndustryUi.DisableHudCanvas(this);
         IndustryUi.Show(overlay, false);
         IsOpen = false;
+        if (ResearchSystem.Instance != null)
+        {
+            ResearchSystem.Instance.OnUnlocksChanged -= RefreshList;
+            ResearchSystem.Instance.OnResearchProgressChanged -= RefreshList;
+            ResearchSystem.Instance.OnUnlocksChanged += RefreshList;
+            ResearchSystem.Instance.OnResearchProgressChanged += RefreshList;
+        }
     }
 
     void OnEnable()
@@ -47,7 +54,10 @@ public class ResearchUI : MonoBehaviour
         if (inputActions != null)
             inputActions.Player.Research.performed += OnResearchToggle;
         if (ResearchSystem.Instance != null)
+        {
             ResearchSystem.Instance.OnUnlocksChanged += RefreshList;
+            ResearchSystem.Instance.OnResearchProgressChanged += RefreshList;
+        }
     }
 
     void OnDisable()
@@ -55,11 +65,19 @@ public class ResearchUI : MonoBehaviour
         if (inputActions != null)
             inputActions.Player.Research.performed -= OnResearchToggle;
         if (ResearchSystem.Instance != null)
+        {
             ResearchSystem.Instance.OnUnlocksChanged -= RefreshList;
+            ResearchSystem.Instance.OnResearchProgressChanged -= RefreshList;
+        }
     }
 
     void OnDestroy()
     {
+        if (ResearchSystem.Instance != null)
+        {
+            ResearchSystem.Instance.OnUnlocksChanged -= RefreshList;
+            ResearchSystem.Instance.OnResearchProgressChanged -= RefreshList;
+        }
         if (Instance == this)
             Instance = null;
     }

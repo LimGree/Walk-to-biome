@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 
 public class SaveSystem : MonoBehaviour
@@ -118,10 +119,24 @@ public class SaveSystem : MonoBehaviour
 
     public void LoadGame()
     {
+        IEnumerator routine = LoadGameRoutine(null);
+        while (routine.MoveNext())
+        {
+        }
+    }
+
+    public IEnumerator LoadGameRoutine(System.Action<float> onProgress)
+    {
+        void Report(float t)
+        {
+            onProgress?.Invoke(Mathf.Clamp01(t));
+        }
+
         if (!WorldCatalog.HasActive)
         {
             Debug.Log("[Save] Нет активного мира — новая сессия сцены");
-            return;
+            Report(1f);
+            yield break;
         }
 
         string path = WorldCatalog.ActiveSavePath;
@@ -137,23 +152,28 @@ public class SaveSystem : MonoBehaviour
                 MapExploration.Instance.ResetToNewWorld();
             if (ProductionStats.Instance != null)
                 ProductionStats.Instance.ResetAll();
-            return;
+            Report(1f);
+            yield break;
         }
 
         SaveData data = SaveData.Normalize(JsonUtility.FromJson<SaveData>(File.ReadAllText(path)));
         if (data == null)
         {
             Debug.LogError("[Save] Не удалось прочитать сохранение");
-            return;
+            Report(1f);
+            yield break;
         }
 
         BuildingData[] catalog = GameDatabase.AllBuildings();
         BuildingLinker.SuppressRelink = true;
         ClearWorldBuildings();
+        Report(0.08f);
+        yield return null;
 
         var spawned = new List<BuildingBase>();
         var states = new List<BuildingSaveData>();
         int count = 0;
+        int total = data.buildings != null ? Mathf.Max(1, data.buildings.Count) : 1;
         if (data.buildings != null)
         {
             for (int i = 0; i < data.buildings.Count; i++)
@@ -164,10 +184,17 @@ public class SaveSystem : MonoBehaviour
                 spawned.Add(building);
                 states.Add(data.buildings[i]);
                 count++;
+                if (count % 8 == 0)
+                {
+                    Report(0.08f + 0.7f * (i / (float)total));
+                    yield return null;
+                }
             }
         }
 
         BuildingLinker.SuppressRelink = false;
+        Report(0.82f);
+        yield return null;
         BuildingLinker.RelinkAll();
 
         for (int i = 0; i < spawned.Count; i++)
@@ -176,8 +203,11 @@ public class SaveSystem : MonoBehaviour
                 continue;
             spawned[i].ApplyLevel(states[i].level);
             spawned[i].ReadSave(states[i]);
+            if (i % 16 == 0)
+                yield return null;
         }
 
+        Report(0.92f);
         if (ResearchSystem.Instance != null)
             ResearchSystem.Instance.ApplySave(data.research);
         if (PlayerWallet.Instance != null)
@@ -207,6 +237,7 @@ public class SaveSystem : MonoBehaviour
 
         nextAutoSave = Time.unscaledTime + Mathf.Max(30f, autoSaveInterval);
         Debug.Log($"[Save] Загружено зданий: {count}  (файл v{data.version})");
+        Report(1f);
     }
 
     static BuildingData FindBuildingData(string id, BuildingData[] catalog)

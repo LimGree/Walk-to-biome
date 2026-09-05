@@ -573,8 +573,8 @@ Button.card-on {
     border-width: 1px;
     border-radius: 2px;
     padding: 8px 12px;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .hud-line {
@@ -587,6 +587,12 @@ Button.card-on {
 .hud-chip .gold,
 .hud-chip .ruby {
     font-size: 18px;
+}
+
+.hud-cost {
+    margin-top: 4px;
+    font-size: 14px;
+    color: var(--accent);
 }
 
 .resource-chip__icon,
@@ -840,6 +846,9 @@ Button.card-on {
 .progress-fill {
     height: 6px;
     background-color: var(--accent);
+    transition-property: width;
+    transition-duration: 80ms;
+    transition-timing-function: linear;
 }
 
 .status-row {

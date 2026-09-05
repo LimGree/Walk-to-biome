@@ -152,29 +152,63 @@ public class Splitter : BuildingBase
         float move = speed * Time.deltaTime / Mathf.Max(0.05f, cell);
         float gap = ItemGap;
 
-        cargo.Sort((a, b) => b.progress.CompareTo(a.progress));
-
         for (int i = 0; i < cargo.Count; i++)
         {
-            float limit = i == 0 ? 1f : cargo[i - 1].progress - gap;
+            float limit = 1f;
+            float progress = cargo[i].progress;
+            for (int j = 0; j < cargo.Count; j++)
+            {
+                if (j == i)
+                    continue;
+                float other = cargo[j].progress;
+                if (other > progress)
+                    limit = Mathf.Min(limit, other - gap);
+            }
             if (limit < 0f)
                 limit = 0f;
-
-            Cargo item = cargo[i];
-            if (item.progress < limit)
-                item.progress = Mathf.Min(limit, item.progress + move);
+            if (progress < limit)
+                cargo[i].progress = Mathf.Min(limit, progress + move);
         }
 
-        if (cargo.Count > 0 && cargo[0].progress >= 0.999f)
-        {
-            if (TryHandOff(cargo[0]))
-                cargo.RemoveAt(0);
-            else
-                cargo[0].progress = 1f;
-        }
-
+        int front = -1;
+        float best = 0.999f;
         for (int i = 0; i < cargo.Count; i++)
-            UpdateCargoVisual(cargo[i]);
+        {
+            if (cargo[i].progress >= best)
+            {
+                best = cargo[i].progress;
+                front = i;
+            }
+        }
+        if (front >= 0)
+        {
+            if (TryHandOff(cargo[front]))
+                cargo.RemoveAt(front);
+            else
+                cargo[front].progress = 1f;
+        }
+
+        RefreshCargoVisuals();
+    }
+
+    void RefreshCargoVisuals()
+    {
+        bool show = WorldView.InRange(transform.position);
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            Cargo item = cargo[i];
+            if (show)
+            {
+                if (item.visual == null)
+                    item.visual = BeltItemView.Create(item.item, itemScale);
+                UpdateCargoVisual(item);
+            }
+            else if (item.visual != null)
+            {
+                BeltItemView.Destroy(item.visual);
+                item.visual = null;
+            }
+        }
     }
 
     bool TryHandOff(Cargo item)
@@ -186,7 +220,7 @@ public class Splitter : BuildingBase
 
         Conveyor nextBelt = dest as Conveyor;
         if (nextBelt != null)
-            return nextBelt.TryAcceptTransfer(item.item, item.visual);
+            return nextBelt.TryAcceptTransfer(item.item, item.visual, this);
 
         Splitter nextSplit = dest as Splitter;
         if (nextSplit != null)
@@ -226,20 +260,31 @@ public class Splitter : BuildingBase
             exitDir = exitDir
         };
 
-        if (cargoItem.visual == null)
-            cargoItem.visual = BeltItemView.Create(item, itemScale);
-        else
-            BeltItemView.Prepare(cargoItem.visual);
+        if (WorldView.InRange(transform.position))
+        {
+            if (cargoItem.visual == null)
+                cargoItem.visual = BeltItemView.Create(item, itemScale);
+            else
+                BeltItemView.Prepare(cargoItem.visual);
+        }
+        else if (cargoItem.visual != null)
+        {
+            BeltItemView.Destroy(cargoItem.visual);
+            cargoItem.visual = null;
+        }
 
         if (cargoItem.visual != null)
             cargoItem.visual.SetParent(transform, true);
 
         cargo.Add(cargoItem);
-        UpdateCargoVisual(cargoItem);
+        if (cargoItem.visual != null)
+            UpdateCargoVisual(cargoItem);
     }
 
     void UpdateCargoVisual(Cargo item)
     {
+        if (item.visual == null)
+            return;
         Vector3 pos = EvaluatePath(item, item.progress);
         Vector3 look = EvaluatePath(item, Mathf.Min(1f, item.progress + 0.05f)) - pos;
         BeltItemView.Update(item.visual, pos, look);
@@ -534,6 +579,7 @@ public class Splitter : BuildingBase
 
     protected override void LateUpdate()
     {
+        base.LateUpdate();
     }
 
     protected override void OnDestroy()

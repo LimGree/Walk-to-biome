@@ -16,6 +16,18 @@ public static class GridOccupancy
     private static readonly Dictionary<object, List<Vector2Int>> reservationCells =
         new Dictionary<object, List<Vector2Int>>();
 
+    public static void CollectOccupants(List<GameObject> results)
+    {
+        if (results == null)
+            return;
+        results.Clear();
+        foreach (var pair in objectCells)
+        {
+            if (pair.Key != null)
+                results.Add(pair.Key);
+        }
+    }
+
     public static bool IsCellFree(Vector2Int cell)
     {
         return IsCellFree(cell, null, null);

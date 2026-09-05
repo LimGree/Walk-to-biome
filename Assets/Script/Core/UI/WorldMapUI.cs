@@ -56,6 +56,7 @@ public class WorldMapUI : MonoBehaviour
     string waypointFilter = "";
     readonly List<VisualElement> miniPins = new List<VisualElement>();
     readonly List<VisualElement> fullPins = new List<VisualElement>();
+    float nextMiniTick;
 
     public static bool MiniRoundPref
     {
@@ -159,6 +160,13 @@ public class WorldMapUI : MonoBehaviour
 
     void LateUpdate()
     {
+        if (!IsOpen)
+        {
+            if (Time.unscaledTime < nextMiniTick)
+                return;
+            nextMiniTick = Time.unscaledTime + 0.08f;
+        }
+
         if (mapTex == null)
             Rebuild();
 

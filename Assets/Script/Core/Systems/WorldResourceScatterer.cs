@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -44,6 +45,7 @@ public class WorldResourceScatterer : MonoBehaviour
     public static WorldResourceScatterer Instance { get; private set; }
     public IReadOnlyList<VeinMark> Veins => veins;
     public bool IsScattered { get; private set; }
+    public float ScatterProgress { get; private set; }
 
     Transform root;
     Transform player;
@@ -65,9 +67,15 @@ public class WorldResourceScatterer : MonoBehaviour
     struct NodeVisual
     {
         public Vector3 pos;
-        public Renderer[] renderers;
+        public GameObject prefab;
+        public GameObject stub;
+        public GameObject visual;
+        public float yaw;
         public bool shown;
     }
+
+    Vector3 lastCullPos = new Vector3(99999f, 0f, 0f);
+    float lastCullTime = -10f;
 
     void Awake()
     {
@@ -88,7 +96,10 @@ public class WorldResourceScatterer : MonoBehaviour
     void SyncVisualRadius()
     {
         visualRadius = GameSettings.RenderDistance;
+        lastCullTime = -10f;
     }
+
+    Coroutine scatterRoutine;
 
     void Start()
     {
@@ -105,17 +116,34 @@ public class WorldResourceScatterer : MonoBehaviour
 
     void LateUpdate()
     {
+        if (!WorldView.HasPlayer)
+            return;
+        Vector3 p = WorldView.PlayerPos;
+        if ((p - lastCullPos).sqrMagnitude < 9f && Time.unscaledTime - lastCullTime < 0.2f)
+            return;
+        lastCullPos = p;
+        lastCullTime = Time.unscaledTime;
         UpdateVisibility();
     }
 
     [ContextMenu("Scatter")]
     public void Scatter()
     {
+        if (!isActiveAndEnabled)
+            return;
+        if (scatterRoutine != null)
+            StopCoroutine(scatterRoutine);
+        scatterRoutine = StartCoroutine(ScatterRoutine());
+    }
+
+    IEnumerator ScatterRoutine()
+    {
         WorldBiomeMap map = WorldBiomeMap.Instance;
         if (map == null || !map.IsReady)
-            return;
+            yield break;
 
         IsScattered = false;
+        ScatterProgress = 0f;
         ResolvePrefabs();
         ClearSpawned();
         used.Clear();
@@ -124,17 +152,19 @@ public class WorldResourceScatterer : MonoBehaviour
         veinLookup.Clear();
         visuals.Clear();
         rng = new System.Random(map.seed * 31 + 9);
-
         root = new GameObject("WorldResources").transform;
+        yield return null;
 
         pendingKind = "sand";
-        SpawnBiomeDeposits(WorldBiome.Beach, sandPrefab, sandDeposits, clusterGap);
+        yield return SpawnBiomeDepositsRoutine(WorldBiome.Beach, sandPrefab, sandDeposits, clusterGap, 0.02f, 0.18f);
         pendingKind = "tree";
-        SpawnBiomeDeposits(WorldBiome.Forest, treePrefab, treeDeposits, 6);
-        SpawnBiomeDeposits(WorldBiome.Woodland, treePrefab, Mathf.Max(12, treeDeposits / 2), 7);
-        SpawnMountainOres(map);
+        yield return SpawnBiomeDepositsRoutine(WorldBiome.Forest, treePrefab, treeDeposits, 6, 0.18f, 0.48f);
+        yield return SpawnBiomeDepositsRoutine(WorldBiome.Woodland, treePrefab, Mathf.Max(12, treeDeposits / 2), 7, 0.48f, 0.62f);
+        yield return SpawnMountainOresRoutine(map);
         HideAllVisuals();
+        ScatterProgress = 1f;
         IsScattered = true;
+        scatterRoutine = null;
         if (WorldMapUI.Instance != null)
             WorldMapUI.Instance.Rebuild();
     }
@@ -148,10 +178,10 @@ public class WorldResourceScatterer : MonoBehaviour
             Destroy(existing);
     }
 
-    int SpawnBiomeDeposits(WorldBiome biome, GameObject prefab, int deposits, int gap)
+    IEnumerator SpawnBiomeDepositsRoutine(WorldBiome biome, GameObject prefab, int deposits, int gap, float p0, float p1)
     {
         if (prefab == null || deposits <= 0)
-            return 0;
+            yield break;
 
         var cells = new List<Vector2Int>(256);
         WorldBiomeMap.Instance.CollectBiomeCells(biome, cells);
@@ -159,21 +189,31 @@ public class WorldResourceScatterer : MonoBehaviour
 
         int made = 0;
         int want = Mathf.Max(10, nodesPerCluster);
+        int steps = 0;
         for (int i = 0; i < cells.Count && made < deposits; i++)
         {
             if (!CanStartCluster(cells[i], gap))
                 continue;
             if (SpawnScatter(cells[i], cells, prefab, want) >= 5)
+            {
                 made++;
+                ScatterProgress = Mathf.Lerp(p0, p1, made / (float)Mathf.Max(1, deposits));
+            }
+            steps++;
+            if (steps % 2 == 0)
+                yield return null;
         }
-        return made;
+        ScatterProgress = p1;
     }
 
-    void SpawnMountainOres(WorldBiomeMap map)
+    IEnumerator SpawnMountainOresRoutine(WorldBiomeMap map)
     {
         int count = map.MountainCount;
         if (count <= 0)
-            return;
+        {
+            ScatterProgress = 0.95f;
+            yield break;
+        }
 
         var infos = new List<MountainInfo>(count);
         for (int id = 0; id < count; id++)
@@ -214,12 +254,18 @@ public class WorldResourceScatterer : MonoBehaviour
         AssignOre(infos, assigned, MountainOre.Sulfur, needsPeak: false, limit: sulfurDeposits, preferSmaller: true);
         FillLeftoverMountains(infos, assigned);
 
+        int done = 0;
+        int total = Mathf.Max(1, infos.Count);
         for (int i = 0; i < infos.Count; i++)
         {
             if (!assigned[i])
                 continue;
             SpawnMountain(map, infos[i]);
+            done++;
+            ScatterProgress = Mathf.Lerp(0.62f, 0.95f, done / (float)total);
+            yield return null;
         }
+        ScatterProgress = 0.95f;
     }
 
     void AssignOre(List<MountainInfo> infos, bool[] assigned, MountainOre ore, bool needsPeak, int limit, bool preferSmaller)
@@ -438,16 +484,23 @@ public class WorldResourceScatterer : MonoBehaviour
 
         Vector3 pos = WorldBiomeMap.Instance.CellWorld(cell);
         float yaw = rng.Next(0, 4) * 90f;
-        GameObject go = Instantiate(prefab, pos, Quaternion.Euler(0f, yaw, 0f), root);
-        go.name = prefab.name + "_" + cell.x + "_" + cell.y;
+        GameObject stub = new GameObject(prefab.name + "_" + cell.x + "_" + cell.y);
+        stub.transform.SetParent(root, false);
+        stub.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw, 0f));
 
-        ResourceNode node = go.GetComponent<ResourceNode>();
-        if (node == null)
-            node = go.AddComponent<ResourceNode>();
+        ResourceNode node = stub.AddComponent<ResourceNode>();
+        node.resource = ResourceOf(prefab);
         node.RegisterCell();
 
-        Renderer[] rends = go.GetComponentsInChildren<Renderer>(true);
-        visuals.Add(new NodeVisual { pos = pos, renderers = rends, shown = true });
+        visuals.Add(new NodeVisual
+        {
+            pos = pos,
+            prefab = prefab,
+            stub = stub,
+            visual = null,
+            yaw = yaw,
+            shown = false
+        });
         veins.Add(new VeinMark
         {
             cell = cell,
@@ -458,6 +511,23 @@ public class WorldResourceScatterer : MonoBehaviour
 
         used.Add(cell);
         return true;
+    }
+
+    static readonly Dictionary<int, ItemData> prefabResource = new Dictionary<int, ItemData>();
+
+    static ItemData ResourceOf(GameObject prefab)
+    {
+        if (prefab == null)
+            return null;
+        int id = prefab.GetInstanceID();
+        if (prefabResource.TryGetValue(id, out ItemData cached))
+            return cached;
+        ResourceNode node = prefab.GetComponent<ResourceNode>();
+        if (node == null)
+            node = prefab.GetComponentInChildren<ResourceNode>(true);
+        ItemData resource = node != null ? node.resource : null;
+        prefabResource[id] = resource;
+        return resource;
     }
 
     public bool TryGetVeinLabel(Vector2Int cell, out string label)
@@ -503,41 +573,62 @@ public class WorldResourceScatterer : MonoBehaviour
     {
         if (visuals.Count == 0)
             return;
-        if (player == null)
-        {
-            PlayerBuilder builder = GameManager.Instance != null
-                ? GameManager.Instance.playerBuilder
-                : FindFirstObjectByType<PlayerBuilder>();
-            if (builder != null)
-                player = builder.transform;
-            if (player == null)
-                return;
-        }
 
-        Vector3 p = player.position;
+        Vector3 p = WorldView.PlayerPos;
         float r2 = visualRadius * visualRadius;
+        int budget = 6;
         for (int i = 0; i < visuals.Count; i++)
         {
             Vector3 d = visuals[i].pos - p;
             d.y = 0f;
-            SetShown(i, d.sqrMagnitude <= r2);
+            bool want = d.sqrMagnitude <= r2;
+            if (want && visuals[i].visual == null)
+            {
+                if (budget <= 0)
+                    continue;
+                budget--;
+            }
+            SetShown(i, want);
         }
     }
 
     void SetShown(int index, bool show)
     {
         NodeVisual vis = visuals[index];
-        if (vis.shown == show)
-            return;
-        vis.shown = show;
-        visuals[index] = vis;
-        if (vis.renderers == null)
-            return;
-        for (int i = 0; i < vis.renderers.Length; i++)
+        if (show)
         {
-            if (vis.renderers[i] != null)
-                vis.renderers[i].enabled = show;
+            if (vis.visual == null)
+                AttachVisual(ref vis);
+            vis.shown = vis.visual != null;
         }
+        else
+        {
+            if (vis.visual != null)
+            {
+                Destroy(vis.visual);
+                vis.visual = null;
+            }
+            vis.shown = false;
+        }
+        visuals[index] = vis;
+    }
+
+    static void AttachVisual(ref NodeVisual vis)
+    {
+        if (vis.stub == null || vis.prefab == null)
+            return;
+        GameObject visual = Object.Instantiate(vis.prefab, vis.stub.transform, false);
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.identity;
+        ResourceNode extra = visual.GetComponent<ResourceNode>();
+        if (extra == null)
+            extra = visual.GetComponentInChildren<ResourceNode>(true);
+        if (extra != null)
+            Object.Destroy(extra);
+        ResourceNode stubNode = vis.stub.GetComponent<ResourceNode>();
+        if (stubNode != null)
+            stubNode.RegisterCell();
+        vis.visual = visual;
     }
 
     static int Chebyshev(Vector2Int a, Vector2Int b)

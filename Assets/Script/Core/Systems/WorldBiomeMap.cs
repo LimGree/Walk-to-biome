@@ -112,10 +112,6 @@ public class WorldBiomeMap : MonoBehaviour
         {
             Debug.LogWarning("Biome overlay skipped: " + e.Message);
         }
-
-        WorldResourceScatterer scatter = GetComponent<WorldResourceScatterer>();
-        if (scatter != null)
-            scatter.Scatter();
     }
 
     void ResolveBounds()

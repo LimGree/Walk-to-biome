@@ -66,16 +66,28 @@ public static class BuildingLinker
         Relink(NeighborBuffer);
     }
 
+    static readonly List<GameObject> OccupantBuffer = new List<GameObject>(256);
+
+    public static void CollectPlaced(List<BuildingBase> results)
+    {
+        if (results == null)
+            return;
+        results.Clear();
+        GridOccupancy.CollectOccupants(OccupantBuffer);
+        for (int i = 0; i < OccupantBuffer.Count; i++)
+        {
+            GameObject go = OccupantBuffer[i];
+            if (go == null)
+                continue;
+            BuildingBase building = go.GetComponent<BuildingBase>();
+            if (building != null)
+                results.Add(building);
+        }
+    }
+
     public static void RelinkAll()
     {
-        BuildingBase[] found = UnityEngine.Object.FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
-        AllBuffer.Clear();
-        for (int i = 0; i < found.Length; i++)
-        {
-            if (found[i] != null)
-                AllBuffer.Add(found[i]);
-        }
-
+        CollectPlaced(AllBuffer);
         Relink(AllBuffer);
     }
 
@@ -184,7 +196,8 @@ public static class BuildingLinker
         {
             if (!belt.IsFedBy(from))
                 return null;
-            return belt.InputSocket;
+            BuildingSocket beltInput = belt.GetInputFrom(from);
+            return beltInput != null ? beltInput : belt.InputSocket;
         }
 
         Splitter splitter = target as Splitter;

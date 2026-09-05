@@ -30,6 +30,7 @@ public class PlayerBuilder : MonoBehaviour
 
     public bool BlocksBuildInput => selection != null && selection.BlocksBuildInput;
     public bool IsLineStrokeActive => strokeActive;
+    public int PreviewBuildCount => strokeActive ? Mathf.Max(1, strokeSlots.Count) : 1;
     public bool HasHeldBuilding => currentBuildingData != null;
     public GameObject CurrentGhost => currentGhost;
     public BuildingData CurrentBuildingData => currentBuildingData;
@@ -967,6 +968,7 @@ public class PlayerBuilder : MonoBehaviour
             return;
 
         GameAudio.World("world_demolish", building.transform.position);
+        Economy.PayRefund(building);
         building.OnRemoved();
         Destroy(building.gameObject);
     }

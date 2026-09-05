@@ -211,6 +211,7 @@ public class BuildSelectionController : MonoBehaviour
             BuildingBase b = selectedBuildings[i];
             if (b == null)
                 continue;
+            Economy.PayRefund(b);
             b.OnRemoved();
             Destroy(b.gameObject);
         }

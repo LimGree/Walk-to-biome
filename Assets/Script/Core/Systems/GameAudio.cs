@@ -40,6 +40,10 @@ public class GameAudio : MonoBehaviour
     string ambKeyB;
     float ambW0;
     float ambW1;
+    float ambForest;
+    float ambField;
+    float ambMountain;
+    float ambWater;
     Transform player;
 
     public static GameAudio Ensure()
@@ -233,6 +237,8 @@ public class GameAudio : MonoBehaviour
     {
         if (host == null)
             return;
+        if (on && !WorldView.InRange(host.transform.position, LoopRange))
+            on = false;
         Ensure().SetLoop(host, "buildings/" + key, on);
     }
 
@@ -264,39 +270,41 @@ public class GameAudio : MonoBehaviour
         PruneLoops();
     }
 
+    float nextAmbientScan;
+
     void TickAmbient()
     {
-        if (player == null)
+        if (Time.unscaledTime >= nextAmbientScan)
         {
-            PlayerMovement move = FindFirstObjectByType<PlayerMovement>();
-            if (move != null)
-                player = move.transform;
-        }
-
-        float forest = 0f, field = 0f, mountain = 0f, water = 0f;
-        if (player != null && WorldBiomeMap.Instance != null && WorldBiomeMap.Instance.IsReady)
-        {
-            Vector2Int cell = BuildingLinker.WorldToCell(player.position);
-            const int r = 6;
-            for (int dz = -r; dz <= r; dz++)
+            nextAmbientScan = Time.unscaledTime + 0.25f;
+            ambForest = 0f;
+            ambField = 0f;
+            ambMountain = 0f;
+            ambWater = 0f;
+            if (WorldBiomeMap.Instance != null && WorldBiomeMap.Instance.IsReady)
             {
-                for (int dx = -r; dx <= r; dx++)
+                Vector2Int cell = BuildingLinker.WorldToCell(WorldView.PlayerPos);
+                const int r = 6;
+                for (int dz = -r; dz <= r; dz++)
                 {
-                    string key = AmbientKey(WorldBiomeMap.Instance.Get(new Vector2Int(cell.x + dx, cell.y + dz)));
-                    if (key == "ambient/amb_forest") forest++;
-                    else if (key == "ambient/amb_mountain") mountain++;
-                    else if (key == "ambient/amb_water") water++;
-                    else field++;
+                    for (int dx = -r; dx <= r; dx++)
+                    {
+                        string key = AmbientKey(WorldBiomeMap.Instance.Get(new Vector2Int(cell.x + dx, cell.y + dz)));
+                        if (key == "ambient/amb_forest") ambForest++;
+                        else if (key == "ambient/amb_mountain") ambMountain++;
+                        else if (key == "ambient/amb_water") ambWater++;
+                        else ambField++;
+                    }
                 }
             }
         }
 
         string k0 = null, k1 = null;
         float t0 = 0f, t1 = 0f;
-        PickTop(forest, "ambient/amb_forest", ref k0, ref t0, ref k1, ref t1);
-        PickTop(field, "ambient/amb_field", ref k0, ref t0, ref k1, ref t1);
-        PickTop(mountain, "ambient/amb_mountain", ref k0, ref t0, ref k1, ref t1);
-        PickTop(water, "ambient/amb_water", ref k0, ref t0, ref k1, ref t1);
+        PickTop(ambForest, "ambient/amb_forest", ref k0, ref t0, ref k1, ref t1);
+        PickTop(ambField, "ambient/amb_field", ref k0, ref t0, ref k1, ref t1);
+        PickTop(ambMountain, "ambient/amb_mountain", ref k0, ref t0, ref k1, ref t1);
+        PickTop(ambWater, "ambient/amb_water", ref k0, ref t0, ref k1, ref t1);
         float sum = t0 + t1;
         if (sum > 0f)
         {

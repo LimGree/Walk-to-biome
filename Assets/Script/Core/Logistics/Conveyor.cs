@@ -2,7 +2,19 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Один объект конвейера. Форма (прямой / угол) — только визуал по соседям.
+/// Форма ленты по входам. Выход всегда вперёд (поворот всего здания).
+/// </summary>
+public enum BeltShape
+{
+    Straight,
+    Corner,
+    Tee,
+    Sides,
+    Triple
+}
+
+/// <summary>
+/// Один объект конвейера. Форма (прямой / угол / T / бока / три входа) — только визуал по соседям.
 /// Объект никогда не пересоздаётся при смене формы.
 /// </summary>
 public class Conveyor : BuildingBase
@@ -19,7 +31,8 @@ public class Conveyor : BuildingBase
     public Vector2Int Cell => BuildingLinker.WorldToCell(transform.position);
     public Vector2Int ExitDir { get; private set; } = new Vector2Int(0, 1);
     public Vector2Int EntryDir { get; private set; } = new Vector2Int(0, 1);
-    public bool IsCorner => EntryDir != ExitDir;
+    public BeltShape Shape { get; private set; } = BeltShape.Straight;
+    public bool IsCorner => Shape == BeltShape.Corner;
 
     public BuildingSocket InputSocket =>
         inputSockets != null && inputSockets.Length > 0 ? inputSockets[0] : null;
@@ -28,8 +41,17 @@ public class Conveyor : BuildingBase
         outputSockets != null && outputSockets.Length > 0 ? outputSockets[0] : null;
 
     bool isLive;
+    bool isPreview;
+    bool fromBack;
+    bool fromLeft;
+    bool fromRight;
     GameObject straightVisual;
     GameObject cornerVisual;
+    GameObject teeVisual;
+    GameObject sidesVisual;
+    GameObject tripleVisual;
+    Vector3 cornerAuthScale = Vector3.one;
+    Vector3 teeAuthScale = Vector3.one;
     readonly List<BeltCargo> cargo = new List<BeltCargo>(4);
 
     class BeltCargo
@@ -37,6 +59,7 @@ public class Conveyor : BuildingBase
         public ItemData item;
         public float progress;
         public Transform visual;
+        public Vector2Int entryDir;
     }
 
     void Awake()
@@ -68,9 +91,11 @@ public class Conveyor : BuildingBase
 
     public void PreparePreview(BuildingData previewData)
     {
+        isPreview = true;
         isLive = false;
         if (previewData != null)
             data = previewData;
+        DestroyCreatedVisuals();
         EnsureSetup();
     }
 
@@ -79,7 +104,7 @@ public class Conveyor : BuildingBase
         isLive = false;
         transform.SetPositionAndRotation(worldPos, rotation);
         RefreshDirectionsFromTransform();
-        EntryDir = DetectEntryDir(worldPos, ExitDir);
+        DetectIncoming(worldPos, ExitDir);
         ApplyVisual();
         PlaceSockets();
     }
@@ -88,7 +113,7 @@ public class Conveyor : BuildingBase
     {
         EnsureSetup();
         RefreshDirectionsFromTransform();
-        EntryDir = DetectEntryDir(transform.position, ExitDir);
+        DetectIncoming(transform.position, ExitDir);
         ApplyVisual();
         PlaceSockets();
     }
@@ -98,11 +123,28 @@ public class Conveyor : BuildingBase
         if (source == null)
             return false;
 
-        if (BuildingLinker.OccupiesCell(source, Cell - EntryDir))
+        if (OccupiesInputSide(source))
             return true;
 
         return BuildingLinker.IsAdjacentTo(source, Cell)
             && BuildingLinker.HasOutputToward(source, Cell);
+    }
+
+    public BuildingSocket GetInputFrom(BuildingBase source)
+    {
+        if (source == null || inputSockets == null)
+            return InputSocket;
+
+        for (int i = 0; i < inputSockets.Length; i++)
+        {
+            BuildingSocket socket = inputSockets[i];
+            if (socket == null)
+                continue;
+            if (BuildingLinker.OccupiesCell(source, BuildingLinker.GetSocketFrontCell(socket)))
+                return socket;
+        }
+
+        return InputSocket;
     }
 
     public override bool CanAcceptFrom(BuildingBase source)
@@ -122,16 +164,16 @@ public class Conveyor : BuildingBase
         if (!isLive || !AcceptsItem(item) || !CanAccept())
             return false;
 
-        SpawnCargo(item, 0f, null);
+        SpawnCargo(item, 0f, null, InferEntryDir(fromSocket, null));
         return true;
     }
 
-    public bool TryAcceptTransfer(ItemData item, Transform visual)
+    public bool TryAcceptTransfer(ItemData item, Transform visual, BuildingBase source = null)
     {
         if (!isLive || !AcceptsItem(item) || !CanAccept())
             return false;
 
-        SpawnCargo(item, 0f, visual);
+        SpawnCargo(item, 0f, visual, InferEntryDir(null, source, visual));
         return true;
     }
 
@@ -202,35 +244,63 @@ public class Conveyor : BuildingBase
         float move = speed * boost * Time.deltaTime / Mathf.Max(0.05f, cell);
         float gap = ItemGap;
 
-        // Ближе к выходу — раньше. Никто не обгоняет соседа впереди.
-        cargo.Sort(CompareByProgressDesc);
-
         for (int i = 0; i < cargo.Count; i++)
         {
-            float limit = i == 0 ? 1f : cargo[i - 1].progress - gap;
+            float limit = 1f;
+            float progress = cargo[i].progress;
+            for (int j = 0; j < cargo.Count; j++)
+            {
+                if (j == i)
+                    continue;
+                float other = cargo[j].progress;
+                if (other > progress)
+                    limit = Mathf.Min(limit, other - gap);
+            }
             if (limit < 0f)
                 limit = 0f;
-
-            BeltCargo item = cargo[i];
-            if (item.progress < limit)
-                item.progress = Mathf.Min(limit, item.progress + move);
+            if (progress < limit)
+                cargo[i].progress = Mathf.Min(limit, progress + move);
         }
 
-        if (cargo.Count > 0 && cargo[0].progress >= 0.999f)
-        {
-            if (TryHandOff(cargo[0]))
-                cargo.RemoveAt(0);
-            else
-                cargo[0].progress = 1f;
-        }
-
+        int front = -1;
+        float best = 0.999f;
         for (int i = 0; i < cargo.Count; i++)
-            UpdateCargoVisual(cargo[i]);
+        {
+            if (cargo[i].progress >= best)
+            {
+                best = cargo[i].progress;
+                front = i;
+            }
+        }
+        if (front >= 0)
+        {
+            if (TryHandOff(cargo[front]))
+                cargo.RemoveAt(front);
+            else
+                cargo[front].progress = 1f;
+        }
+
+        RefreshCargoVisuals();
     }
 
-    static int CompareByProgressDesc(BeltCargo a, BeltCargo b)
+    void RefreshCargoVisuals()
     {
-        return b.progress.CompareTo(a.progress);
+        bool show = ShowCargoVisual && WorldView.InRange(transform.position);
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            BeltCargo item = cargo[i];
+            if (show)
+            {
+                if (item.visual == null)
+                    item.visual = CreateItemVisual(item.item);
+                UpdateCargoVisual(item);
+            }
+            else if (item.visual != null)
+            {
+                DestroyVisual(item.visual);
+                item.visual = null;
+            }
+        }
     }
 
     bool TryHandOff(BeltCargo item)
@@ -242,7 +312,7 @@ public class Conveyor : BuildingBase
 
         Conveyor nextBelt = dest as Conveyor;
         if (nextBelt != null)
-            return nextBelt.TryAcceptTransfer(item.item, item.visual);
+            return nextBelt.TryAcceptTransfer(item.item, item.visual, this);
 
         Splitter nextSplit = dest as Splitter;
         if (nextSplit != null)
@@ -266,16 +336,21 @@ public class Conveyor : BuildingBase
         return true;
     }
 
-    void SpawnCargo(ItemData item, float progress, Transform existingVisual)
+    void SpawnCargo(ItemData item, float progress, Transform existingVisual, Vector2Int entryDir)
     {
+        if (entryDir.x == 0 && entryDir.y == 0)
+            entryDir = ExitDir;
+
         BeltCargo cargoItem = new BeltCargo
         {
             item = item,
             progress = progress,
-            visual = existingVisual
+            visual = existingVisual,
+            entryDir = entryDir
         };
 
-        if (ShowCargoVisual)
+        bool show = ShowCargoVisual && WorldView.InRange(transform.position);
+        if (show)
         {
             if (cargoItem.visual == null)
                 cargoItem.visual = CreateItemVisual(item);
@@ -289,7 +364,8 @@ public class Conveyor : BuildingBase
         }
 
         cargo.Add(cargoItem);
-        UpdateCargoVisual(cargoItem);
+        if (cargoItem.visual != null)
+            UpdateCargoVisual(cargoItem);
     }
 
     void UpdateCargoVisual(BeltCargo item)
@@ -297,12 +373,12 @@ public class Conveyor : BuildingBase
         if (item.visual == null)
             return;
 
-        item.visual.position = EvaluatePath(item.progress);
+        item.visual.position = EvaluatePath(item.progress, item.entryDir);
 
         SpriteRenderer sprite = item.visual.GetComponent<SpriteRenderer>();
         if (sprite != null)
         {
-            Camera cam = Camera.main;
+            Camera cam = WorldView.Cam;
             if (cam != null)
             {
                 Vector3 toCam = item.visual.position - cam.transform.position;
@@ -312,7 +388,7 @@ public class Conveyor : BuildingBase
             return;
         }
 
-        Vector3 look = EvaluatePath(Mathf.Min(1f, item.progress + 0.05f)) - item.visual.position;
+        Vector3 look = EvaluatePath(Mathf.Min(1f, item.progress + 0.05f), item.entryDir) - item.visual.position;
         look.y = 0f;
         if (look.sqrMagnitude > 0.0001f)
             item.visual.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
@@ -320,14 +396,22 @@ public class Conveyor : BuildingBase
 
     Vector3 EvaluatePath(float t)
     {
+        return EvaluatePath(t, EntryDir);
+    }
+
+    Vector3 EvaluatePath(float t, Vector2Int entryDir)
+    {
+        if (entryDir.x == 0 && entryDir.y == 0)
+            entryDir = ExitDir;
+
         float cell = GridFootprint.CellSize;
         Vector3 up = Vector3.up * itemHeight;
-        Vector3 start = transform.position - BuildingLinker.CardinalToWorld(EntryDir) * (cell * 0.5f) + up;
+        Vector3 start = transform.position - BuildingLinker.CardinalToWorld(entryDir) * (cell * 0.5f) + up;
         Vector3 mid = transform.position + up;
         Vector3 end = transform.position + BuildingLinker.CardinalToWorld(ExitDir) * (cell * 0.5f) + up;
 
         t = Mathf.Clamp01(t);
-        if (!IsCorner)
+        if (entryDir == ExitDir)
             return Vector3.Lerp(start, end, t);
 
         if (t < 0.5f)
@@ -337,13 +421,7 @@ public class Conveyor : BuildingBase
 
     Transform CreateItemVisual(ItemData item)
     {
-        GameObject root = new GameObject(item != null ? "BeltItem_" + item.id : "BeltItem");
-        bool built = TryAttachWorldModel(root, item) || TryAttachIcon(root, item);
-        if (!built)
-            AttachFallbackCube(root);
-
-        DisableColliders(root);
-        return root.transform;
+        return BeltItemView.Create(item, itemScale);
     }
 
     bool TryAttachWorldModel(GameObject root, ItemData item)
@@ -441,6 +519,7 @@ public class Conveyor : BuildingBase
 
         visual.SetParent(null, true);
         DisableColliders(visual.gameObject);
+        BeltItemView.ApplyWorldCullLayer(visual.gameObject);
     }
 
     void DestroyVisual(Transform visual)
@@ -463,21 +542,36 @@ public class Conveyor : BuildingBase
             EntryDir = ExitDir;
     }
 
-    Vector2Int DetectEntryDir(Vector3 worldPos, Vector2Int exitDir)
+    void DetectIncoming(Vector3 worldPos, Vector2Int exitDir)
     {
         Vector2Int cell = BuildingLinker.WorldToCell(worldPos);
         Vector2Int back = new Vector2Int(-exitDir.x, -exitDir.y);
         Vector2Int left = new Vector2Int(-exitDir.y, exitDir.x);
         Vector2Int right = new Vector2Int(exitDir.y, -exitDir.x);
 
-        if (HasIncomingFrom(cell + back, cell))
-            return exitDir;
-        if (HasIncomingFrom(cell + left, cell))
-            return new Vector2Int(-left.x, -left.y);
-        if (HasIncomingFrom(cell + right, cell))
-            return new Vector2Int(-right.x, -right.y);
+        fromBack = HasIncomingFrom(cell + back, cell);
+        fromLeft = HasIncomingFrom(cell + left, cell);
+        fromRight = HasIncomingFrom(cell + right, cell);
 
-        return exitDir;
+        if (fromBack && fromLeft && fromRight)
+            Shape = BeltShape.Triple;
+        else if (fromLeft && fromRight)
+            Shape = BeltShape.Sides;
+        else if (fromBack && (fromLeft || fromRight))
+            Shape = BeltShape.Tee;
+        else if (fromLeft || fromRight)
+            Shape = BeltShape.Corner;
+        else
+            Shape = BeltShape.Straight;
+
+        if (fromBack)
+            EntryDir = exitDir;
+        else if (fromLeft)
+            EntryDir = new Vector2Int(-left.x, -left.y);
+        else if (fromRight)
+            EntryDir = new Vector2Int(-right.x, -right.y);
+        else
+            EntryDir = exitDir;
     }
 
     bool HasIncomingFrom(Vector2Int neighborCell, Vector2Int selfCell)
@@ -489,25 +583,148 @@ public class Conveyor : BuildingBase
         return BuildingLinker.HasOutputToward(other, selfCell);
     }
 
+    bool OccupiesInputSide(BuildingBase source)
+    {
+        Vector2Int back = new Vector2Int(-ExitDir.x, -ExitDir.y);
+        Vector2Int left = new Vector2Int(-ExitDir.y, ExitDir.x);
+        Vector2Int right = new Vector2Int(ExitDir.y, -ExitDir.x);
+        return BuildingLinker.OccupiesCell(source, Cell + back)
+            || BuildingLinker.OccupiesCell(source, Cell + left)
+            || BuildingLinker.OccupiesCell(source, Cell + right);
+    }
+
+    Vector2Int InferEntryDir(BuildingSocket fromSocket, BuildingBase source, Transform visual = null)
+    {
+        if (source != null)
+        {
+            Vector2Int fromSource = EntryDirFromSource(source);
+            if (fromSource.x != 0 || fromSource.y != 0)
+                return fromSource;
+        }
+
+        if (fromSocket != null)
+        {
+            BuildingBase owner = fromSocket.Owner;
+            if (owner != null && owner != this)
+            {
+                Vector2Int fromOwner = EntryDirFromSource(owner);
+                if (fromOwner.x != 0 || fromOwner.y != 0)
+                    return fromOwner;
+            }
+        }
+
+        if (visual != null)
+        {
+            Vector2Int fromWorld = EntryDirFromWorld(visual.position);
+            if (fromWorld.x != 0 || fromWorld.y != 0)
+                return fromWorld;
+        }
+
+        return ExitDir;
+    }
+
+    Vector2Int EntryDirFromSource(BuildingBase source)
+    {
+        if (source == null)
+            return Vector2Int.zero;
+
+        Vector2Int back = new Vector2Int(-ExitDir.x, -ExitDir.y);
+        Vector2Int left = new Vector2Int(-ExitDir.y, ExitDir.x);
+        Vector2Int right = new Vector2Int(ExitDir.y, -ExitDir.x);
+
+        if (BuildingLinker.OccupiesCell(source, Cell + back))
+            return ExitDir;
+        if (BuildingLinker.OccupiesCell(source, Cell + left))
+            return new Vector2Int(-left.x, -left.y);
+        if (BuildingLinker.OccupiesCell(source, Cell + right))
+            return new Vector2Int(-right.x, -right.y);
+
+        return EntryDirFromWorld(source.transform.position);
+    }
+
+    Vector2Int EntryDirFromWorld(Vector3 world)
+    {
+        Vector2Int fromCell = BuildingLinker.WorldToCell(world);
+        Vector2Int delta = Cell - fromCell;
+        Vector2Int fromFront = new Vector2Int(-ExitDir.x, -ExitDir.y);
+        if (Mathf.Abs(delta.x) + Mathf.Abs(delta.y) == 1)
+        {
+            if (delta == fromFront)
+                return Vector2Int.zero;
+            return delta;
+        }
+
+        Vector3 local = world - transform.position;
+        local.y = 0f;
+        if (local.sqrMagnitude < 0.0001f)
+            return Vector2Int.zero;
+
+        Vector2Int inward = BuildingLinker.ToCardinal(local);
+        Vector2Int travel = new Vector2Int(-inward.x, -inward.y);
+        if (travel == fromFront)
+            return Vector2Int.zero;
+        return travel;
+    }
+
     void ApplyVisual()
     {
         EnsureSetup();
 
-        bool useCorner = IsCorner && cornerVisual != null;
+        BeltShape shown = ResolveShownShape();
 
         if (straightVisual != null)
-            straightVisual.SetActive(!useCorner);
+            straightVisual.SetActive(shown == BeltShape.Straight);
 
-        if (cornerVisual != null)
+        SetShapeVisual(cornerVisual, shown == BeltShape.Corner, OrientCornerVisual);
+        SetShapeVisual(teeVisual, shown == BeltShape.Tee, OrientTeeVisual);
+        SetShapeVisual(sidesVisual, shown == BeltShape.Sides, null);
+        SetShapeVisual(tripleVisual, shown == BeltShape.Triple, null);
+    }
+
+    BeltShape ResolveShownShape()
+    {
+        BeltShape shown = Shape;
+        if (shown == BeltShape.Triple && tripleVisual == null)
         {
-            cornerVisual.SetActive(useCorner);
-            if (useCorner)
-                OrientCornerVisual();
+            if (sidesVisual != null && fromLeft && fromRight)
+                return BeltShape.Sides;
+            if (teeVisual != null && (fromLeft || fromRight))
+                return BeltShape.Tee;
+            if (cornerVisual != null && (fromLeft || fromRight) && !fromBack)
+                return BeltShape.Corner;
+            return BeltShape.Straight;
         }
+
+        if (shown == BeltShape.Sides && sidesVisual == null)
+            return BeltShape.Straight;
+
+        if (shown == BeltShape.Tee && teeVisual == null)
+        {
+            if (cornerVisual != null && !fromBack)
+                return BeltShape.Corner;
+            return BeltShape.Straight;
+        }
+
+        if (shown == BeltShape.Corner && cornerVisual == null)
+            return BeltShape.Straight;
+
+        return shown;
+    }
+
+    static void SetShapeVisual(GameObject visual, bool on, System.Action orient)
+    {
+        if (visual == null)
+            return;
+        visual.SetActive(on);
+        if (on && orient != null)
+            orient();
     }
 
     void OrientCornerVisual()
     {
+        if (cornerVisual == null)
+            return;
+
         Vector3 entry = BuildingLinker.CardinalToWorld(EntryDir);
         Vector3 exit = BuildingLinker.CardinalToWorld(ExitDir);
         float turnY = Vector3.Cross(entry, exit).y;
@@ -516,13 +733,34 @@ public class Conveyor : BuildingBase
         if (turnY >= 0f)
         {
             cornerVisual.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
-            cornerVisual.transform.localScale = Vector3.one;
+            ApplyAuthScale(cornerVisual.transform, cornerAuthScale, false);
         }
         else
         {
             cornerVisual.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
-            cornerVisual.transform.localScale = new Vector3(-1f, 1f, 1f);
+            ApplyAuthScale(cornerVisual.transform, cornerAuthScale, true);
         }
+    }
+
+    void OrientTeeVisual()
+    {
+        if (teeVisual == null)
+            return;
+
+        // Модель T: выход +Z, зад -Z, боковой вход +X. Зеркало по X для левого бока.
+        ApplyAuthScale(teeVisual.transform, teeAuthScale, fromLeft && !fromRight);
+    }
+
+    static void ApplyAuthScale(Transform t, Vector3 auth, bool mirrorX)
+    {
+        if (t == null)
+            return;
+        if (Mathf.Abs(auth.x) < 0.0001f && Mathf.Abs(auth.y) < 0.0001f && Mathf.Abs(auth.z) < 0.0001f)
+            auth = Vector3.one;
+        t.localScale = new Vector3(
+            mirrorX ? -Mathf.Abs(auth.x) : Mathf.Abs(auth.x),
+            auth.y,
+            auth.z);
     }
 
     void PlaceSockets()
@@ -532,14 +770,17 @@ public class Conveyor : BuildingBase
         if (OutputSocket != null)
             OutputSocket.transform.localPosition = new Vector3(0f, 0.3f, 0.5f);
 
-        if (InputSocket != null)
-        {
-            Vector3 localEntry = transform.InverseTransformDirection(BuildingLinker.CardinalToWorld(EntryDir));
-            InputSocket.transform.localPosition = new Vector3(
-                -Mathf.Round(localEntry.x) * 0.5f,
-                0.3f,
-                -Mathf.Round(localEntry.z) * 0.5f);
-        }
+        PlaceNamedSocket("StartPoint", new Vector3(0f, 0.3f, -0.5f));
+        PlaceNamedSocket("StartPointLeft", new Vector3(-0.5f, 0.3f, 0f));
+        PlaceNamedSocket("StartPointRight", new Vector3(0.5f, 0.3f, 0f));
+        PlaceNamedSocket("InputSocket", new Vector3(0f, 0.3f, -0.5f));
+    }
+
+    void PlaceNamedSocket(string socketName, Vector3 localPos)
+    {
+        Transform t = transform.Find(socketName);
+        if (t != null)
+            t.localPosition = localPos;
     }
 
     void EnsureSetup()
@@ -576,35 +817,29 @@ public class Conveyor : BuildingBase
 
     void EnsureSockets()
     {
-        if (NeedSocket(outputSockets, SocketType.Output))
-        {
-            outputSockets = new[]
-            {
-                CreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, 0.5f))
-            };
-        }
+        BuildingSocket output = FindOrCreateSocket("EndPoint", SocketType.Output, new Vector3(0f, 0.3f, 0.5f));
+        if (output == null)
+            output = FindOrCreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, 0.5f));
+        outputSockets = new[] { output };
 
-        if (NeedSocket(inputSockets, SocketType.Input))
-        {
-            inputSockets = new[]
-            {
-                CreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -0.5f))
-            };
-        }
+        BuildingSocket back = FindOrCreateSocket("StartPoint", SocketType.Input, new Vector3(0f, 0.3f, -0.5f));
+        if (back == null)
+            back = FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -0.5f));
+        BuildingSocket left = FindOrCreateSocket("StartPointLeft", SocketType.Input, new Vector3(-0.5f, 0.3f, 0f));
+        BuildingSocket right = FindOrCreateSocket("StartPointRight", SocketType.Input, new Vector3(0.5f, 0.3f, 0f));
+        inputSockets = new[] { back, left, right };
     }
 
-    static bool NeedSocket(BuildingSocket[] sockets, SocketType type)
-    {
-        if (sockets == null || sockets.Length == 0 || sockets[0] == null)
-            return true;
-        sockets[0].socketType = type;
-        return false;
-    }
-
-    BuildingSocket CreateSocket(string socketName, SocketType type, Vector3 localPos)
+    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos)
     {
         Transform existing = transform.Find(socketName);
+        if (existing == null && socketName == "EndPoint")
+            existing = transform.Find("OutputSocket");
+        if (existing == null && socketName == "StartPoint")
+            existing = transform.Find("InputSocket");
+
         GameObject go = existing != null ? existing.gameObject : new GameObject(socketName);
+        go.name = socketName;
         go.transform.SetParent(transform, false);
         go.transform.localPosition = localPos;
         go.transform.localRotation = Quaternion.identity;
@@ -622,7 +857,35 @@ public class Conveyor : BuildingBase
             straightVisual = FindStraightVisual();
 
         if (cornerVisual == null)
-            CreateCornerVisual();
+        {
+            cornerVisual = CreateChildVisual("CornerVisual", data != null ? data.cornerPrefab : null, data != null ? data.cornerGhostPrefab : null);
+            cornerAuthScale = ReadAuthScale(cornerVisual);
+        }
+        if (teeVisual == null)
+        {
+            teeVisual = CreateChildVisual("TeeVisual", data != null ? data.teePrefab : null, data != null ? data.teeGhostPrefab : null);
+            teeAuthScale = ReadAuthScale(teeVisual);
+        }
+        if (sidesVisual == null)
+            sidesVisual = CreateChildVisual("SidesVisual", data != null ? data.sidesPrefab : null, data != null ? data.sidesGhostPrefab : null);
+        if (tripleVisual == null)
+            tripleVisual = CreateChildVisual("TripleVisual", data != null ? data.triplePrefab : null, data != null ? data.tripleGhostPrefab : null);
+    }
+
+    void DestroyCreatedVisuals()
+    {
+        DestroyVisualRoot(ref cornerVisual);
+        DestroyVisualRoot(ref teeVisual);
+        DestroyVisualRoot(ref sidesVisual);
+        DestroyVisualRoot(ref tripleVisual);
+    }
+
+    static void DestroyVisualRoot(ref GameObject visual)
+    {
+        if (visual == null)
+            return;
+        Destroy(visual);
+        visual = null;
     }
 
     GameObject FindStraightVisual()
@@ -635,6 +898,12 @@ public class Conveyor : BuildingBase
 
             string n = child.name;
             if (n.IndexOf("Corner", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                continue;
+            if (n.IndexOf("Tee", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                continue;
+            if (n.IndexOf("Sides", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                continue;
+            if (n.IndexOf("Triple", System.StringComparison.OrdinalIgnoreCase) >= 0)
                 continue;
             if (n.IndexOf("Socket", System.StringComparison.OrdinalIgnoreCase) >= 0)
                 continue;
@@ -651,26 +920,39 @@ public class Conveyor : BuildingBase
         return null;
     }
 
-    void CreateCornerVisual()
+    GameObject CreateChildVisual(string visualName, GameObject livePrefab, GameObject ghostPrefab)
     {
-        GameObject src = null;
-        if (data != null)
-        {
-            if (!isLive && data.cornerGhostPrefab != null)
-                src = data.cornerGhostPrefab;
-            else
-                src = data.cornerPrefab;
-        }
+        GameObject src = isPreview && ghostPrefab != null ? ghostPrefab : livePrefab;
         if (src == null)
-            return;
+            src = livePrefab;
+        if (src == null)
+            return null;
 
-        cornerVisual = Instantiate(src, transform);
-        cornerVisual.name = "CornerVisual";
-        cornerVisual.transform.localPosition = Vector3.zero;
-        cornerVisual.transform.localRotation = Quaternion.identity;
-        cornerVisual.transform.localScale = Vector3.one;
-        StripRuntimeComponents(cornerVisual);
-        cornerVisual.SetActive(false);
+        GameObject visual = Instantiate(src, transform);
+        visual.name = visualName;
+        visual.transform.localPosition = Vector3.zero;
+        MatchLayer(visual, gameObject.layer);
+        StripRuntimeComponents(visual);
+        visual.SetActive(false);
+        return visual;
+    }
+
+    static Vector3 ReadAuthScale(GameObject go)
+    {
+        if (go == null)
+            return Vector3.one;
+        Vector3 s = go.transform.localScale;
+        return new Vector3(Mathf.Abs(s.x), s.y, s.z);
+    }
+
+    static void MatchLayer(GameObject go, int layer)
+    {
+        if (go == null)
+            return;
+        go.layer = layer;
+        Transform t = go.transform;
+        for (int i = 0; i < t.childCount; i++)
+            MatchLayer(t.GetChild(i).gameObject, layer);
     }
 
     static void StripRuntimeComponents(GameObject root)
@@ -701,7 +983,11 @@ public class Conveyor : BuildingBase
             save.cargo.Add(new BeltItemSave
             {
                 itemId = entry.item.id,
-                progress = entry.progress
+                progress = entry.progress,
+                entryX = entry.entryDir.x,
+                entryY = entry.entryDir.y,
+                exitX = ExitDir.x,
+                exitY = ExitDir.y
             });
         }
     }
@@ -719,12 +1005,14 @@ public class Conveyor : BuildingBase
             ItemData item = GameDatabase.FindItem(entry.itemId);
             if (item == null)
                 continue;
-            SpawnCargo(item, Mathf.Clamp01(entry.progress), null);
+            Vector2Int entryDir = new Vector2Int(entry.entryX, entry.entryY);
+            SpawnCargo(item, Mathf.Clamp01(entry.progress), null, entryDir);
         }
     }
 
     protected override void LateUpdate()
     {
+        base.LateUpdate();
     }
 
     protected override void OnDestroy()
@@ -743,7 +1031,18 @@ public class Conveyor : BuildingBase
         Gizmos.color = Color.cyan;
         Gizmos.DrawRay(pos, BuildingLinker.CardinalToWorld(ExitDir));
         Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(pos, -BuildingLinker.CardinalToWorld(EntryDir) * 0.6f);
+        if (fromBack)
+            Gizmos.DrawRay(pos, -BuildingLinker.CardinalToWorld(ExitDir) * 0.6f);
+        if (fromLeft)
+        {
+            Vector2Int left = new Vector2Int(-ExitDir.y, ExitDir.x);
+            Gizmos.DrawRay(pos, BuildingLinker.CardinalToWorld(left) * 0.6f);
+        }
+        if (fromRight)
+        {
+            Vector2Int right = new Vector2Int(ExitDir.y, -ExitDir.x);
+            Gizmos.DrawRay(pos, BuildingLinker.CardinalToWorld(right) * 0.6f);
+        }
     }
 #endif
 }

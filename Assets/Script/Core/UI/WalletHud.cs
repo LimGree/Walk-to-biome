@@ -9,6 +9,7 @@ public class WalletHud : MonoBehaviour
     VisualElement shop;
     Label coinsText;
     Label rubiesText;
+    Label buildCostText;
     Label shopCoins;
     Label shopRubies;
     Label offer1;
@@ -96,8 +97,13 @@ public class WalletHud : MonoBehaviour
         rubiesText = IndustryUi.Text("R", "0", "ruby");
         rubyLine.Add(rubiesText);
         UiTooltip.Bind(rubyLine, UiLocale.T("shop.rubies"), UiLocale.T("shop.rubies_tip"));
-        chip.Add(coinLine);
-        chip.Add(rubyLine);
+        var top = IndustryUi.El("BalRow", "hud-line");
+        top.Add(coinLine);
+        top.Add(rubyLine);
+        chip.Add(top);
+        buildCostText = IndustryUi.Text("BuildCost", "", "hud-cost", "gold");
+        IndustryUi.Show(buildCostText, false);
+        chip.Add(buildCostText);
         root.Add(chip);
 
         shop = IndustryUi.OverlayPanel(UiLocale.T("overlay.shop"), GameHudIcons.Ruby, () => SetShopOpen(false));
@@ -167,6 +173,11 @@ public class WalletHud : MonoBehaviour
         Refresh();
     }
 
+    void LateUpdate()
+    {
+        RefreshBuildCost();
+    }
+
     void Refresh()
     {
         PlayerWallet wallet = PlayerWallet.Instance;
@@ -182,5 +193,28 @@ public class WalletHud : MonoBehaviour
             offerAll.text = rubies <= 0
                 ? UiLocale.T("shop.none")
                 : UiLocale.T("shop.all", rubies, rubies * Economy.CoinsPerRuby);
+        RefreshBuildCost();
+    }
+
+    void RefreshBuildCost()
+    {
+        if (buildCostText == null)
+            return;
+        PlayerBuilder builder = GameManager.Instance != null ? GameManager.Instance.playerBuilder : null;
+        BuildingData data = builder != null && builder.isBuildMode ? builder.CurrentBuildingData : null;
+        int unit = Economy.BuildCost(data);
+        if (data == null || unit <= 0)
+        {
+            IndustryUi.Show(buildCostText, false);
+            return;
+        }
+
+        string name = data.displayName;
+        int count = builder.PreviewBuildCount;
+        if (builder.IsLineStrokeActive && count > 1)
+            buildCostText.text = UiLocale.T("hud.build_line", name, count, IndustryUi.Money(unit * count));
+        else
+            buildCostText.text = UiLocale.T("hud.build_cost", name, IndustryUi.Money(unit));
+        IndustryUi.Show(buildCostText, true);
     }
 }

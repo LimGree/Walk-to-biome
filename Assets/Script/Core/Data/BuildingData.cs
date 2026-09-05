@@ -17,6 +17,18 @@ public class BuildingData : ScriptableObject
     public GameObject cornerPrefab;
     [Tooltip("Гост угла для превью линии. Если пусто — берётся cornerPrefab.")]
     public GameObject cornerGhostPrefab;
+    [Tooltip("T: вход сзади + один бок (зеркало на другой бок). conveer_4_5.")]
+    public GameObject teePrefab;
+    [Tooltip("Гост T. Если пусто — берётся teePrefab.")]
+    public GameObject teeGhostPrefab;
+    [Tooltip("Два бока, сзади нет. conveer_6.")]
+    public GameObject sidesPrefab;
+    [Tooltip("Гост двух боков. Если пусто — берётся sidesPrefab.")]
+    public GameObject sidesGhostPrefab;
+    [Tooltip("Три входа. conveer_3.")]
+    public GameObject triplePrefab;
+    [Tooltip("Гост трёх входов. Если пусто — берётся triplePrefab.")]
+    public GameObject tripleGhostPrefab;
     [Tooltip("Труба: ставится линией, как конвейер, но возит только жидкости.")]
     public bool isPipe;
 
