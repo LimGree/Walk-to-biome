@@ -1,6 +1,6 @@
 # KeybindStore
 
-**Файл:** `Assets/Script/Core/Systems/KeybindStore.cs`
+**Файл:** `Assets/Script/Core/Settings/KeybindStore.cs`
 
 Единственный живой экземпляр [[InputSystem_Actions]] на всю игру. Все скрипты берут `KeybindStore.Shared`, а не создают свои — иначе переназначения не совпадут.
 

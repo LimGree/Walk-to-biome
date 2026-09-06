@@ -1,6 +1,6 @@
 # BeltSpeedSystem
 
-**Файл:** `Assets/Script/Core/Systems/BeltSpeedSystem.cs`
+**Файл:** `Assets/Script/Core/Logistics/BeltSpeedSystem.cs`
 
 Общая прокачка **всех** конвейеров в мире. Не отдельная лента.
 

@@ -1,6 +1,6 @@
 # WorldResourceScatterer
 
-**Файл:** `Assets/Script/Core/Systems/WorldResourceScatterer.cs`
+**Файл:** `Assets/Script/Core/World/WorldResourceScatterer.cs`
 
 Расставляет жилы и деревья по биомам после генерации [[WorldBiomeMap]].
 

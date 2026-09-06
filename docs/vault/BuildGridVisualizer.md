@@ -1,6 +1,6 @@
 # BuildGridVisualizer
 
-**Файл:** `Assets/Script/Core/Systems/BuildGridVisualizer.cs`
+**Файл:** `Assets/Script/Core/Player/BuildGridVisualizer.cs`
 
 Рисует на земле клеточную сетку, когда включён режим стройки [[PlayerBuilder]]. Чтобы глаз видел, куда встанет здание.
 

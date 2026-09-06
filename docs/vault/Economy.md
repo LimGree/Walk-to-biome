@@ -1,6 +1,6 @@
 # Economy
 
-**Файл:** `Assets/Script/Core/Systems/Economy.cs`  
+**Файл:** `Assets/Script/Core/Economy/Economy.cs`  
 **Тип:** статический калькулятор, объектов нет
 
 ## Зачем нужен

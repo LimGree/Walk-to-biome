@@ -1,6 +1,6 @@
 # DayNightCycle
 
-**Файл:** `Assets/Script/Core/Systems/DayNightCycle.cs`  
+**Файл:** `Assets/Script/Core/World/DayNightCycle.cs`  
 **Тип:** компонент на [[GameManager]]
 
 Каждый кадр двигает [[DayNight.Hour]], если в настройках включены сутки. Длина дня — слайдер минут реального времени на полный круг (по умолчанию 16). На паузе солнце стоит.

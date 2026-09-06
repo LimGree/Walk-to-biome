@@ -1,6 +1,6 @@
 # GameDatabase
 
-**Файл:** `Assets/Script/Core/Systems/GameDatabase.cs`  
+**Файл:** `Assets/Script/Core/Data/GameDatabase.cs`  
 **Тип:** ScriptableObject в `Resources/GameDatabase.asset`
 
 Телефонная книга игры: массивы зданий, предметов, рецептов, исследований.

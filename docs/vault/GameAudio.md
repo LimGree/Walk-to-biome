@@ -1,6 +1,6 @@
 # GameAudio
 
-**Файл:** `Assets/Script/Core/Systems/GameAudio.cs`
+**Файл:** `Assets/Script/Core/Audio/GameAudio.cs`
 
 Единая колонка звука. Клипы лежат в `Resources/Audio/<папка>/` и грузятся по ключу вроде `ui/ui_click`.
 

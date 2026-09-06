@@ -1,6 +1,6 @@
 # GridFootprint
 
-**Файл:** `Assets/Script/Core/Systems/GridFootprint.cs`  
+**Файл:** `Assets/Script/Core/Grid/GridFootprint.cs`  
 **Тип:** статический
 
 Считает, какие клетки занимает здание: размер из [[BuildingData]] + поворот на 90/180/270.

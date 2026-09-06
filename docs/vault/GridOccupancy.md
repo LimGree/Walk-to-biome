@@ -1,6 +1,6 @@
 # GridOccupancy
 
-**Файл:** `Assets/Script/Core/Systems/GridOccupancy.cs`  
+**Файл:** `Assets/Script/Core/Grid/GridOccupancy.cs`  
 **Тип:** статический словарь «клетка → объект»
 
 ## Зачем нужен

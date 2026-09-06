@@ -1,6 +1,6 @@
 # RuntimeMaterials
 
-**Файл:** `Assets/Script/Core/Systems/RuntimeMaterials.cs`
+**Файл:** `Assets/Script/Core/World/RuntimeMaterials.cs`
 
 Unity в билде выкидывает неиспользуемые шейдеры. `Shader.Find("Unlit/Color")` внезапно возвращает null — розовые объекты.
 

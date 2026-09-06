@@ -1,6 +1,6 @@
 # SaveSystem
 
-**Файл:** `Assets/Script/Core/Systems/SaveSystem.cs`
+**Файл:** `Assets/Script/Core/Save/SaveSystem.cs`
 
 ## Зачем нужен
 

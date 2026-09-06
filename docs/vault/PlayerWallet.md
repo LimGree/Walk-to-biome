@@ -1,6 +1,6 @@
 # PlayerWallet
 
-**Файл:** `Assets/Script/Core/Systems/PlayerWallet.cs`
+**Файл:** `Assets/Script/Core/Economy/PlayerWallet.cs`
 
 Кошелёк игрока. Один на мир (висит на [[GameManager]]).
 

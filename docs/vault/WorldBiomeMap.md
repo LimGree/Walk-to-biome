@@ -1,6 +1,6 @@
 # WorldBiomeMap
 
-**Файл:** `Assets/Script/Core/Systems/WorldBiomeMap.cs`
+**Файл:** `Assets/Script/Core/World/WorldBiomeMap.cs`
 
 ## WorldBiome
 

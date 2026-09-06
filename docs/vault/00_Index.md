@@ -19,6 +19,13 @@
 - [[GameManager]] — «дирижёр» игровой сцены, пауза, подключение систем
 - Сцены Unity: `Assets/Scenes/MainMenu.unity`, `Loading.unity`, `SampleScene.unity` (сама игра)
 
+Код: `Assets/Script/Core/` — папки по смыслу (не свалка Systems):
+
+- `Audio/` · `Buildings/` · `Data/` · `Economy/` · `Editor/` · `Grid/` · `Items/` · `Logistics/` · `Map/` · `Player/` · `Research/` · `Save/` · `Settings/` · `UI/` · `World/`
+- `GameManager.cs` лежит в корне Core.
+
+Связи сцен и префабов идут по GUID в `.meta`, не по пути. Скрипт переезжает только вместе со своим `.meta`.
+
 ---
 
 ## Игрок и строительство

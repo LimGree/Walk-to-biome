@@ -1,6 +1,6 @@
 # MapMarkerSystem
 
-**Файл:** `Assets/Script/Core/Systems/MapMarkerSystem.cs`
+**Файл:** `Assets/Script/Core/Map/MapMarkerSystem.cs`
 
 Именованные метки на карте (как вейпоинты в Xaero).
 

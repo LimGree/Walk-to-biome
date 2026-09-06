@@ -1,6 +1,6 @@
 # GridSystem
 
-**Файл:** `Assets/Script/Core/Systems/GridSystem.cs`
+**Файл:** `Assets/Script/Core/Grid/GridSystem.cs`
 
 ## Зачем нужен
 

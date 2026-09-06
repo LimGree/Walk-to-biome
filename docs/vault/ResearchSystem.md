@@ -1,6 +1,6 @@
 # ResearchSystem
 
-**Файл:** `Assets/Script/Core/Systems/ResearchSystem.cs`
+**Файл:** `Assets/Script/Core/Research/ResearchSystem.cs`
 
 Дерево технологий. Узлы — [[ResearchNodeData]] из [[GameDatabase]].
 

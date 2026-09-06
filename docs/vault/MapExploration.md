@@ -1,6 +1,6 @@
 # MapExploration
 
-**Файл:** `Assets/Script/Core/Systems/MapExploration.cs`
+**Файл:** `Assets/Script/Core/Map/MapExploration.cs`
 
 Туман исследования: байтовая маска клеток. Вокруг игрока кружок открывается каждый раз, когда он переходит клетку. Клетки под зданиями тоже открыты (фабрика видна).
 

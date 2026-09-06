@@ -1,6 +1,6 @@
 # WorldView
 
-**Файл:** `Assets/Script/Core/Systems/WorldView.cs`  
+**Файл:** `Assets/Script/Core/World/WorldView.cs`  
 **Тип:** статический
 
 Кэш позиции игрока и радиуса прогрузки картинки ([[GameSettings.RenderDistance]]).

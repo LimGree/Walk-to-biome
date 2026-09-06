@@ -1,6 +1,6 @@
 # ProductionStats
 
-**Файл:** `Assets/Script/Core/Systems/ProductionStats.cs`
+**Файл:** `Assets/Script/Core/Economy/ProductionStats.cs`
 
 Счётчик «сколько железа сделали / сожгли за сессию», монеты приход/расход, рубины. Считает скользящее «в минуту».
 

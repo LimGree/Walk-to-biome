@@ -1,6 +1,6 @@
 # ResourceNode
 
-**Файл:** `Assets/Script/Core/Buildings/ResourceNode.cs`
+**Файл:** `Assets/Script/Core/World/ResourceNode.cs`
 
 ## Зачем нужен
 

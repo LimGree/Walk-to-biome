@@ -1,6 +1,6 @@
 # GameSettings
 
-**Файл:** `Assets/Script/Core/Systems/GameSettings.cs`  
+**Файл:** `Assets/Script/Core/Settings/GameSettings.cs`  
 **Тип:** статический, хранилище **PlayerPrefs** (это как маленький реестр Unity, не файл мира)
 
 ## Зачем нужен

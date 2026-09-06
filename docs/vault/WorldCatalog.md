@@ -1,6 +1,6 @@
 # WorldCatalog
 
-**Файл:** `Assets/Script/Core/Systems/WorldCatalog.cs`  
+**Файл:** `Assets/Script/Core/World/WorldCatalog.cs`  
 **Тип:** статический
 
 Список миров на диске компьютера игрока, не в сцене.

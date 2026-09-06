@@ -1,6 +1,6 @@
 # SaveData
 
-**Файл:** `Assets/Script/Core/Systems/SaveData.cs`
+**Файл:** `Assets/Script/Core/Save/SaveData.cs`
 
 Набор простых классов «как записать мир в JSON». Unity `JsonUtility` умеет только публичные поля, без словарей — поэтому списки пар ключ-значение.
 
