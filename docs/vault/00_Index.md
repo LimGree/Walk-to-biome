@@ -84,6 +84,7 @@
 - [[ResourceNodePrefabs]] — какие модели жил использовать
 - [[RuntimeMaterials]] — материалы, которые точно есть в билде
 - [[DayNight]] / [[DayNightCycle]] — сутки, рассвет и закат
+- [[Weather]] / [[WeatherCycle]] — ясно, дождь, гроза
 
 ---
 

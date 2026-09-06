@@ -109,6 +109,10 @@ public class SaveSystem : MonoBehaviour
             data.worldHour = DayNight.Hour;
             data.worldDay = DayNight.Day;
         }
+        if (WeatherCycle.Instance != null)
+            WeatherCycle.Instance.CaptureSave(data);
+        else
+            data.worldWeather = (int)Weather.Kind;
 
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)
@@ -163,6 +167,10 @@ public class SaveSystem : MonoBehaviour
                 DayNightCycle.Instance.ResetToNewWorld();
             else
                 DayNight.ResetToNewWorld();
+            if (WeatherCycle.Instance != null)
+                WeatherCycle.Instance.ResetToNewWorld();
+            else
+                Weather.ResetToNewWorld();
             Report(1f);
             yield break;
         }
@@ -238,6 +246,12 @@ public class SaveSystem : MonoBehaviour
             DayNight.Hour = DayNight.WrapHour(data.worldHour);
             DayNight.Day = Mathf.Max(1, data.worldDay);
         }
+        if (WeatherCycle.Instance != null)
+            WeatherCycle.Instance.ApplySave(data);
+        else
+            Weather.Kind = data.worldWeather >= 0 && data.worldWeather <= 2
+                ? (WeatherKind)data.worldWeather
+                : WeatherKind.Clear;
 
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)

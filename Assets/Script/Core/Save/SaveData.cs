@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public const int CurrentVersion = 7;
+    public const int CurrentVersion = 8;
 
     public int version = CurrentVersion;
     public string worldName;
@@ -33,6 +33,7 @@ public class SaveData
     public string exploredBits;
     public float worldHour = 9f;
     public int worldDay = 1;
+    public int worldWeather;
     public List<SaveKeyValue> extras = new List<SaveKeyValue>();
 
     public static SaveData Normalize(SaveData data)

@@ -96,6 +96,22 @@ public static class GameSettings
 
     public static DayNight.ClockParts ClockParts => (DayNight.ClockParts)ClockFormat;
 
+    public static bool WeatherAuto
+    {
+        get => PlayerPrefs.GetInt("GfxWeatherAuto", 1) != 0;
+        set { SetInt("GfxWeatherAuto", value ? 1 : 0); }
+    }
+
+    public static int WeatherKindIndex
+    {
+        get => (int)Weather.Kind;
+        set
+        {
+            int v = Mathf.Clamp(value, 0, 2);
+            Weather.Kind = (WeatherKind)v;
+        }
+    }
+
     public static int DisplayMode
     {
         get => Mathf.Clamp(PlayerPrefs.GetInt("GfxDisplayMode", DefaultDisplayMode()), 0, 2);
@@ -256,7 +272,7 @@ public static class GameSettings
     public static void ApplyAtmosphere()
     {
         CaptureDefaults();
-        DayNight.Sample sample = DayNight.Evaluate(DayNight.Hour);
+        DayNight.Sample sample = Weather.Filter(DayNight.Evaluate(DayNight.Hour));
         float userMul = Mathf.Clamp(WorldLight * Brightness, 0.12f, 2.5f);
         float intensity = Mathf.Max(0.04f, sunBase < 0f ? 1f : sunBase) * sample.sunIntensity * WorldLight;
 
@@ -286,6 +302,15 @@ public static class GameSettings
         fogColor *= Mathf.Lerp(0.55f, 1.05f, sample.dayFactor);
         fogColor.a = 1f;
         RenderSettings.fogColor = fogColor;
+        if (FogEnabled)
+        {
+            float far = Mathf.Clamp(Mathf.Max(240f, RenderDistance * 4f), 240f, 700f);
+            float start = Mathf.Clamp(FogStart, 1f, Mathf.Max(2f, far - 4f));
+            float end = Mathf.Clamp(Mathf.Max(start + 4f, FogEnd), start + 4f, far);
+            end = Mathf.Lerp(end, Mathf.Max(start + 8f, end * 0.55f), Weather.Cloud);
+            RenderSettings.fogStartDistance = start;
+            RenderSettings.fogEndDistance = end;
+        }
 
         ApplySky(sample, fogColor, userMul);
 

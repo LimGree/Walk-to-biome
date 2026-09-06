@@ -34,6 +34,7 @@ public class GameAudio : MonoBehaviour
     AudioSource ambA;
     AudioSource ambB;
     AudioSource world2d;
+    AudioSource weather;
     float nextHover;
     string musicKey;
     string ambKeyA;
@@ -98,6 +99,8 @@ public class GameAudio : MonoBehaviour
         ambA.loop = true;
         ambB = MakeSource("AmbientB", true, 0f);
         ambB.loop = true;
+        weather = MakeSource("Weather", true, 0f);
+        weather.loop = true;
         LoadFolder("ui");
         LoadFolder("world");
         LoadFolder("buildings");
@@ -142,6 +145,8 @@ public class GameAudio : MonoBehaviour
             ambA.volume = ambBus * ambW0;
         if (ambB != null)
             ambB.volume = ambBus * ambW1;
+        if (weather != null && weather.isPlaying)
+            weather.volume = Mathf.Max(weather.volume, 0f);
         foreach (var pair in loops)
         {
             if (pair.Value != null)
@@ -233,6 +238,23 @@ public class GameAudio : MonoBehaviour
         Ensure().Play2d("player/" + key, WorldVolume * 0.7f, false);
     }
 
+    public static void Thunder()
+    {
+        GameAudio audio = Ensure();
+        if (audio.world2d == null)
+            return;
+        audio.world2d.pitch = Random.Range(0.82f, 1.12f);
+        AudioClip clip = audio.Clip("world/world_thunder");
+        if (clip != null)
+            audio.world2d.PlayOneShot(clip, 0.92f * GetBus("world") * GetBus("ambient"));
+        audio.world2d.pitch = 1f;
+    }
+
+    public static void SetWeather(float rain)
+    {
+        Ensure().DriveWeather(rain);
+    }
+
     public static void Loop(Component host, string key, bool on)
     {
         if (host == null)
@@ -317,6 +339,33 @@ public class GameAudio : MonoBehaviour
         ambW1 = Mathf.MoveTowards(ambW1, t1, speed);
         DriveAmb(ref ambA, ref ambKeyA, k0, ambW0);
         DriveAmb(ref ambB, ref ambKeyB, k1, ambW1);
+    }
+
+    void DriveWeather(float rain)
+    {
+        if (weather == null)
+            return;
+        float target = AmbientVolume * 1.55f * GetBus("ambient") * Mathf.Clamp01(rain);
+        float fade = Time.unscaledDeltaTime * 0.45f;
+        if (target < 0.012f)
+        {
+            weather.volume = Mathf.MoveTowards(weather.volume, 0f, fade);
+            if (weather.volume < 0.01f && weather.isPlaying)
+                weather.Stop();
+            return;
+        }
+
+        if (weather.clip == null)
+        {
+            AudioClip clip = Clip("ambient/amb_rain");
+            if (clip == null)
+                return;
+            weather.clip = clip;
+        }
+
+        if (!weather.isPlaying)
+            weather.Play();
+        weather.volume = Mathf.MoveTowards(weather.volume, target, fade);
     }
 
     static void PickTop(float w, string key, ref string k0, ref float t0, ref string k1, ref float t1)

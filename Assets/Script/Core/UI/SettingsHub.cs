@@ -135,6 +135,13 @@ public static class SettingsHub
             (UiLocale.T("settings.clock_hms"), () => GameSettings.ClockFormat == 2, () => GameSettings.ClockFormat = 2)));
         parent.Add(SettingsControls.Toggle("settings.clock_day", () => GameSettings.ClockShowDay, v => GameSettings.ClockShowDay = v));
 
+        parent.Add(IndustryUi.Text("G1c", UiLocale.T("settings.weather"), "settings-group"));
+        parent.Add(SettingsControls.Toggle("settings.weather_auto", () => GameSettings.WeatherAuto, v => GameSettings.WeatherAuto = v));
+        parent.Add(SettingsControls.ChipRow("settings.weather_kind",
+            (UiLocale.T("settings.weather_clear"), () => GameSettings.WeatherKindIndex == 0, () => GameSettings.WeatherKindIndex = 0),
+            (UiLocale.T("settings.weather_rain"), () => GameSettings.WeatherKindIndex == 1, () => GameSettings.WeatherKindIndex = 1),
+            (UiLocale.T("settings.weather_storm"), () => GameSettings.WeatherKindIndex == 2, () => GameSettings.WeatherKindIndex = 2)));
+
         string[] qualityNames = QualitySettings.names;
         if (qualityNames != null && qualityNames.Length > 0)
         {
