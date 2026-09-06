@@ -15,7 +15,7 @@
 
 ## Связи
 
-- Создаёт/дополняет: [[InputHintUI]], [[WorldMapUI]], [[PlayerWallet]], [[ProductionStats]], [[BeltSpeedSystem]], [[MapMarkerSystem]], [[MapExploration]], [[WalletHud]], [[SelectionActionsUI]], [[CrosshairHud]]
+- Создаёт/дополняет: [[InputHintUI]], [[WorldMapUI]], [[PlayerWallet]], [[ProductionStats]], [[BeltSpeedSystem]], [[MapMarkerSystem]], [[MapExploration]], [[WalletHud]], [[SelectionActionsUI]], [[CrosshairHud]], [[DayNightCycle]]
 - Зовёт [[GameAudio]], [[GameSettings]], [[KeybindStore]], [[IndustryPause]]
 - Закрывает при паузе: [[InventoryUI]], [[WalletHud]], [[MachineUI]], [[ResearchUI]], [[BuildMenuUI]], [[WorldMapUI]]
 - Сцены: [[MainMenu]]

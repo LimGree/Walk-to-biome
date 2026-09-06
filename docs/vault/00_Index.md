@@ -71,11 +71,12 @@
 - [[GridSystem]] — клетка ↔ метры
 - [[GridFootprint]] — сколько клеток занимает здание
 - [[GridOccupancy]] — кто стоит в какой клетке
-- [[WorldBiomeMap]] / [[WorldBiome]] — лес, поле, горы, вода
+- [[WorldBiomeMap]] / [[WorldBiome]] — лес, поле, горы, вода (океан за горизонт, ходить по нему нельзя; озёра можно)
 - [[WorldResourceScatterer]] — расстановка жил и деревьев
 - [[WorldView]] — радиус прогрузки картинки (логика зданий не гасится)
 - [[ResourceNodePrefabs]] — какие модели жил использовать
 - [[RuntimeMaterials]] — материалы, которые точно есть в билде
+- [[DayNight]] / [[DayNightCycle]] — сутки, рассвет и закат
 
 ---
 

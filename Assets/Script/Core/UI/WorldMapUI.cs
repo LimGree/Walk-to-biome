@@ -34,6 +34,7 @@ public class WorldMapUI : MonoBehaviour
     Label zoomLabel;
     Label measureLabel;
     Label miniInfo;
+    Label miniClock;
     Label worldCompass;
     Label[] compass;
     Button measureBtn;
@@ -174,6 +175,7 @@ public class WorldMapUI : MonoBehaviour
         UpdateMiniView();
         UpdatePlayerMark(miniMarker, miniOverlay, miniUv, MiniFollow ? PlayerYaw() : 0f, true);
         UpdateMiniInfo();
+        UpdateMiniClock();
         UpdateCompass();
         if (IsOpen)
         {
@@ -353,7 +355,10 @@ public class WorldMapUI : MonoBehaviour
         miniFrame.Add(miniClip);
         miniInfo = IndustryUi.Text("MiniInfo", "", "mini-info");
         miniInfo.pickingMode = PickingMode.Ignore;
+        miniClock = IndustryUi.Text("MiniClock", "", "mini-clock");
+        miniClock.pickingMode = PickingMode.Ignore;
         miniHost.Add(miniFrame);
+        miniHost.Add(miniClock);
         miniHost.Add(miniInfo);
         miniClip.RegisterCallback<WheelEvent>(OnMiniWheel);
         miniClip.RegisterCallback<PointerMoveEvent>(evt => UpdateTooltip(miniImage, miniUv, evt.localPosition, evt.position, MiniFollow ? PlayerYaw() : 0f));
@@ -836,12 +841,31 @@ public class WorldMapUI : MonoBehaviour
                 break;
         }
 
-        if (miniInfo == null || miniFrame == null)
+        if (miniFrame == null)
             return;
-        if (MapSettings.MiniCorner >= 2)
-            miniInfo.SendToBack();
+
+        bool bottom = MapSettings.MiniCorner >= 2;
+        if (miniClock != null)
+            miniClock.RemoveFromHierarchy();
+        if (miniInfo != null)
+            miniInfo.RemoveFromHierarchy();
+        miniFrame.RemoveFromHierarchy();
+        if (bottom)
+        {
+            if (miniInfo != null)
+                miniHost.Add(miniInfo);
+            if (miniClock != null)
+                miniHost.Add(miniClock);
+            miniHost.Add(miniFrame);
+        }
         else
-            miniFrame.SendToBack();
+        {
+            miniHost.Add(miniFrame);
+            if (miniClock != null)
+                miniHost.Add(miniClock);
+            if (miniInfo != null)
+                miniHost.Add(miniInfo);
+        }
     }
 
     static void SetRadius(VisualElement el, float radius)
@@ -1403,6 +1427,21 @@ public class WorldMapUI : MonoBehaviour
             text = string.IsNullOrEmpty(text) ? biome : text + "  ·  " + biome;
         }
         miniInfo.text = text;
+    }
+
+    void UpdateMiniClock()
+    {
+        if (miniClock == null)
+            return;
+        bool show = GameSettings.ClockVisible && MapSettings.MiniVisible && !IsOpen;
+        IndustryUi.Show(miniClock, show);
+        if (!show)
+            return;
+        miniClock.text = DayNight.FormatClock(
+            DayNight.Hour,
+            DayNight.Day,
+            GameSettings.ClockParts,
+            GameSettings.ClockShowDay);
     }
 
     void UpdateCompass()

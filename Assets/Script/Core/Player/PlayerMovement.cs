@@ -61,6 +61,9 @@ public class PlayerMovement : MonoBehaviour
 
     public void TeleportToCell(Vector2Int cell)
     {
+        if (WorldBiomeMap.Instance != null && WorldBiomeMap.Instance.IsReady)
+            cell = WorldBiomeMap.Instance.NearestWalkable(cell);
+
         Vector3 world = GridSystem.Instance != null
             ? GridSystem.Instance.GetCellCenter(cell, transform.position.y)
             : new Vector3(cell.x, transform.position.y, cell.y);
@@ -191,10 +194,17 @@ public class PlayerMovement : MonoBehaviour
             GameAudio.Player("player_land");
         wasGrounded = isGrounded;
 
-        // Движение
+        if (WorldBiomeMap.BlocksPlayer(transform.position, controller.radius))
+            PushOutOfOcean();
+
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         float speed = isSprinting ? sprintSpeed : walkSpeed;
-        controller.Move(move * speed * Time.deltaTime);
+        Vector3 wish = move * speed * Time.deltaTime;
+        if (!TryWalk(wish))
+        {
+            if (!TryWalk(new Vector3(wish.x, 0f, 0f)))
+                TryWalk(new Vector3(0f, 0f, wish.z));
+        }
 
         if (isGrounded && move.sqrMagnitude > 0.2f)
         {
@@ -221,5 +231,36 @@ public class PlayerMovement : MonoBehaviour
         // Гравитация
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
+
+    bool TryWalk(Vector3 delta)
+    {
+        if (controller == null)
+            return true;
+        if (delta.sqrMagnitude < 0.0000001f)
+            return true;
+
+        Vector3 before = transform.position;
+        controller.Move(delta);
+        if (!WorldBiomeMap.BlocksPlayer(transform.position, controller.radius))
+            return true;
+
+        controller.Move(before - transform.position);
+        return false;
+    }
+
+    void PushOutOfOcean()
+    {
+        if (controller == null)
+            return;
+
+        Vector3 center = WorldBiomeMap.Instance != null
+            ? WorldBiomeMap.Instance.PlayableCenterWorld
+            : transform.position;
+        Vector3 dir = center - transform.position;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.0001f)
+            dir = Vector3.forward;
+        controller.Move(dir.normalized * walkSpeed * Time.deltaTime);
     }
 }

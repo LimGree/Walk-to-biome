@@ -53,6 +53,8 @@ public class GameManager : MonoBehaviour
             gameObject.AddComponent<SelectionActionsUI>();
         if (GetComponent<CrosshairHud>() == null)
             gameObject.AddComponent<CrosshairHud>();
+        if (GetComponent<DayNightCycle>() == null)
+            gameObject.AddComponent<DayNightCycle>();
         GameAudio.Ensure();
         GameSettings.Apply();
     }

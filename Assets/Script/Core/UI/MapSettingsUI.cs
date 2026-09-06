@@ -37,6 +37,7 @@ public static class MapSettingsUI
         parent.Add(IndustryUi.Text("I", UiLocale.T("settings.map_info"), "settings-group"));
         parent.Add(SettingsControls.Toggle("settings.mini_coords", () => MapSettings.MiniCoords, v => MapSettings.MiniCoords = v));
         parent.Add(SettingsControls.Toggle("settings.mini_biome", () => MapSettings.MiniBiome, v => MapSettings.MiniBiome = v));
+        parent.Add(SettingsControls.Toggle("settings.clock_visible", () => GameSettings.ClockVisible, v => GameSettings.ClockVisible = v));
 
         parent.Add(IndustryUi.Text("W", UiLocale.T("settings.map_waypoints"), "settings-group"));
         parent.Add(SettingsControls.Toggle("settings.mini_waypoints", () => MapSettings.MiniWaypoints, v => MapSettings.MiniWaypoints = v));

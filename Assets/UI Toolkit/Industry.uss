@@ -1155,6 +1155,16 @@ TextField {
     -unity-text-align: middle-center;
 }
 
+.mini-clock {
+    margin-top: 6px;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: rgb(255, 236, 196);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 0.4px;
+}
+
 .compass-letter {
     position: absolute;
     font-size: 13px;

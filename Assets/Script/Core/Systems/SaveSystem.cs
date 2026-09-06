@@ -102,6 +102,13 @@ public class SaveSystem : MonoBehaviour
             MapExploration.Instance.CaptureSave(data);
         if (ProductionStats.Instance != null)
             ProductionStats.Instance.CaptureSave(data);
+        if (DayNightCycle.Instance != null)
+            DayNightCycle.Instance.CaptureSave(data);
+        else
+        {
+            data.worldHour = DayNight.Hour;
+            data.worldDay = DayNight.Day;
+        }
 
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)
@@ -152,6 +159,10 @@ public class SaveSystem : MonoBehaviour
                 MapExploration.Instance.ResetToNewWorld();
             if (ProductionStats.Instance != null)
                 ProductionStats.Instance.ResetAll();
+            if (DayNightCycle.Instance != null)
+                DayNightCycle.Instance.ResetToNewWorld();
+            else
+                DayNight.ResetToNewWorld();
             Report(1f);
             yield break;
         }
@@ -220,6 +231,13 @@ public class SaveSystem : MonoBehaviour
             MapExploration.Instance.ApplySave(data);
         if (ProductionStats.Instance != null)
             ProductionStats.Instance.ApplySave(data);
+        if (DayNightCycle.Instance != null)
+            DayNightCycle.Instance.ApplySave(data);
+        else
+        {
+            DayNight.Hour = DayNight.WrapHour(data.worldHour);
+            DayNight.Day = Mathf.Max(1, data.worldDay);
+        }
 
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)

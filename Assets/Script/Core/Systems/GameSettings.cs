@@ -54,6 +54,48 @@ public static class GameSettings
         set { SetFloat("GfxBrightness", Mathf.Clamp(value, 0.35f, 2f)); Apply(); }
     }
 
+    public static bool DayNightEnabled
+    {
+        get => PlayerPrefs.GetInt("GfxDayNight", 1) != 0;
+        set { SetInt("GfxDayNight", value ? 1 : 0); Apply(); }
+    }
+
+    public static float DayLengthMinutes
+    {
+        get => Mathf.Clamp(PlayerPrefs.GetFloat("GfxDayMinutes", 16f), 6f, 48f);
+        set { SetFloat("GfxDayMinutes", Mathf.Clamp(value, 6f, 48f)); }
+    }
+
+    public static float WorldHour
+    {
+        get => DayNight.Hour;
+        set
+        {
+            DayNight.Hour = DayNight.WrapHour(value);
+            ApplyAtmosphere();
+        }
+    }
+
+    public static bool ClockVisible
+    {
+        get => PlayerPrefs.GetInt("GfxClockVisible", 1) != 0;
+        set { SetInt("GfxClockVisible", value ? 1 : 0); }
+    }
+
+    public static int ClockFormat
+    {
+        get => Mathf.Clamp(PlayerPrefs.GetInt("GfxClockFormat", 1), 0, 2);
+        set { SetInt("GfxClockFormat", Mathf.Clamp(value, 0, 2)); }
+    }
+
+    public static bool ClockShowDay
+    {
+        get => PlayerPrefs.GetInt("GfxClockDay", 1) != 0;
+        set { SetInt("GfxClockDay", value ? 1 : 0); }
+    }
+
+    public static DayNight.ClockParts ClockParts => (DayNight.ClockParts)ClockFormat;
+
     public static int DisplayMode
     {
         get => Mathf.Clamp(PlayerPrefs.GetInt("GfxDisplayMode", DefaultDisplayMode()), 0, 2);
@@ -144,43 +186,12 @@ public static class GameSettings
         Application.targetFrameRate = FpsCap <= 0 ? -1 : FpsCap;
 
         CaptureDefaults();
-        Light[] lights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
-        for (int i = 0; i < lights.Length; i++)
-        {
-            Light light = lights[i];
-            if (light == null || light.type != LightType.Directional)
-                continue;
-            if (sunBase < 0f)
-                sunBase = light.intensity;
-            light.intensity = sunBase * WorldLight;
-        }
-
-        float lightMul = Mathf.Clamp(WorldLight * Brightness, 0.12f, 2.5f);
-        Color sunColor = sun != null ? sun.color : Color.white;
-        Color lightTint = sunColor * lightMul;
-        lightTint.a = 1f;
-        Shader.SetGlobalColor("_WalkLightTint", lightTint);
-
-        if (ambientCaptured)
-            RenderSettings.ambientLight = ambientBase * Brightness;
-        RenderSettings.ambientMode = AmbientMode.Trilight;
-        RenderSettings.ambientIntensity = Brightness;
-        RenderSettings.ambientSkyColor = lightTint * 0.85f;
-        RenderSettings.ambientEquatorColor = lightTint * 0.55f;
-        RenderSettings.ambientGroundColor = lightTint * 0.22f;
 
         float objects = RenderDistance;
         float far = Mathf.Clamp(Mathf.Max(240f, objects * 4f), 240f, 700f);
         float start = Mathf.Clamp(FogStart, 1f, Mathf.Max(2f, far - 4f));
         float end = Mathf.Clamp(Mathf.Max(start + 4f, FogEnd), start + 4f, far);
-        Color fogColor = Color.Lerp(
-            new Color(0.62f, 0.72f, 0.82f, 1f),
-            lightTint,
-            0.28f);
-        fogColor *= Mathf.Lerp(0.45f, 1.15f, Mathf.InverseLerp(0.12f, 2f, lightMul));
-        fogColor.a = 1f;
         RenderSettings.fog = FogEnabled;
-        RenderSettings.fogColor = fogColor;
         RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogStartDistance = start;
         RenderSettings.fogEndDistance = end;
@@ -198,8 +209,8 @@ public static class GameSettings
             Shader.DisableKeyword("FOG_EXP2");
         }
 
-        ApplySky(fogColor, lightMul);
         QualitySettings.shadowDistance = Mathf.Clamp(objects * 0.8f, 20f, objects);
+        ApplyAtmosphere();
         Camera[] cams = Camera.allCameras;
         for (int i = 0; i < cams.Length; i++)
         {
@@ -207,7 +218,7 @@ public static class GameSettings
             if (cam == null || cam.orthographic)
                 continue;
             cam.farClipPlane = far;
-            cam.backgroundColor = fogColor;
+            cam.backgroundColor = RenderSettings.fogColor;
             if (cam.clearFlags == CameraClearFlags.SolidColor || cam.clearFlags == CameraClearFlags.Skybox)
                 cam.clearFlags = skyRuntime != null ? CameraClearFlags.Skybox : CameraClearFlags.SolidColor;
             ApplyObjectCull(cam, objects);
@@ -242,7 +253,56 @@ public static class GameSettings
         cam.layerCullSpherical = true;
     }
 
-    static void ApplySky(Color fogColor, float lightMul)
+    public static void ApplyAtmosphere()
+    {
+        CaptureDefaults();
+        DayNight.Sample sample = DayNight.Evaluate(DayNight.Hour);
+        float userMul = Mathf.Clamp(WorldLight * Brightness, 0.12f, 2.5f);
+        float intensity = Mathf.Max(0.04f, sunBase < 0f ? 1f : sunBase) * sample.sunIntensity * WorldLight;
+
+        if (sun != null)
+        {
+            Vector3 body = sample.sunDir.y >= 0f ? sample.sunDir : -sample.sunDir;
+            if (body.sqrMagnitude > 0.0001f)
+                sun.transform.rotation = Quaternion.LookRotation(-body);
+            sun.color = sample.sunColor;
+            sun.intensity = intensity;
+        }
+
+        Color tint = sample.tint * userMul;
+        tint.a = 1f;
+        Shader.SetGlobalColor("_WalkLightTint", tint);
+
+        RenderSettings.ambientMode = AmbientMode.Trilight;
+        RenderSettings.ambientIntensity = Mathf.Lerp(0.55f, 1f, sample.dayFactor) * Brightness;
+        RenderSettings.ambientSkyColor = sample.sky * Mathf.Lerp(0.45f, 0.85f, sample.dayFactor) * Brightness;
+        RenderSettings.ambientEquatorColor = sample.horizon * Mathf.Lerp(0.35f, 0.55f, sample.dayFactor) * Brightness;
+        RenderSettings.ambientGroundColor = sample.ground * 0.35f * Brightness;
+        RenderSettings.ambientLight = sample.horizon * 0.4f * Brightness;
+
+        Color fogColor = sample.fog;
+        if (FogEnabled)
+            fogColor = Color.Lerp(fogColor, sample.horizon, 0.35f);
+        fogColor *= Mathf.Lerp(0.55f, 1.05f, sample.dayFactor);
+        fogColor.a = 1f;
+        RenderSettings.fogColor = fogColor;
+
+        ApplySky(sample, fogColor, userMul);
+
+        Camera[] cams = Camera.allCameras;
+        for (int i = 0; i < cams.Length; i++)
+        {
+            Camera cam = cams[i];
+            if (cam == null || cam.orthographic)
+                continue;
+            cam.backgroundColor = fogColor;
+        }
+
+        if (WorldBiomeMap.Instance != null)
+            WorldBiomeMap.Instance.RefreshOverlayGfx();
+    }
+
+    static void ApplySky(DayNight.Sample sample, Color fogColor, float userMul)
     {
         if (skyRuntime == null)
         {
@@ -259,15 +319,14 @@ public static class GameSettings
         if (skyRuntime == null)
             return;
 
-        float energy = Mathf.InverseLerp(0.12f, 1.8f, lightMul);
-        Color sky = Color.Lerp(new Color(0.06f, 0.08f, 0.14f, 1f), new Color(0.42f, 0.66f, 0.98f, 1f), energy);
-        Color horizon = Color.Lerp(new Color(0.12f, 0.14f, 0.18f, 1f), new Color(0.78f, 0.86f, 0.94f, 1f), energy);
-        Color ground = Color.Lerp(new Color(0.08f, 0.07f, 0.06f, 1f), new Color(0.32f, 0.30f, 0.26f, 1f), energy);
+        Color sky = sample.sky;
+        Color horizon = sample.horizon;
+        Color ground = sample.ground;
         if (FogEnabled)
         {
-            sky = Color.Lerp(sky, fogColor, 0.42f);
-            horizon = fogColor;
-            ground = Color.Lerp(ground, fogColor, 0.62f);
+            sky = Color.Lerp(sky, fogColor, 0.28f);
+            horizon = Color.Lerp(horizon, fogColor, 0.55f);
+            ground = Color.Lerp(ground, fogColor, 0.45f);
         }
 
         if (skyRuntime.HasProperty("_SkyColor"))
@@ -276,8 +335,16 @@ public static class GameSettings
             skyRuntime.SetColor("_HorizonColor", horizon);
         if (skyRuntime.HasProperty("_GroundColor"))
             skyRuntime.SetColor("_GroundColor", ground);
+        if (skyRuntime.HasProperty("_SunColor"))
+            skyRuntime.SetColor("_SunColor", sample.sunColor);
+        if (skyRuntime.HasProperty("_SunsetColor"))
+            skyRuntime.SetColor("_SunsetColor", sample.sunset);
+        if (skyRuntime.HasProperty("_SunDir"))
+            skyRuntime.SetVector("_SunDir", sample.sunDir);
+        if (skyRuntime.HasProperty("_StarStrength"))
+            skyRuntime.SetFloat("_StarStrength", sample.stars);
         if (skyRuntime.HasProperty("_Exposure"))
-            skyRuntime.SetFloat("_Exposure", Mathf.Clamp(lightMul, 0.35f, 1.6f));
+            skyRuntime.SetFloat("_Exposure", Mathf.Clamp(sample.exposure * Mathf.Lerp(0.85f, 1.05f, Mathf.InverseLerp(0.12f, 2f, userMul)), 0.45f, 1.45f));
         RenderSettings.skybox = skyRuntime;
     }
 

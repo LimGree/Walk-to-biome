@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 7;
 
     public int version = CurrentVersion;
     public string worldName;
@@ -31,6 +31,8 @@ public class SaveData
     public int exploreWidth;
     public int exploreHeight;
     public string exploredBits;
+    public float worldHour = 9f;
+    public int worldDay = 1;
     public List<SaveKeyValue> extras = new List<SaveKeyValue>();
 
     public static SaveData Normalize(SaveData data)
@@ -54,6 +56,11 @@ public class SaveData
             data.statsConsumed = new List<ItemAmountSave>();
         if (data.markers == null)
             data.markers = new List<MapMarkerSave>();
+        if (data.version < 6)
+            data.worldHour = 9f;
+        data.worldHour = DayNight.WrapHour(data.worldHour);
+        if (data.worldDay < 1)
+            data.worldDay = 1;
 
         for (int i = 0; i < data.buildings.Count; i++)
         {

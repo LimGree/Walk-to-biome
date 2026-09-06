@@ -53,6 +53,9 @@ public class WorldBiomeMap : MonoBehaviour
 
     MeshRenderer overlay;
     Texture2D biomeTexture;
+    Texture2D overlayTexture;
+
+    const float HorizonPadMeters = 720f;
 
     public bool IsReady => ready;
     public int MapMinX => minX;
@@ -60,6 +63,18 @@ public class WorldBiomeMap : MonoBehaviour
     public int MapWidth => width;
     public int MapHeight => height;
     public Texture2D BiomeTexture => biomeTexture;
+
+    public Vector3 PlayableCenterWorld
+    {
+        get
+        {
+            if (terrain == null || terrain.terrainData == null)
+                return Vector3.zero;
+            Vector3 pos = terrain.GetPosition();
+            Vector3 size = terrain.terrainData.size;
+            return new Vector3(pos.x + size.x * 0.5f, 0f, pos.z + size.z * 0.5f);
+        }
+    }
 
     void Awake()
     {
@@ -85,6 +100,10 @@ public class WorldBiomeMap : MonoBehaviour
     void OnDestroy()
     {
         GameSettings.Changed -= RefreshOverlayGfx;
+        if (biomeTexture != null)
+            Destroy(biomeTexture);
+        if (overlayTexture != null)
+            Destroy(overlayTexture);
         if (Instance == this)
             Instance = null;
     }
@@ -411,6 +430,67 @@ public class WorldBiomeMap : MonoBehaviour
         return biome == WorldBiome.Lake || biome == WorldBiome.Ocean;
     }
 
+    public bool IsOcean(Vector2Int cell)
+    {
+        return Get(cell) == WorldBiome.Ocean;
+    }
+
+    public bool IsLake(Vector2Int cell)
+    {
+        return Get(cell) == WorldBiome.Lake;
+    }
+
+    public static bool BlocksPlayer(Vector3 world)
+    {
+        if (Instance == null || !Instance.ready)
+            return false;
+        return Instance.IsOcean(WorldToCell(world));
+    }
+
+    public static bool BlocksPlayer(Vector3 world, float radius)
+    {
+        if (BlocksPlayer(world))
+            return true;
+        if (radius < 0.05f)
+            return false;
+        float r = radius * 0.8f;
+        return BlocksPlayer(world + new Vector3(r, 0f, 0f))
+            || BlocksPlayer(world + new Vector3(-r, 0f, 0f))
+            || BlocksPlayer(world + new Vector3(0f, 0f, r))
+            || BlocksPlayer(world + new Vector3(0f, 0f, -r));
+    }
+
+    public Vector2Int NearestWalkable(Vector2Int cell, int maxRadius = 48)
+    {
+        if (!IsOcean(cell))
+            return cell;
+
+        for (int r = 1; r <= maxRadius; r++)
+        {
+            for (int dx = -r; dx <= r; dx++)
+            {
+                Vector2Int a = new Vector2Int(cell.x + dx, cell.y - r);
+                if (!IsOcean(a))
+                    return a;
+                Vector2Int b = new Vector2Int(cell.x + dx, cell.y + r);
+                if (!IsOcean(b))
+                    return b;
+            }
+
+            for (int dz = -r + 1; dz <= r - 1; dz++)
+            {
+                Vector2Int a = new Vector2Int(cell.x - r, cell.y + dz);
+                if (!IsOcean(a))
+                    return a;
+                Vector2Int b = new Vector2Int(cell.x + r, cell.y + dz);
+                if (!IsOcean(b))
+                    return b;
+            }
+        }
+
+        return cell;
+    }
+
     public static bool CanBuild(Vector2Int origin, Vector2Int size, bool allowWater = false, bool requireWater = false)
     {
         if (Instance == null || !Instance.ready)
@@ -453,26 +533,16 @@ public class WorldBiomeMap : MonoBehaviour
 
     void PaintOverlay()
     {
-        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
-        tex.wrapMode = TextureWrapMode.Clamp;
+        if (biomeTexture != null)
+            Destroy(biomeTexture);
+        if (overlayTexture != null)
+            Destroy(overlayTexture);
 
-        var pixels = new Color32[width * height];
-        for (int z = 0; z < height; z++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                Color c = ColorOf(GetLocal(x, z));
-                float n = (Mathf.PerlinNoise(x * 0.35f, z * 0.35f) - 0.5f) * 0.06f;
-                c.r = Mathf.Clamp01(c.r + n);
-                c.g = Mathf.Clamp01(c.g + n);
-                c.b = Mathf.Clamp01(c.b + n);
-                pixels[z * width + x] = c;
-            }
-        }
-        tex.SetPixels32(pixels);
-        tex.Apply(false, false);
-        biomeTexture = tex;
+        biomeTexture = BuildBiomeTexture(0, 0);
+        Vector3 size = terrain.terrainData.size;
+        int padX = Mathf.Max(1, Mathf.CeilToInt(HorizonPadMeters * width / Mathf.Max(1f, size.x)));
+        int padZ = Mathf.Max(1, Mathf.CeilToInt(HorizonPadMeters * height / Mathf.Max(1f, size.z)));
+        overlayTexture = BuildBiomeTexture(padX, padZ);
 
         if (overlay == null)
         {
@@ -488,19 +558,47 @@ public class WorldBiomeMap : MonoBehaviour
         }
 
         Vector3 pos = terrain.GetPosition();
-        Vector3 size = terrain.terrainData.size;
         overlay.transform.position = new Vector3(
             pos.x + size.x * 0.5f,
             0.01f,
             pos.z + size.z * 0.5f);
         overlay.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-        overlay.transform.localScale = new Vector3(size.x, size.z, 1f);
+        overlay.transform.localScale = new Vector3(
+            size.x + padX * 2f * (size.x / Mathf.Max(1, width)),
+            size.z + padZ * 2f * (size.z / Mathf.Max(1, height)),
+            1f);
 
-        overlay.sharedMaterial = RuntimeMaterials.Create(tex, Color.white);
+        overlay.sharedMaterial = RuntimeMaterials.Create(overlayTexture, Color.white);
         RefreshOverlayGfx();
     }
 
-    void RefreshOverlayGfx()
+    Texture2D BuildBiomeTexture(int padX, int padZ)
+    {
+        int tw = width + padX * 2;
+        int th = height + padZ * 2;
+        Texture2D tex = new Texture2D(tw, th, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Point;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        var pixels = new Color32[tw * th];
+        for (int z = 0; z < th; z++)
+        {
+            for (int x = 0; x < tw; x++)
+            {
+                Color c = ColorOf(GetLocal(x - padX, z - padZ));
+                float n = (Mathf.PerlinNoise(x * 0.35f, z * 0.35f) - 0.5f) * 0.06f;
+                c.r = Mathf.Clamp01(c.r + n);
+                c.g = Mathf.Clamp01(c.g + n);
+                c.b = Mathf.Clamp01(c.b + n);
+                pixels[z * tw + x] = c;
+            }
+        }
+        tex.SetPixels32(pixels);
+        tex.Apply(false, false);
+        return tex;
+    }
+
+    public void RefreshOverlayGfx()
     {
         if (overlay == null)
             return;

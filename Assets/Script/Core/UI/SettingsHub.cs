@@ -122,6 +122,19 @@ public static class SettingsHub
         parent.Add(SettingsControls.SliderRow("settings.brightness", 0.35f, 2f,
             () => GameSettings.Brightness, v => GameSettings.Brightness = v, v => v.ToString("0.00")));
 
+        parent.Add(IndustryUi.Text("G1b", UiLocale.T("settings.daynight"), "settings-group"));
+        parent.Add(SettingsControls.Toggle("settings.daynight_on", () => GameSettings.DayNightEnabled, v => GameSettings.DayNightEnabled = v));
+        parent.Add(SettingsControls.SliderRow("settings.day_length", 6f, 48f,
+            () => GameSettings.DayLengthMinutes, v => GameSettings.DayLengthMinutes = v, v => Mathf.RoundToInt(v)));
+        parent.Add(SettingsControls.SliderRow("settings.world_hour", 0f, 24f,
+            () => GameSettings.WorldHour, v => GameSettings.WorldHour = v, v => DayNight.FormatHour(v)));
+        parent.Add(SettingsControls.Toggle("settings.clock_visible", () => GameSettings.ClockVisible, v => GameSettings.ClockVisible = v));
+        parent.Add(SettingsControls.ChipRow("settings.clock_format",
+            (UiLocale.T("settings.clock_h"), () => GameSettings.ClockFormat == 0, () => GameSettings.ClockFormat = 0),
+            (UiLocale.T("settings.clock_hm"), () => GameSettings.ClockFormat == 1, () => GameSettings.ClockFormat = 1),
+            (UiLocale.T("settings.clock_hms"), () => GameSettings.ClockFormat == 2, () => GameSettings.ClockFormat = 2)));
+        parent.Add(SettingsControls.Toggle("settings.clock_day", () => GameSettings.ClockShowDay, v => GameSettings.ClockShowDay = v));
+
         string[] qualityNames = QualitySettings.names;
         if (qualityNames != null && qualityNames.Length > 0)
         {
