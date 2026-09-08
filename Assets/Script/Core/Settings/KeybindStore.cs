@@ -36,6 +36,11 @@ public static class KeybindStore
 
     static float ignoreInputUntil;
 
+    public static void SuppressGameplay(float seconds = 0.25f)
+    {
+        ignoreInputUntil = Mathf.Max(ignoreInputUntil, Time.unscaledTime + Mathf.Max(0.05f, seconds));
+    }
+
     public static InputActionAsset ReferenceAsset
     {
         get

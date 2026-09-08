@@ -57,6 +57,10 @@ public class GameManager : MonoBehaviour
             gameObject.AddComponent<DayNightCycle>();
         if (GetComponent<WeatherCycle>() == null)
             gameObject.AddComponent<WeatherCycle>();
+        if (GetComponent<TutorialSystem>() == null)
+            gameObject.AddComponent<TutorialSystem>();
+        if (GetComponent<TutorialUI>() == null)
+            gameObject.AddComponent<TutorialUI>();
         GameAudio.Ensure();
         GameSettings.Apply();
     }
@@ -82,6 +86,8 @@ public class GameManager : MonoBehaviour
     void OnPausePerformed(InputAction.CallbackContext context)
     {
         if (KeybindStore.BlocksGameplayInput)
+            return;
+        if (TutorialSystem.Instance != null && TutorialSystem.Instance.BlocksPause)
             return;
 
         if (UiModal.IsOpen)
@@ -178,7 +184,8 @@ public class GameManager : MonoBehaviour
         bool selectionOpen = SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen;
         bool researchOpen = ResearchUI.Instance != null && ResearchUI.Instance.IsOpen;
         bool buildOpen = BuildMenuUI.Instance != null && BuildMenuUI.Instance.IsOpen;
-        bool menuOpen = uiOpen || mapOpen || bagOpen || shopOpen || selectionOpen || researchOpen || buildOpen;
+        bool tutorialOpen = TutorialSystem.Instance != null && TutorialSystem.Instance.IsModal;
+        bool menuOpen = uiOpen || mapOpen || bagOpen || shopOpen || selectionOpen || researchOpen || buildOpen || tutorialOpen;
         bool freeCursor = isPaused || menuOpen;
 
         UnityEngine.Cursor.lockState = freeCursor ? CursorLockMode.None : CursorLockMode.Locked;

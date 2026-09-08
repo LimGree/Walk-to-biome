@@ -138,6 +138,15 @@ public class PlayerBuilder : MonoBehaviour
             return;
         }
 
+        if (WorldMapUI.Instance != null && WorldMapUI.Instance.IsOpen)
+        {
+            EndStroke();
+            if (currentGhost != null)
+                currentGhost.SetActive(false);
+            ClearPlacementTarget();
+            return;
+        }
+
         UpdateAim();
 
         if (BlocksBuildInput)
@@ -165,15 +174,23 @@ public class PlayerBuilder : MonoBehaviour
 
     bool IsGameplayBuildInputBlocked()
     {
+        if (KeybindStore.BlocksGameplayInput)
+            return true;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return true;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return true;
+        if (ResearchUI.Instance != null && ResearchUI.Instance.IsOpen)
             return true;
         if (buildMenuUI != null && buildMenuUI.IsOpen)
             return true;
         if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
             return true;
         if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            return true;
+        if (WorldMapUI.Instance != null && WorldMapUI.Instance.IsOpen)
+            return true;
+        if (TutorialSystem.Instance != null && TutorialSystem.Instance.IsModal)
             return true;
         return false;
     }
@@ -260,6 +277,8 @@ public class PlayerBuilder : MonoBehaviour
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return;
+        if (ResearchUI.Instance != null && ResearchUI.Instance.IsOpen)
             return;
 
         if (!isBuildMode)

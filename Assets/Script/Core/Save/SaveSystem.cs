@@ -113,6 +113,8 @@ public class SaveSystem : MonoBehaviour
             WeatherCycle.Instance.CaptureSave(data);
         else
             data.worldWeather = (int)Weather.Kind;
+        if (TutorialSystem.Instance != null)
+            TutorialSystem.Instance.CaptureSave(data);
 
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)
@@ -171,6 +173,8 @@ public class SaveSystem : MonoBehaviour
                 WeatherCycle.Instance.ResetToNewWorld();
             else
                 Weather.ResetToNewWorld();
+            if (TutorialSystem.Instance != null)
+                TutorialSystem.Instance.OnWorldReady(false, null);
             Report(1f);
             yield break;
         }
@@ -253,6 +257,9 @@ public class SaveSystem : MonoBehaviour
                 ? (WeatherKind)data.worldWeather
                 : WeatherKind.Clear;
 
+        if (TutorialSystem.Instance != null)
+            TutorialSystem.Instance.PrepareFromSave(true, data);
+
         PlayerInventory inv = Object.FindFirstObjectByType<PlayerInventory>();
         if (inv != null)
         {
@@ -266,6 +273,9 @@ public class SaveSystem : MonoBehaviour
             if (player != null)
                 player.ApplySavedPose(data.playerPos, data.playerYaw, data.playerPitch);
         }
+
+        if (TutorialSystem.Instance != null)
+            TutorialSystem.Instance.OnWorldReady(true, data);
 
         nextAutoSave = Time.unscaledTime + Mathf.Max(30f, autoSaveInterval);
         Debug.Log($"[Save] Загружено зданий: {count}  (файл v{data.version})");

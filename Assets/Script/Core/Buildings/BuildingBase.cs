@@ -27,6 +27,18 @@ public abstract class BuildingBase : MonoBehaviour
     public int OutputBufferCount => outputBuffer.Count;
     public int OutputBufferFree => Mathf.Max(0, maxOutputBuffer - outputBuffer.Count);
 
+    public bool OutputContains(ItemData item)
+    {
+        if (item == null)
+            return false;
+        foreach (ItemData have in outputBuffer)
+        {
+            if (have == item)
+                return true;
+        }
+        return false;
+    }
+
     public Vector2Int FootprintSize
     {
         get

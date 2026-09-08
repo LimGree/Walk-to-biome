@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public const int CurrentVersion = 8;
+    public const int CurrentVersion = 9;
 
     public int version = CurrentVersion;
     public string worldName;
@@ -34,6 +34,9 @@ public class SaveData
     public float worldHour = 9f;
     public int worldDay = 1;
     public int worldWeather;
+    public int tutorialStep;
+    public bool tutorialFinished;
+    public bool tutorialSkipped;
     public List<SaveKeyValue> extras = new List<SaveKeyValue>();
 
     public static SaveData Normalize(SaveData data)
@@ -62,6 +65,8 @@ public class SaveData
         data.worldHour = DayNight.WrapHour(data.worldHour);
         if (data.worldDay < 1)
             data.worldDay = 1;
+        if (data.version < 9)
+            data.tutorialFinished = true;
 
         for (int i = 0; i < data.buildings.Count; i++)
         {

@@ -106,7 +106,6 @@ public class Conveyor : BuildingBase
         RefreshDirectionsFromTransform();
         DetectIncoming(worldPos, ExitDir);
         ApplyVisual();
-        PlaceSockets();
     }
 
     public void RefreshShape()
@@ -115,7 +114,6 @@ public class Conveyor : BuildingBase
         RefreshDirectionsFromTransform();
         DetectIncoming(transform.position, ExitDir);
         ApplyVisual();
-        PlaceSockets();
     }
 
     public bool IsFedBy(BuildingBase source)
@@ -763,26 +761,6 @@ public class Conveyor : BuildingBase
             auth.z);
     }
 
-    void PlaceSockets()
-    {
-        EnsureSockets();
-
-        if (OutputSocket != null)
-            OutputSocket.transform.localPosition = new Vector3(0f, 0.3f, 0.5f);
-
-        PlaceNamedSocket("StartPoint", new Vector3(0f, 0.3f, -0.5f));
-        PlaceNamedSocket("StartPointLeft", new Vector3(-0.5f, 0.3f, 0f));
-        PlaceNamedSocket("StartPointRight", new Vector3(0.5f, 0.3f, 0f));
-        PlaceNamedSocket("InputSocket", new Vector3(0f, 0.3f, -0.5f));
-    }
-
-    void PlaceNamedSocket(string socketName, Vector3 localPos)
-    {
-        Transform t = transform.Find(socketName);
-        if (t != null)
-            t.localPosition = localPos;
-    }
-
     void EnsureSetup()
     {
         EnsureCollider();
@@ -832,23 +810,58 @@ public class Conveyor : BuildingBase
 
     BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos)
     {
-        Transform existing = transform.Find(socketName);
+        Transform existing = FindDeep(transform, socketName);
         if (existing == null && socketName == "EndPoint")
-            existing = transform.Find("OutputSocket");
+            existing = FindDeep(transform, "OutputSocket");
         if (existing == null && socketName == "StartPoint")
-            existing = transform.Find("InputSocket");
+            existing = FindDeep(transform, "InputSocket");
 
-        GameObject go = existing != null ? existing.gameObject : new GameObject(socketName);
-        go.name = socketName;
-        go.transform.SetParent(transform, false);
-        go.transform.localPosition = localPos;
-        go.transform.localRotation = Quaternion.identity;
+        GameObject go;
+        if (existing != null)
+        {
+            go = existing.gameObject;
+        }
+        else
+        {
+            go = new GameObject(socketName);
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = localPos;
+            go.transform.localRotation = Quaternion.identity;
+        }
 
         BuildingSocket socket = go.GetComponent<BuildingSocket>();
         if (socket == null)
             socket = go.AddComponent<BuildingSocket>();
         socket.socketType = type;
         return socket;
+    }
+
+    static Transform FindDeep(Transform root, string socketName)
+    {
+        if (root == null || string.IsNullOrEmpty(socketName))
+            return null;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child == null)
+                continue;
+            if (child.name == socketName)
+                return child;
+            if (IsVisualChild(child.name))
+                continue;
+            Transform found = FindDeep(child, socketName);
+            if (found != null)
+                return found;
+        }
+        return null;
+    }
+
+    static bool IsVisualChild(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return false;
+        return name.IndexOf("Visual", System.StringComparison.OrdinalIgnoreCase) >= 0
+            || name.IndexOf("BeltItem", System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     void EnsureVisuals()

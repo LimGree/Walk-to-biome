@@ -38,6 +38,22 @@ public class PlayerInventory : MonoBehaviour
         FillEmptySlotsFromUnlocks();
     }
 
+    public void ClearHotbar()
+    {
+        EnsureHotbarArray();
+        for (int i = 0; i < hotbar.Length; i++)
+            hotbar[i] = null;
+        seenUnlocks.Clear();
+        OnHotbarChanged?.Invoke();
+        OnSelectionChanged?.Invoke(selectedIndex);
+    }
+
+    public void AllowAutofillAndFill()
+    {
+        seenUnlocks.Clear();
+        FillEmptySlotsFromUnlocks();
+    }
+
     void OnDestroy()
     {
         if (ResearchSystem.Instance != null)
@@ -161,6 +177,9 @@ public class PlayerInventory : MonoBehaviour
 
     void FillEmptySlotsFromUnlocks()
     {
+        if (TutorialSystem.Instance != null && TutorialSystem.Instance.BlocksHotbarAutofill)
+            return;
+
         EnsureHotbarArray();
         List<BuildingData> unlocked = GetUnlockedBuildings();
         for (int i = 0; i < unlocked.Count; i++)
@@ -408,10 +427,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (!any)
             FillEmptySlotsFromUnlocks();
-        else
-        {
-            OnHotbarChanged?.Invoke();
-            OnSelectionChanged?.Invoke(selectedIndex);
-        }
+        OnHotbarChanged?.Invoke();
+        OnSelectionChanged?.Invoke(selectedIndex);
     }
 }

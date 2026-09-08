@@ -213,6 +213,37 @@ public class InventoryUI : MonoBehaviour
         return 1f + overshoot * Mathf.Pow(t - 1f, 3f) + bounce * Mathf.Pow(t - 1f, 2f);
     }
 
+    public VisualElement FindBagCard(string buildingId)
+    {
+        if (bagGrid == null || string.IsNullOrEmpty(buildingId))
+            return null;
+        return bagGrid.Q("Bag_" + buildingId);
+    }
+
+    public VisualElement FirstEmptySlot()
+    {
+        if (inventory == null || inventory.hotbar == null)
+            return null;
+        for (int i = 0; i < slots.Count && i < inventory.hotbar.Length; i++)
+        {
+            if (inventory.hotbar[i] == null)
+                return slots[i];
+        }
+        return slots.Count > 0 ? slots[0] : null;
+    }
+
+    public VisualElement FindHotbarBuilding(string buildingId)
+    {
+        if (inventory == null || inventory.hotbar == null || string.IsNullOrEmpty(buildingId))
+            return null;
+        for (int i = 0; i < slots.Count && i < inventory.hotbar.Length; i++)
+        {
+            if (inventory.hotbar[i] != null && TutorialSystem.IdsEqual(inventory.hotbar[i].id, buildingId))
+                return slots[i];
+        }
+        return null;
+    }
+
     public void RefreshHotbar()
     {
         if (inventory == null)

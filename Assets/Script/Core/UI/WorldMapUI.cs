@@ -197,19 +197,43 @@ public class WorldMapUI : MonoBehaviour
 
     void OnMapToggle(InputAction.CallbackContext ctx)
     {
-        PlayerBuilder builder = GameManager.Instance != null
-            ? GameManager.Instance.playerBuilder
-            : FindFirstObjectByType<PlayerBuilder>();
         if (KeybindStore.BlocksGameplayInput)
-            return;
-        if (builder != null && builder.isBuildMode)
             return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return;
+        if (BuildMenuUI.Instance != null && BuildMenuUI.Instance.IsOpen)
+            return;
+        if (ResearchUI.Instance != null && ResearchUI.Instance.IsOpen)
+            return;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            return;
 
-        SetOpen(!IsOpen);
+        if (IsOpen)
+        {
+            SetOpen(false);
+            return;
+        }
+
+        if (SelectionHoldsMapKey())
+            return;
+
+        SetOpen(true);
+    }
+
+    static bool SelectionHoldsMapKey()
+    {
+        PlayerBuilder builder = GameManager.Instance != null
+            ? GameManager.Instance.playerBuilder
+            : FindFirstObjectByType<PlayerBuilder>();
+        if (builder == null || !builder.isBuildMode)
+            return false;
+        BuildSelectionController sel = builder.Selection;
+        if (sel == null)
+            return false;
+        return sel.IsPasteActive || sel.IsMoveActive
+            || (sel.IsSelectionMode && sel.HasSelectedBuildings);
     }
 
     public void SetOpen(bool open)

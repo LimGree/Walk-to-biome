@@ -13,6 +13,17 @@ public class BuildSelectionController : MonoBehaviour
     public bool HasClipboard => clipboard.Count > 0;
     public bool HasSelectedBuildings => selectedBuildings.Count > 0;
 
+    public int CountClipboard(string buildingId)
+    {
+        int n = 0;
+        for (int i = 0; i < clipboard.Count; i++)
+        {
+            if (clipboard[i].data != null && TutorialSystem.IdsEqual(clipboard[i].data.id, buildingId))
+                n++;
+        }
+        return n;
+    }
+
     public IReadOnlyList<BuildingBase> SelectedBuildings
     {
         get
@@ -157,13 +168,19 @@ public class BuildSelectionController : MonoBehaviour
 
     bool IsBlocked()
     {
+        if (KeybindStore.BlocksGameplayInput)
+            return true;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return true;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return true;
+        if (ResearchUI.Instance != null && ResearchUI.Instance.IsOpen)
+            return true;
         if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
             return true;
         if (IsSelectionPanelOpen())
+            return true;
+        if (WorldMapUI.Instance != null && WorldMapUI.Instance.IsOpen)
             return true;
         return false;
     }

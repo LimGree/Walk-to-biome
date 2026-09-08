@@ -5,8 +5,12 @@ using UnityEngine.UIElements;
 
 public class InputHintUI : MonoBehaviour
 {
+    public static InputHintUI Instance { get; private set; }
+
     public const string PrefsKey = "ShowInputHints";
     const int MaxHints = 10;
+
+    public VisualElement Bar => bar;
 
     public static bool HintsEnabled
     {
@@ -27,6 +31,11 @@ public class InputHintUI : MonoBehaviour
     readonly StringBuilder key = new StringBuilder(256);
     string lastKey;
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
         BindRefs();
@@ -39,6 +48,8 @@ public class InputHintUI : MonoBehaviour
     {
         KeybindStore.Changed -= OnBindsChanged;
         UiLocale.Changed -= OnBindsChanged;
+        if (Instance == this)
+            Instance = null;
     }
 
     void OnBindsChanged()
@@ -207,6 +218,7 @@ public class InputHintUI : MonoBehaviour
         }
 
         Add(hints, KeybindStore.Hint("BuildMode"), UiLocale.T("hint.exit_build"));
+        Add(hints, KeybindStore.Hint("MoveSelection"), UiLocale.T("hint.map"));
         Add(hints, KeybindStore.Hint("Inventory"), UiLocale.T("hint.inventory"));
         if (builder.HasHeldBuilding)
         {

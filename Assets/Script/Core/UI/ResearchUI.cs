@@ -100,6 +100,7 @@ public class ResearchUI : MonoBehaviour
         detailNeed = IndustryUi.El("Need", "row", "io-row");
         detailUnlocks = IndustryUi.El("Unlock", "row", "io-row");
         detailStart = IndustryUi.Btn(UiLocale.T("research.start"), OnStartClicked, "btn-primary");
+        detailStart.name = "ResearchStart";
         detail.Add(detailTitle);
         detail.Add(detailStatus);
         detail.Add(detailBody);
@@ -154,6 +155,7 @@ public class ResearchUI : MonoBehaviour
     public void Close()
     {
         IsOpen = false;
+        KeybindStore.SuppressGameplay();
         IndustryUi.Show(overlay, false);
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();

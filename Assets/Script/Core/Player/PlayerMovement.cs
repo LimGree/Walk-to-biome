@@ -106,6 +106,12 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+        if (TutorialSystem.Instance != null && TutorialSystem.Instance.IsModal)
+        {
+            RestoreFov();
+            return;
+        }
+
         if (canLook) HandleMouseLook();
         if (canMove) HandleMovement();
         HandleZoom();

@@ -126,6 +126,14 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
         return true;
     }
 
+    public int CountInput(ItemData item)
+    {
+        if (item == null)
+            return 0;
+        inputBuffer.TryGetValue(item, out int have);
+        return have;
+    }
+
     public virtual void SetRecipe(RecipeData recipe)
     {
         currentRecipe = recipe;

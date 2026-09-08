@@ -302,6 +302,7 @@ public class MachineUI : MonoBehaviour
     {
         IsOpen = false;
         currentBuilding = null;
+        KeybindStore.SuppressGameplay();
         IndustryUi.Show(upgradeBtn, false);
         IndustryUi.Show(overlay, false);
         if (GameManager.Instance != null)
@@ -444,14 +445,17 @@ public class MachineUI : MonoBehaviour
                     continue;
 
                 RecipeData captured = recipe;
-                bodyList.Add(IndustryUi.RecipeCard(
+                VisualElement card = IndustryUi.RecipeCard(
                     recipe,
                     selected == recipe,
                     () =>
                     {
                         crafter.SetRecipe(captured);
                         RefreshRecipeList(crafter);
-                    }));
+                    });
+                if (!string.IsNullOrEmpty(recipe.id))
+                    card.name = "Rec_" + recipe.id.Trim();
+                bodyList.Add(card);
             }
         }
 

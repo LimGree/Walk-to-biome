@@ -534,6 +534,8 @@ public static class IndustryUi
         VisualElement card = onClick != null && unlocked
             ? CardButton(onClick, "card-building")
             : El("BuildingCard", "card", "card-building");
+        if (data != null && !string.IsNullOrEmpty(data.id))
+            card.name = "Bag_" + data.id;
         if (compact)
             card.AddToClassList("card-building-compact");
         if (marked)
@@ -572,6 +574,8 @@ public static class IndustryUi
     public static VisualElement ResearchCard(ResearchNodeData node, string status, bool canStart, Action onClick)
     {
         Button card = CardButton(onClick, "research-node");
+        if (node != null && !string.IsNullOrEmpty(node.id))
+            card.name = "Res_" + node.id;
         if (status == "ACTIVE")
             card.AddToClassList("is-active");
         if (status == "DONE")
