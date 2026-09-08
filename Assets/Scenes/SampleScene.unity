@@ -1218,7 +1218,7 @@ MonoBehaviour:
   maxBuildDistance: 12
   ghostValidMaterial: {fileID: 2100000, guid: d6ee5da17f5f9174c9ef112c4a7cfb6a, type: 2}
   ghostInvalidMaterial: {fileID: 2100000, guid: 83fa8c95ac0dfd4409b01ebd374a5ff0, type: 2}
-  isBuildMode: 1
+  isBuildMode: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

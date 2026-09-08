@@ -80,6 +80,8 @@ public class PlayerBuilder : MonoBehaviour
         selection = GetComponent<BuildSelectionController>();
         if (selection == null)
             selection = gameObject.AddComponent<BuildSelectionController>();
+
+        isBuildMode = false;
     }
 
     void OnEnable()

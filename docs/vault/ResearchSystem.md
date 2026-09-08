@@ -15,3 +15,7 @@
 [[ResearchLab]] · [[ResearchUI]] · [[MachineUI]] · [[PlayerWallet]] · [[BeltSpeedSystem]] · [[Economy]] · [[SaveData]] (ResearchSaveData)
 
 Лишние шестерёнки после заполнения исследования всё равно идут в ленты, не пропадают.
+
+Без выбранного узла лаборатория **продаёт** входящее за монеты. Поэтому в [[Обучение]] исследование стартует до лент.
+
+Первая глава — `research_basic_automation` (125 Iron Ore + 125 Cooper ore). Вторая — `research_mechanical_engineering` (125 + 125 слитков).

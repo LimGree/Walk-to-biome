@@ -15,3 +15,5 @@
 Старые Canvas-панели на префабе прячутся (`HideLegacy`).
 
 Связи: [[CrafterBuilding]], [[ResearchLab]], [[BeltSpeedSystem]], [[ResearchSystem]], [[PlayerWallet]], [[IndustryUi]].
+
+В [[Обучение]] это шаги 9 (E по лаборатории → Start) и 13–15 (E по плавильне → рецепт).
