@@ -20,8 +20,8 @@ public class ResearchSystem : MonoBehaviour
     [Tooltip("id исследований, каждое из которых даёт +1 слот лаборатории (уровни 4 и 5).")]
     public string[] extraLabSlotResearchIds =
     {
-        "research_advanced_automation",
-        "research_petrochemistry"
+        "research_extractor_2",
+        "research_assembler_2"
     };
 
     private readonly HashSet<ResearchNodeData> unlockedResearch = new HashSet<ResearchNodeData>();

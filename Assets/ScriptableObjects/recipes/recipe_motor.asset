@@ -15,8 +15,6 @@ MonoBehaviour:
   id: recipe_motor
   displayName: "\u041C\u043E\u0442\u043E\u0440"
   inputs:
-  - item: {fileID: 11400000, guid: 9d495ae5fdb87d6479f40cd1e73fed53, type: 2}
-    amount: 2
   - item: {fileID: 11400000, guid: 2021222324252627282920a1b2c3d4e6, type: 2}
     amount: 2
   - item: {fileID: 11400000, guid: 217f28faff3699148aee942274ec50ec, type: 2}

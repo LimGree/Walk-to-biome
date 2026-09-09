@@ -2,20 +2,26 @@
 
 **Файл:** `Assets/Script/Core/Research/ResearchSystem.cs`
 
-Дерево технологий. Узлы — [[ResearchNodeData]] из [[GameDatabase]].
+Дерево технологий. Живой список узлов — `GameDatabase.researches` ([[GameDatabase]]), сцена дублирует его в `allResearchNodes`.
+
+## Старт
+
+`startingBuildings`: extractor, conveyor, research_lab. Стартовых рецептов нет.
+
+Лимит лабораторий: `baseLabLimit` = 1, потолок 3. +1 слот за `research_extractor_2` и `research_assembler_2`.
 
 ## Цикл
 
-1. Игрок в лаборатории выбирает узел, если предки открыты → `SetCurrentResearch`.
-2. Предметы с ленты/`SubmitItem`: если предмет в списке нужного — копится. Набрали все — узел открыт, дают рубины, звук notify.
-3. Открытый узел разрешает здания и рецепты (`unlockedBuildingIds` / рецепты с `requiredResearch`).
+1. В лаборатории (E или T) выбирают узел, если предки открыты → `SetCurrentResearch`.
+2. Предметы с ленты / `SubmitItem`: если предмет в стоимости узла — копится. Набрали все — узел открыт.
+3. Узел даёт здания (`unlockedBuildings`) и рецепты (`unlockedRecipes`).
+
+Без выбранного узла лаборатория **продаёт** входящее за монеты. В [[Обучение]] исследование стартует до лент.
+
+Старые паки (`research_basic_automation` и т.д.) в папке Research не в дереве. Старые сейвы с их id не мапятся — новая игра.
+
+Цены и граф — лист «Стоимость лабы» в рабочем xlsx. Первая глава: `research_smelter` (140 iron_ore + 140 cooper_ore) → плавильня. Слитки — отдельные узлы после неё.
 
 ## Связи
 
-[[ResearchLab]] · [[ResearchUI]] · [[MachineUI]] · [[PlayerWallet]] · [[BeltSpeedSystem]] · [[Economy]] · [[SaveData]] (ResearchSaveData)
-
-Лишние шестерёнки после заполнения исследования всё равно идут в ленты, не пропадают.
-
-Без выбранного узла лаборатория **продаёт** входящее за монеты. Поэтому в [[Обучение]] исследование стартует до лент.
-
-Первая глава — `research_basic_automation` (125 Iron Ore + 125 Cooper ore). Вторая — `research_mechanical_engineering` (125 + 125 слитков).
+[[ResearchLab]] · [[ResearchUI]] · [[MachineUI]] · [[ResearchTree]] · [[ResearchNodeData]] · [[PlayerWallet]] · [[BeltSpeedSystem]] · [[Economy]] · [[SaveData]]

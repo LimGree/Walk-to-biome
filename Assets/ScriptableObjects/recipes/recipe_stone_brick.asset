@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u041A\u0430\u043C\u0435\u043D\u043D\u044B\u0439 \u0431\u043B\u043E\u043A "
   inputs:
   - item: {fileID: 11400000, guid: e7230629525cd7949b7de909c563bd03, type: 2}
-    amount: 5
+    amount: 2
   outputs:
   - item: {fileID: 11400000, guid: 9e2b3f8fe9e45ad45b3cc57ced5b0110, type: 2}
     amount: 1

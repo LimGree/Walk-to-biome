@@ -9,7 +9,10 @@ public class Assembler : CrafterBuilding
     GameObject level2Visual;
 
     public bool CanUpgrade => level < 2;
-    public override bool CanUpgradeBuilding => CanUpgrade;
+    public override bool CanUpgradeBuilding =>
+        CanUpgrade
+        && ResearchSystem.Instance != null
+        && ResearchSystem.Instance.IsResearchIdUnlocked("research_assembler_2");
     public override float CraftSpeed => level >= 2 ? Mathf.Max(1f, upgradedCraftSpeed) : 1f;
 
     void Awake()
@@ -34,7 +37,7 @@ public class Assembler : CrafterBuilding
 
     public override bool TryUpgradeBuilding()
     {
-        if (!CanUpgrade)
+        if (!CanUpgradeBuilding)
             return false;
 
         level = 2;

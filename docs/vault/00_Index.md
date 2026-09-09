@@ -96,6 +96,7 @@
 - [[Economy]] — цены продажи, стоимость лент, замедление крафта
 - [[PlayerWallet]] — монеты и рубины
 - [[ResearchSystem]] — дерево исследований
+- [[ResearchTree]] — граф в окне лаборатории (зум колесом, ПКМ — панорама)
 - [[ResearchNodeData]] · [[RecipeData]] · [[ItemData]] · [[ItemStack]] · [[ItemInstance]]
 - [[GameDatabase]] — каталог всего (здания, предметы, рецепты, исследования)
 - [[ProductionStats]] — сколько чего произведено
@@ -130,7 +131,7 @@
 - [[IndustryUi]] — фабрика кнопок и панелей UI Toolkit
 - [[UiRuntime]] · [[UiTheme]] · [[UiFactory]] · [[UiMotion]]
 - [[UiModal]] · [[UiNotification]] · [[UiTooltip]] · [[UiAudio]] · [[UiStatus]]
-- [[BuildMenuUI]] · [[InventoryUI]] · [[MachineUI]] · [[ResearchUI]] · [[RecipeCodex]]
+- [[BuildMenuUI]] · [[InventoryUI]] · [[MachineUI]] · [[ResearchUI]] · [[ResearchTree]] · [[RecipeCodex]]
 - [[OverlayUi]] · [[WalletHud]] · [[InputHintUI]] · [[CrosshairHud]]
 - [[SelectionActionsUI]] · [[LoadingScreen]] · [[HotbarSlotView]] · [[BagBuildingCard]]
 - [[GameHudIcons]] · [[GameBranding]]

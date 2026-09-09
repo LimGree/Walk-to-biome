@@ -34,7 +34,11 @@ public class MachineUI : MonoBehaviour
     VisualElement recipePage;
     VisualElement beltPage;
     VisualElement statsPage;
-    ScrollView researchList;
+    VisualElement researchView;
+    VisualElement researchCanvas;
+    VisualElement researchDetail;
+    readonly ResearchTreeNav researchNav = new ResearchTreeNav();
+    string selectedResearchId;
     ScrollView recipeList;
     ScrollView beltList;
     ScrollView statsList;
@@ -186,9 +190,15 @@ public class MachineUI : MonoBehaviour
         bodyList = IndustryUi.Scroll("BodyList");
         bodyHost.Add(bodyList);
 
-        researchPage = IndustryUi.El("ResearchPage", "col", "grow");
-        researchList = IndustryUi.Scroll("ResearchList");
-        researchPage.Add(researchList);
+        researchPage = IndustryUi.El("ResearchPage", "research-layout", "grow");
+        researchView = IndustryUi.El("ResearchView", "research-view", "grow");
+        researchView.pickingMode = PickingMode.Position;
+        researchCanvas = IndustryUi.El("ResearchCanvas", "research-canvas");
+        researchView.Add(researchCanvas);
+        researchNav.Attach(researchView, researchCanvas);
+        researchDetail = IndustryUi.El("ResearchDetail", "research-detail", "col");
+        researchPage.Add(researchView);
+        researchPage.Add(researchDetail);
 
         recipePage = IndustryUi.El("RecipePage", "col", "grow");
         codexSearchHost = IndustryUi.El("CodexSearchHost", "search-host");
@@ -834,46 +844,81 @@ public class MachineUI : MonoBehaviour
 
     void FillResearchTab()
     {
-        if (researchList == null || ResearchSystem.Instance == null)
+        if (researchCanvas == null || ResearchSystem.Instance == null)
             return;
 
-        researchList.Clear();
-        foreach (ResearchNodeData node in ResearchSystem.Instance.GetAllNodes())
+        if (string.IsNullOrEmpty(selectedResearchId))
         {
-            if (node == null)
-                continue;
-
-            string status = "READY";
-            bool canStart = ResearchSystem.Instance.CanStartResearch(node);
-            if (ResearchSystem.Instance.IsResearchUnlocked(node))
-            {
-                status = "DONE";
-                canStart = false;
-            }
-            else if (ResearchSystem.Instance.CurrentResearch == node)
-            {
-                status = "ACTIVE";
-                canStart = false;
-            }
-            else if (!canStart)
-            {
-                status = "LOCKED";
-            }
-
-            ResearchNodeData captured = node;
-            researchList.Add(IndustryUi.ResearchCard(
-                node,
-                status,
-                canStart,
-                () =>
-                {
-                    if (ResearchSystem.Instance.SetCurrentResearch(captured))
-                    {
-                        UiAudio.PlayConfirm();
-                        FillResearchTab();
-                    }
-                }));
+            ResearchNodeData pick = ResearchTree.DefaultSelection();
+            selectedResearchId = pick != null ? pick.id : null;
         }
+
+        int nodes = CountResearchNodes();
+        if (researchCanvas.childCount != nodes || !researchCanvas.ClassListContains("tree-rev3"))
+        {
+            ResearchTree.Build(researchCanvas, OnPickResearch, selectedResearchId);
+            ScrollResearchIntoView(selectedResearchId);
+        }
+        else
+            ResearchTree.ApplyStatus(researchCanvas, selectedResearchId);
+
+        ResearchNodeData selected = FindResearchNode(selectedResearchId);
+        ResearchTree.FillDetail(researchDetail, selected, () => StartPickedResearch(selected));
+    }
+
+    void OnPickResearch(ResearchNodeData node)
+    {
+        if (node == null)
+            return;
+        selectedResearchId = node.id;
+        StartPickedResearch(node);
+        FillResearchTab();
+    }
+
+    void StartPickedResearch(ResearchNodeData node)
+    {
+        if (node == null || ResearchSystem.Instance == null)
+            return;
+        if (ResearchSystem.Instance.SetCurrentResearch(node))
+            UiAudio.PlayConfirm();
+    }
+
+    void ScrollResearchIntoView(string id)
+    {
+        if (researchCanvas == null || string.IsNullOrEmpty(id))
+            return;
+        VisualElement card = researchCanvas.Q("Res_" + id);
+        if (card != null)
+            researchNav.Focus(card);
+    }
+
+    static int CountResearchNodes()
+    {
+        if (ResearchSystem.Instance == null)
+            return 0;
+        List<ResearchNodeData> nodes = ResearchSystem.Instance.GetAllNodes();
+        int n = 0;
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            if (nodes[i] != null)
+                n++;
+        }
+
+        return n;
+    }
+
+    static ResearchNodeData FindResearchNode(string id)
+    {
+        if (string.IsNullOrEmpty(id) || ResearchSystem.Instance == null)
+            return null;
+        List<ResearchNodeData> nodes = ResearchSystem.Instance.GetAllNodes();
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            if (nodes[i] != null && GameDatabase.Normalize(nodes[i].id) == GameDatabase.Normalize(id))
+                return nodes[i];
+        }
+
+        return GameDatabase.FindResearch(id);
     }
 
     void RebuildBeltTree()

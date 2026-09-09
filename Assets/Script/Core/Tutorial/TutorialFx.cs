@@ -87,6 +87,8 @@ public class TutorialFx : MonoBehaviour
                     buildings.Add(lab);
                 break;
             case TutorialStep.StartResearch:
+            case TutorialStep.ResearchIronIngot:
+            case TutorialStep.ResearchCopperIngot:
                 lab = TutorialSystem.FindLab();
                 if (lab != null)
                     buildings.Add(lab);

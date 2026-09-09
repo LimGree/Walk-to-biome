@@ -27,7 +27,10 @@ public class Extractor : BuildingBase, IInteractable
     private float nextFailLogTime;
 
     public bool CanUpgrade => level < 2;
-    public override bool CanUpgradeBuilding => CanUpgrade;
+    public override bool CanUpgradeBuilding =>
+        CanUpgrade
+        && ResearchSystem.Instance != null
+        && ResearchSystem.Instance.IsResearchIdUnlocked("research_extractor_2");
     public float CurrentInterval => Mathf.Max(0.05f, extractInterval * Economy.ExtractTimeMul);
     public int CurrentItemsPerCycle => Mathf.Max(1, itemsPerCycle);
 
@@ -61,7 +64,7 @@ public class Extractor : BuildingBase, IInteractable
 
     public override bool TryUpgradeBuilding()
     {
-        if (!CanUpgrade)
+        if (!CanUpgradeBuilding)
             return false;
 
         level = 2;

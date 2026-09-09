@@ -15,12 +15,12 @@ MonoBehaviour:
   id: 'recipe_circuit_board '
   displayName: "\u041F\u043B\u0430\u0442\u0430"
   inputs:
-  - item: {fileID: 11400000, guid: 217f28faff3699148aee942274ec50ec, type: 2}
-    amount: 5
   - item: {fileID: 11400000, guid: 8c467a15348d1394f9881d7282605663, type: 2}
     amount: 2
+  - item: {fileID: 11400000, guid: 217f28faff3699148aee942274ec50ec, type: 2}
+    amount: 4
   outputs:
   - item: {fileID: 11400000, guid: 61b810ccecfea014ebb50eda1ac4dcf9, type: 2}
     amount: 1
-  craftTime: 3
+  craftTime: 2
   requiredBuilding: {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}

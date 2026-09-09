@@ -20,7 +20,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
     protected readonly Dictionary<ItemData, int> inputBuffer = new Dictionary<ItemData, int>();
 
     public virtual float CraftSpeed => level >= 2 ? 2f : 1f;
-    public override bool CanUpgradeBuilding => level < 2;
+    public override bool CanUpgradeBuilding => false;
     protected virtual string WorkClip => "bld_assembler_loop";
 
     public override int ReadLevel()
@@ -36,7 +36,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
 
     public override bool TryUpgradeBuilding()
     {
-        if (level >= 2)
+        if (!CanUpgradeBuilding)
             return false;
         level = 2;
         return true;
