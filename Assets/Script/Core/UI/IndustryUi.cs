@@ -614,6 +614,82 @@ public static class IndustryUi
         return row;
     }
 
+    public static VisualElement BuildingChip(BuildingData building)
+    {
+        var chip = El("Bld", "codex-building");
+        chip.Add(Icon(building != null ? building.icon : null, "icon-32"));
+        chip.Add(Text("N", building != null ? building.displayName : "—", "caption"));
+        if (building != null)
+            UiTooltip.Bind(chip, building.displayName, building.description);
+        return chip;
+    }
+
+    public static VisualElement CodexCard(RecipeCodex.Entry entry)
+    {
+        ItemData item = entry.item;
+        var card = El("Codex", "card", "codex-card");
+        if (item != null && !string.IsNullOrEmpty(item.id))
+            card.name = "Codex_" + item.id.Trim();
+
+        var head = El("Head", "codex-head");
+        head.Add(Icon(item != null ? item.icon : null, "codex-icon"));
+        var meta = El("Meta", "col", "grow");
+        var titleRow = El("TitleRow", "row");
+        titleRow.Add(Text("T", item != null ? item.displayName : "Item", "heading-3", "grow"));
+        if (item != null && item.isFluid)
+            titleRow.Add(Text("Fluid", UiLocale.T("codex.fluid"), "badge", "badge-ready"));
+        meta.Add(titleRow);
+        if (item != null && !string.IsNullOrEmpty(item.description))
+            meta.Add(Text("D", item.description, "muted"));
+        head.Add(meta);
+        card.Add(head);
+
+        bool any = false;
+        if (entry.extractBuildings != null && entry.extractBuildings.Count > 0)
+        {
+            any = true;
+            card.Add(Text("EX", UiLocale.T("codex.extract"), "label-caps"));
+            var row = El("Extract", "codex-source");
+            for (int i = 0; i < entry.extractBuildings.Count; i++)
+                row.Add(BuildingChip(entry.extractBuildings[i]));
+            row.Add(Text("Vein", UiLocale.T("codex.extract_node"), "caption"));
+            card.Add(row);
+        }
+
+        if (entry.recipes != null && entry.recipes.Count > 0)
+        {
+            any = true;
+            card.Add(Text("CR", UiLocale.T("codex.craft"), "label-caps"));
+            for (int i = 0; i < entry.recipes.Count; i++)
+            {
+                RecipeData recipe = entry.recipes[i];
+                if (recipe == null)
+                    continue;
+                var block = El("Recipe", "codex-recipe", "col");
+                var io = El("IO", "row", "io-row");
+                AddStacks(io, recipe.inputs);
+                io.Add(Text("Arr", " → ", "gold"));
+                AddStacks(io, recipe.outputs);
+                block.Add(io);
+
+                var where = El("Where", "codex-source");
+                List<BuildingData> buildings = RecipeCodex.BuildingsOf(recipe);
+                for (int b = 0; b < buildings.Count; b++)
+                    where.Add(BuildingChip(buildings[b]));
+                if (recipe.craftTime > 0f)
+                    where.Add(Text("Time", UiLocale.T("codex.time", recipe.craftTime.ToString("0.##")), "caption"));
+                block.Add(where);
+                card.Add(block);
+            }
+        }
+
+        if (!any)
+            card.Add(Text("None", UiLocale.T("codex.none"), "muted"));
+
+        UiTooltip.Bind(card, item != null ? item.displayName : "Item", item != null ? item.description : "");
+        return card;
+    }
+
     public static VisualElement StorageCell()
     {
         var slot = El("Slot", "storage-slot");

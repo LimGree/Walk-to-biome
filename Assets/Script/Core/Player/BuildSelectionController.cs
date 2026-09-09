@@ -512,6 +512,17 @@ public class BuildSelectionController : MonoBehaviour
         int labUsed = 0;
         int labCap = LabCapacity();
 
+        Conveyor.PreviewExits.Clear();
+        for (int i = 0; i < preview.Count; i++)
+        {
+            PreviewItem feed = preview[i];
+            if (feed.data == null || !feed.data.IsConveyor)
+                continue;
+            Vector2Int feedSize = GridFootprint.GetRotatedSize(feed.data.size, feed.yaw);
+            Vector3 feedPos = GridFootprint.MinCellToCenter(origin + feed.minOffset, feedSize, y);
+            Conveyor.RegisterPreviewExit(feedPos, feed.yaw);
+        }
+
         for (int i = 0; i < preview.Count; i++)
         {
             PreviewItem item = preview[i];
@@ -548,7 +559,9 @@ public class BuildSelectionController : MonoBehaviour
         }
 
         GridOccupancy.Reserve(reserveToken, cells);
+        Conveyor.ApplyWorldVisualOverrides();
         TintPreview(allValid);
+        Conveyor.PreviewExits.Clear();
     }
 
     bool PreviewAllValid()
@@ -854,13 +867,15 @@ public class BuildSelectionController : MonoBehaviour
         {
             if (preview[i].ghost == null)
                 continue;
-            foreach (var r in preview[i].ghost.GetComponentsInChildren<Renderer>())
-                r.material = mat;
+            foreach (var r in preview[i].ghost.GetComponentsInChildren<Renderer>(true))
+                r.sharedMaterial = mat;
         }
     }
 
     void CancelPreview(bool keepSelection = false)
     {
+        Conveyor.ClearWorldVisualOverrides();
+        Conveyor.PreviewExits.Clear();
         GridOccupancy.Release(reserveToken);
         for (int i = 0; i < preview.Count; i++)
         {

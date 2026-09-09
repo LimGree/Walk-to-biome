@@ -382,9 +382,25 @@ public class TutorialFx : MonoBehaviour
 
     static Mesh CubeMesh()
     {
-        GameObject tmp = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Mesh mesh = tmp.GetComponent<MeshFilter>().sharedMesh;
-        Destroy(tmp);
+        var mesh = new Mesh { name = "TutCube" };
+        mesh.vertices = new[]
+        {
+            new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(0.5f, -0.5f, -0.5f),
+            new Vector3(0.5f, 0.5f, -0.5f), new Vector3(-0.5f, 0.5f, -0.5f),
+            new Vector3(-0.5f, -0.5f, 0.5f), new Vector3(0.5f, -0.5f, 0.5f),
+            new Vector3(0.5f, 0.5f, 0.5f), new Vector3(-0.5f, 0.5f, 0.5f)
+        };
+        mesh.triangles = new[]
+        {
+            0, 2, 1, 0, 3, 2,
+            4, 5, 6, 4, 6, 7,
+            0, 1, 5, 0, 5, 4,
+            3, 6, 2, 3, 7, 6,
+            0, 7, 3, 0, 4, 7,
+            1, 2, 6, 1, 6, 5
+        };
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
         return mesh;
     }
 }

@@ -25,14 +25,17 @@ public class MachineUI : MonoBehaviour
     VisualElement progress;
     VisualElement tabRow;
     Button tabResearch;
+    Button tabRecipes;
     Button tabBelts;
     Button tabStats;
     VisualElement bodyHost;
     ScrollView bodyList;
     VisualElement researchPage;
+    VisualElement recipePage;
     VisualElement beltPage;
     VisualElement statsPage;
     ScrollView researchList;
+    ScrollView recipeList;
     ScrollView beltList;
     ScrollView statsList;
     VisualElement storageGrid;
@@ -44,6 +47,8 @@ public class MachineUI : MonoBehaviour
     Button upgradeBtn;
     VisualElement recipeSearchHost;
     TextField recipeSearch;
+    VisualElement codexSearchHost;
+    TextField codexSearch;
     VisualElement filterSearchHost;
     TextField filterSearch;
     string upgradeTipTitle = "";
@@ -51,8 +56,14 @@ public class MachineUI : MonoBehaviour
     readonly List<VisualElement> storageSlots = new List<VisualElement>();
 
     BuildingBase currentBuilding;
+    public bool IsLabView { get; private set; }
     int labTab;
     float nextStatsRefresh;
+
+    const int TabResearch = 0;
+    const int TabRecipes = 1;
+    const int TabBelts = 2;
+    const int TabStats = 3;
 
     void Awake()
     {
@@ -116,7 +127,7 @@ public class MachineUI : MonoBehaviour
 
     void Update()
     {
-        if (IsOpen && currentBuilding != null)
+        if (IsOpen && (currentBuilding != null || IsLabView))
             UpdateProgress();
     }
 
@@ -147,10 +158,12 @@ public class MachineUI : MonoBehaviour
         panel.Add(progress);
 
         tabRow = IndustryUi.El("Tabs", "tab-row");
-        tabResearch = IndustryUi.TabBtn("Исследования", () => OpenLabTab(0));
-        tabBelts = IndustryUi.TabBtn("Конвейеры", () => OpenLabTab(1));
-        tabStats = IndustryUi.TabBtn("Статистика", () => OpenLabTab(2));
+        tabResearch = IndustryUi.TabBtn(UiLocale.T("machine.tab_research"), () => OpenLabTab(TabResearch));
+        tabRecipes = IndustryUi.TabBtn(UiLocale.T("machine.tab_recipes"), () => OpenLabTab(TabRecipes));
+        tabBelts = IndustryUi.TabBtn(UiLocale.T("machine.tab_belts"), () => OpenLabTab(TabBelts));
+        tabStats = IndustryUi.TabBtn(UiLocale.T("machine.tab_stats"), () => OpenLabTab(TabStats));
         tabRow.Add(tabResearch);
+        tabRow.Add(tabRecipes);
         tabRow.Add(tabBelts);
         tabRow.Add(tabStats);
         panel.Add(tabRow);
@@ -176,6 +189,24 @@ public class MachineUI : MonoBehaviour
         researchPage = IndustryUi.El("ResearchPage", "col", "grow");
         researchList = IndustryUi.Scroll("ResearchList");
         researchPage.Add(researchList);
+
+        recipePage = IndustryUi.El("RecipePage", "col", "grow");
+        codexSearchHost = IndustryUi.El("CodexSearchHost", "search-host");
+        codexSearchHost.Add(IndustryUi.Text("CL", UiLocale.T("machine.search_recipe"), "label-caps"));
+        var searchRow = IndustryUi.El("CodexSearchRow", "row", "codex-search-row");
+        searchRow.Add(IndustryUi.Text("Plus", "+", "codex-search-plus"));
+        codexSearch = new TextField { name = "CodexSearch" };
+        codexSearch.AddToClassList("field");
+        codexSearch.AddToClassList("search-field");
+        codexSearch.AddToClassList("grow");
+        if (codexSearch.textEdition != null)
+            codexSearch.textEdition.placeholder = UiLocale.T("codex.search");
+        codexSearch.RegisterValueChangedCallback(_ => FillRecipeTab());
+        searchRow.Add(codexSearch);
+        codexSearchHost.Add(searchRow);
+        recipeList = IndustryUi.Scroll("RecipeList");
+        recipePage.Add(codexSearchHost);
+        recipePage.Add(recipeList);
 
         beltPage = IndustryUi.El("BeltPage", "col", "grow");
         beltList = IndustryUi.Scroll("BeltList");
@@ -207,6 +238,7 @@ public class MachineUI : MonoBehaviour
         armScroll.Add(armGrid);
 
         bodyHost.Add(researchPage);
+        bodyHost.Add(recipePage);
         bodyHost.Add(beltPage);
         bodyHost.Add(statsPage);
         bodyHost.Add(storageSummary);
@@ -238,6 +270,7 @@ public class MachineUI : MonoBehaviour
             SelectionActionsUI.Instance.SetOpen(false);
 
         currentBuilding = building;
+        IsLabView = building is ResearchLab;
         IsOpen = true;
         HidePages();
 
@@ -298,9 +331,70 @@ public class MachineUI : MonoBehaviour
         }
     }
 
+    public void ToggleLab()
+    {
+        if (IsOpen && IsLabView)
+            Close();
+        else
+            OpenLab();
+    }
+
+    public void OpenLab()
+    {
+        ResearchLab lab = FindWorldLab();
+        if (lab != null)
+        {
+            Open(lab);
+            return;
+        }
+
+        BindLiveEvents();
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+        if (overlay == null)
+            Build();
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            WalletHud.Instance.SetShopOpen(false);
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            SelectionActionsUI.Instance.SetOpen(false);
+
+        currentBuilding = null;
+        IsLabView = true;
+        IsOpen = true;
+        HidePages();
+        BuildingData labData = GameDatabase.FindBuilding("research_lab");
+        IndustryUi.SetHeader(overlay, labData != null ? labData.displayName : "Research Lab", labData != null ? labData.icon : null);
+        ShowResearchLabUI();
+        BindUpgrade(null);
+        IndustryUi.Show(overlay, true);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
+        else
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+            SetPlayerControl(false);
+        }
+    }
+
+    static ResearchLab FindWorldLab()
+    {
+        ResearchLab[] labs = UnityEngine.Object.FindObjectsByType<ResearchLab>(FindObjectsSortMode.None);
+        for (int i = 0; i < labs.Length; i++)
+        {
+            if (labs[i] != null && labs[i].IsWorldLab)
+                return labs[i];
+        }
+
+        return labs.Length > 0 ? labs[0] : null;
+    }
+
     public void Close()
     {
         IsOpen = false;
+        IsLabView = false;
         currentBuilding = null;
         KeybindStore.SuppressGameplay();
         IndustryUi.Show(upgradeBtn, false);
@@ -344,6 +438,7 @@ public class MachineUI : MonoBehaviour
         IndustryUi.Show(tabRow, false);
         IndustryUi.Show(bodyList, false);
         IndustryUi.Show(researchPage, false);
+        IndustryUi.Show(recipePage, false);
         IndustryUi.Show(beltPage, false);
         IndustryUi.Show(statsPage, false);
         IndustryUi.Show(storageSummary, false);
@@ -674,17 +769,25 @@ public class MachineUI : MonoBehaviour
 
     void OnLiveChanged()
     {
-        if (!IsOpen || currentBuilding == null)
+        if (!IsOpen)
+            return;
+        if (IsLabView)
+        {
+            BindUpgrade(currentBuilding);
+            if (labTab == TabResearch)
+                FillResearchTab();
+            else if (labTab == TabRecipes)
+                FillRecipeTab();
+            else if (labTab == TabBelts)
+                RebuildBeltTree();
+            else
+                RebuildStatsList();
+            return;
+        }
+
+        if (currentBuilding == null)
             return;
         BindUpgrade(currentBuilding);
-        if (!(currentBuilding is ResearchLab))
-            return;
-        if (labTab == 0)
-            FillResearchTab();
-        else if (labTab == 1)
-            RebuildBeltTree();
-        else
-            RebuildStatsList();
     }
 
     void OpenLabTab(int tab)
@@ -692,19 +795,41 @@ public class MachineUI : MonoBehaviour
         if (labTab != tab)
             UiAudio.PlayTab();
         labTab = tab;
-        IndustryUi.Show(researchPage, tab == 0);
-        IndustryUi.Show(beltPage, tab == 1);
-        IndustryUi.Show(statsPage, tab == 2);
-        IndustryUi.SetOn(tabResearch, tab == 0, "tab-on");
-        IndustryUi.SetOn(tabBelts, tab == 1, "tab-on");
-        IndustryUi.SetOn(tabStats, tab == 2, "tab-on");
+        IndustryUi.Show(researchPage, tab == TabResearch);
+        IndustryUi.Show(recipePage, tab == TabRecipes);
+        IndustryUi.Show(beltPage, tab == TabBelts);
+        IndustryUi.Show(statsPage, tab == TabStats);
+        IndustryUi.SetOn(tabResearch, tab == TabResearch, "tab-on");
+        IndustryUi.SetOn(tabRecipes, tab == TabRecipes, "tab-on");
+        IndustryUi.SetOn(tabBelts, tab == TabBelts, "tab-on");
+        IndustryUi.SetOn(tabStats, tab == TabStats, "tab-on");
 
-        if (tab == 0)
+        if (tab == TabResearch)
             FillResearchTab();
-        else if (tab == 1)
+        else if (tab == TabRecipes)
+            FillRecipeTab();
+        else if (tab == TabBelts)
             RebuildBeltTree();
         else
             RebuildStatsList();
+    }
+
+    void FillRecipeTab()
+    {
+        if (recipeList == null)
+            return;
+        recipeList.Clear();
+        string query = codexSearch != null ? codexSearch.value : "";
+        List<RecipeCodex.Entry> entries = RecipeCodex.Build();
+        for (int i = 0; i < entries.Count; i++)
+        {
+            RecipeCodex.Entry entry = entries[i];
+            if (entry.item == null)
+                continue;
+            if (!RecipeCodex.Matches(entry, query))
+                continue;
+            recipeList.Add(IndustryUi.CodexCard(entry));
+        }
     }
 
     void FillResearchTab()
@@ -743,7 +868,10 @@ public class MachineUI : MonoBehaviour
                 () =>
                 {
                     if (ResearchSystem.Instance.SetCurrentResearch(captured))
-                        Close();
+                    {
+                        UiAudio.PlayConfirm();
+                        FillResearchTab();
+                    }
                 }));
         }
     }
@@ -920,7 +1048,7 @@ public class MachineUI : MonoBehaviour
         {
             UpdateArmSummary(arm);
         }
-        else if (currentBuilding is ResearchLab)
+        else if (IsLabView || currentBuilding is ResearchLab)
         {
             float t = ResearchSystem.Instance != null
                 ? ResearchSystem.Instance.GetCurrentProgress01()
@@ -934,7 +1062,7 @@ public class MachineUI : MonoBehaviour
                     ? UiStatus.Running
                     : UiStatus.Ready);
 
-            if (labTab == 2 && Time.unscaledTime >= nextStatsRefresh)
+            if (labTab == TabStats && Time.unscaledTime >= nextStatsRefresh)
                 RebuildStatsList();
         }
     }

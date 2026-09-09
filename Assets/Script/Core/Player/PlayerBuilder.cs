@@ -49,6 +49,7 @@ public class PlayerBuilder : MonoBehaviour
         public Vector2Int min;
         public Vector3 pos;
         public bool valid;
+        public float yaw;
     }
 
     bool strokeActive;
@@ -154,6 +155,8 @@ public class PlayerBuilder : MonoBehaviour
             EndStroke();
             if (currentGhost != null)
                 currentGhost.SetActive(false);
+            Conveyor.ClearWorldVisualOverrides();
+            Conveyor.PreviewExits.Clear();
             return;
         }
 
@@ -162,8 +165,10 @@ public class PlayerBuilder : MonoBehaviour
             if (strokeActive)
                 currentRotationY = strokeYaw;
 
-            UpdateGhost();
-            TickLineStroke();
+            if (strokeActive)
+                TickLineStroke();
+            else
+                UpdateGhost();
         }
         else
         {
@@ -393,6 +398,8 @@ public class PlayerBuilder : MonoBehaviour
                 Destroy(lineGhosts[i]);
         }
         lineGhosts.Clear();
+        Conveyor.ClearWorldVisualOverrides();
+        Conveyor.PreviewExits.Clear();
     }
 
     void ClearPlacementTarget()
@@ -457,28 +464,47 @@ public class PlayerBuilder : MonoBehaviour
         if (!HasPlacementTarget)
         {
             currentGhost.SetActive(false);
+            Conveyor.ClearWorldVisualOverrides();
+            Conveyor.PreviewExits.Clear();
             return;
         }
 
         Vector3 placePos = CurrentPlacementPosition;
-        currentGhost.transform.position = placePos;
-        currentGhost.transform.rotation = Quaternion.Euler(0f, currentRotationY, 0f);
+        Quaternion rot = Quaternion.Euler(0f, currentRotationY, 0f);
+        currentGhost.transform.SetPositionAndRotation(placePos, rot);
 
+        Conveyor.PreviewExits.Clear();
         Conveyor ghostBelt = currentGhost.GetComponent<Conveyor>();
         if (ghostBelt != null)
-            ghostBelt.Preview(placePos, currentGhost.transform.rotation);
-
-        canPlace = IsPlacementValid(placePos, currentGhost.transform.rotation);
-        CanPlaceCurrent = canPlace;
-
-        Material mat = canPlace ? ghostValidMaterial : ghostInvalidMaterial;
-        if (mat != null)
         {
-            foreach (var r in currentGhost.GetComponentsInChildren<Renderer>())
-                r.material = mat;
+            Conveyor.RegisterPreviewExit(placePos, currentRotationY);
+            ghostBelt.Preview(placePos, rot);
+            Conveyor.ApplyWorldVisualOverrides();
         }
+        else
+            Conveyor.ClearWorldVisualOverrides();
 
+        Conveyor.PreviewExits.Clear();
+
+        canPlace = IsPlacementValid(placePos, rot);
+        CanPlaceCurrent = canPlace;
+        TintGhost(currentGhost, canPlace);
         currentGhost.SetActive(true);
+    }
+
+    void TintGhost(GameObject ghost, bool valid)
+    {
+        if (ghost == null)
+            return;
+        Material mat = valid ? ghostValidMaterial : ghostInvalidMaterial;
+        if (mat == null)
+            return;
+        Renderer[] renderers = ghost.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+                renderers[i].sharedMaterial = mat;
+        }
     }
 
     Vector3 SnapToGrid(Vector3 position)
@@ -697,6 +723,8 @@ public class PlayerBuilder : MonoBehaviour
         strokeAxis = null;
         strokeSlots.Clear();
         ClearLineGhosts();
+        Conveyor.ClearWorldVisualOverrides();
+        Conveyor.PreviewExits.Clear();
         if (currentGhost != null && isBuildMode)
             currentGhost.SetActive(HasPlacementTarget);
     }
@@ -794,8 +822,10 @@ public class PlayerBuilder : MonoBehaviour
                     paid++;
             }
 
-            strokeSlots.Add(new LineSlot { min = min, pos = pos, valid = valid });
+            strokeSlots.Add(new LineSlot { min = min, pos = pos, valid = valid, yaw = strokeYaw });
         }
+
+        ApplySmartYawToLastSlot();
 
         if (strokeSlots.Count > 0)
         {
@@ -810,6 +840,22 @@ public class PlayerBuilder : MonoBehaviour
             return MaxLineBuildings;
         return Mathf.Max(0, ResearchSystem.Instance.GetMaxResearchLabs()
             - ResearchSystem.Instance.CountPlacedLabs());
+    }
+
+    void ApplySmartYawToLastSlot()
+    {
+        if (strokeSlots.Count == 0 || strokeBuilding == null || !strokeBuilding.IsConveyor)
+            return;
+
+        int last = strokeSlots.Count - 1;
+        LineSlot slot = strokeSlots[last];
+        var strokeCells = new HashSet<Vector2Int>(strokeSlots.Count);
+        for (int i = 0; i < strokeSlots.Count; i++)
+            strokeCells.Add(BuildingLinker.WorldToCell(strokeSlots[i].pos));
+
+        Vector2Int cell = BuildingLinker.WorldToCell(slot.pos);
+        slot.yaw = BuildingLinker.MaybeSmartYaw(cell, strokeYaw, strokeCells);
+        strokeSlots[last] = slot;
     }
 
     Vector2Int LineMinAt(int index, int dir, int step)
@@ -841,8 +887,13 @@ public class PlayerBuilder : MonoBehaviour
             lineGhosts.RemoveAt(i);
         }
 
-        Quaternion rot = Quaternion.Euler(0f, strokeYaw, 0f);
-        Material mat = lineOk ? ghostValidMaterial : ghostInvalidMaterial;
+        Conveyor.PreviewExits.Clear();
+        if (strokeBuilding != null && strokeBuilding.IsConveyor)
+        {
+            for (int i = 0; i < strokeSlots.Count; i++)
+                Conveyor.RegisterPreviewExit(strokeSlots[i].pos, strokeSlots[i].yaw);
+        }
+
         for (int i = 0; i < strokeSlots.Count; i++)
         {
             GameObject ghost = lineGhosts[i];
@@ -855,6 +906,7 @@ public class PlayerBuilder : MonoBehaviour
                 continue;
 
             Vector3 pos = strokeSlots[i].pos;
+            Quaternion rot = Quaternion.Euler(0f, strokeSlots[i].yaw, 0f);
             ghost.SetActive(true);
             ghost.transform.SetPositionAndRotation(pos, rot);
 
@@ -862,13 +914,15 @@ public class PlayerBuilder : MonoBehaviour
             if (belt != null)
                 belt.Preview(pos, rot);
 
-            if (mat != null)
-            {
-                foreach (var r in ghost.GetComponentsInChildren<Renderer>())
-                    r.material = mat;
-            }
+            TintGhost(ghost, lineOk);
         }
 
+        if (strokeBuilding != null && strokeBuilding.IsConveyor)
+            Conveyor.ApplyWorldVisualOverrides();
+        else
+            Conveyor.ClearWorldVisualOverrides();
+
+        Conveyor.PreviewExits.Clear();
         canPlace = lineOk;
         CanPlaceCurrent = lineOk;
     }
@@ -927,9 +981,20 @@ public class PlayerBuilder : MonoBehaviour
             return;
         }
 
-        Quaternion rot = Quaternion.Euler(0f, strokeYaw, 0f);
+        Vector3 soundPos = strokeSlots[strokeSlots.Count - 1].pos;
         for (int i = 0; i < strokeSlots.Count; i++)
+        {
+            Quaternion rot = Quaternion.Euler(0f, strokeSlots[i].yaw, 0f);
             SpawnAt(strokeSlots[i].pos, rot);
+        }
+
+        if (currentBuildingData != null)
+        {
+            if (currentBuildingData.IsConveyor)
+                GameAudio.World("world_place_belt", soundPos);
+            else
+                GameAudio.World("world_place", soundPos);
+        }
 
         EndStroke();
     }
@@ -949,10 +1014,6 @@ public class PlayerBuilder : MonoBehaviour
         GameObject go = Instantiate(currentBuildingData.prefab, placePos, placeRot);
         go.name = go.name + $"{indexBuilding}";
         indexBuilding += 1;
-        if (currentBuildingData.IsConveyor)
-            GameAudio.World("world_place_belt", placePos);
-        else
-            GameAudio.World("world_place", placePos);
 
         BuildingBase buildingBase = go.GetComponent<BuildingBase>();
         if (buildingBase != null)

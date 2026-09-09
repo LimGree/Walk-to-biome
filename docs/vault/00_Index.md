@@ -61,6 +61,7 @@
 
 Логистика:
 
+- [[BeltRules]] — таблица форм и путей ленты
 - [[Conveyor]] · [[Pipe]] (труба = конвейер только для жидкостей)
 - [[Splitter]] · [[RoboticArm]]
 - [[StorageContainer]] · [[FluidStorageTank]]
@@ -129,7 +130,7 @@
 - [[IndustryUi]] — фабрика кнопок и панелей UI Toolkit
 - [[UiRuntime]] · [[UiTheme]] · [[UiFactory]] · [[UiMotion]]
 - [[UiModal]] · [[UiNotification]] · [[UiTooltip]] · [[UiAudio]] · [[UiStatus]]
-- [[BuildMenuUI]] · [[InventoryUI]] · [[MachineUI]] · [[ResearchUI]]
+- [[BuildMenuUI]] · [[InventoryUI]] · [[MachineUI]] · [[ResearchUI]] · [[RecipeCodex]]
 - [[OverlayUi]] · [[WalletHud]] · [[InputHintUI]] · [[CrosshairHud]]
 - [[SelectionActionsUI]] · [[LoadingScreen]] · [[HotbarSlotView]] · [[BagBuildingCard]]
 - [[GameHudIcons]] · [[GameBranding]]

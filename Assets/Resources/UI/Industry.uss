@@ -1034,6 +1034,76 @@ TextField {
     margin-top: 6px;
 }
 
+.codex-card {
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.codex-head {
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.codex-icon {
+    width: 56px;
+    height: 56px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.codex-source {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 6px;
+}
+
+.codex-building {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 12px;
+    margin-bottom: 4px;
+}
+
+.codex-recipe {
+    background-color: var(--surface-0);
+    border-width: 1px;
+    border-color: var(--border-subtle);
+    border-radius: 2px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+}
+
+.codex-recipe.is-locked {
+    opacity: 0.72;
+}
+
+.codex-search-row {
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.codex-search-plus {
+    width: 36px;
+    height: 40px;
+    margin-right: 8px;
+    margin-bottom: 0;
+    font-size: 22px;
+    color: var(--accent);
+    -unity-text-align: middle-center;
+    background-color: var(--surface-0);
+    border-width: 1px;
+    border-color: var(--border-subtle);
+    border-radius: 2px;
+}
+
+.codex-search-row .search-field {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
 /* ===== MAP ===== */
 
 .mini-host {

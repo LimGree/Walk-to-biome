@@ -59,12 +59,12 @@ public abstract class BuildingBase : MonoBehaviour
     public virtual void OnRemoved()
     {
         worldPlaced = false;
-        List<BuildingBase> neighbors = new List<BuildingBase>(8);
-        BuildingLinker.CollectNeighbors(this, neighbors);
+        var around = new List<Vector2Int>(8);
+        BuildingLinker.CollectFootprintCells(this, around);
         DisconnectAllSockets();
         GridOccupancy.Unregister(gameObject);
         if (!BuildingLinker.SuppressRelink)
-            BuildingLinker.Relink(neighbors);
+            BuildingLinker.RefreshRemoved(around);
     }
 
     public virtual void OnRotated()
@@ -189,11 +189,17 @@ public abstract class BuildingBase : MonoBehaviour
             }
 
             BuildingBase front = BuildingLinker.GetBuildingAt(BuildingLinker.GetSocketFrontCell(socket));
-            if (front != null
-                && front != this
-                && front.CanAcceptFrom(this)
-                && front.TryReceiveItem(item, socket))
-                return true;
+            if (front != null && front != this)
+            {
+                Conveyor belt = front as Conveyor;
+                if (belt != null)
+                {
+                    if (belt.TryAcceptTransfer(item, null, this))
+                        return true;
+                }
+                else if (front.CanAcceptFrom(this) && front.TryReceiveItem(item, socket))
+                    return true;
+            }
         }
 
         return false;
