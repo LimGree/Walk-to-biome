@@ -38,7 +38,7 @@
 - [[PlayerInteractor]] — кнопка «взаимодействие» по взгляду, интерфейс [[IInteractable]]
 - [[BuildSelectionController]] — выделение, копирование, вставка, перенос группы зданий
 - [[BuildGridVisualizer]] — сетка под ногами в режиме стройки (`BuildGridPlane`, не белый квадрат)
-- [[BuildIoArrowVisualizer]] — стрелки входов/выходов у призрака здания
+- [[BuildIoArrowVisualizer]] — выключен; стрелки I/O только на префабах ([[SocketArrow]])
 
 ---
 
@@ -49,6 +49,9 @@
 - [[BuildingSocket]] / [[SocketType]] — «розетки» входа и выхода
 - [[BuildingLinker]] — кто с кем соседствует на сетке
 - [[BuildingData]] — карточка здания в каталоге (цена, префаб, размер)
+- [[BuildingPrefabLayout]] — +Z выход, −Z вход; гост и уровни в одном префабе
+- [[BuildingVisuals]] · [[GhostTint]] — призрак с albedo и прозрачностью
+- [[SocketArrow]] — стрелки I/O на префабе; в игре только в режиме стройки
 
 Станки-крафтеры (почти близнецы, разный звук/модель):
 
@@ -132,6 +135,7 @@
 - [[UiRuntime]] · [[UiTheme]] · [[UiFactory]] · [[UiMotion]]
 - [[UiModal]] · [[UiNotification]] · [[UiTooltip]] · [[UiAudio]] · [[UiStatus]]
 - [[BuildMenuUI]] · [[InventoryUI]] · [[MachineUI]] · [[ResearchUI]] · [[ResearchTree]] · [[RecipeCodex]]
+- [[BuildingPrefabLayout]] · [[SocketArrow]]
 - [[OverlayUi]] · [[WalletHud]] · [[InputHintUI]] · [[CrosshairHud]]
 - [[SelectionActionsUI]] · [[LoadingScreen]] · [[HotbarSlotView]] · [[BagBuildingCard]]
 - [[GameHudIcons]] · [[GameBranding]]

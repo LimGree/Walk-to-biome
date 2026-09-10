@@ -60,6 +60,7 @@ public class Assembler : CrafterBuilding
 
     void ApplyLevel()
     {
+        BuildingVisuals.ApplyLevel(this, level);
         if (level1Visual != null)
             level1Visual.SetActive(level < 2);
         if (level2Visual != null)
@@ -68,6 +69,12 @@ public class Assembler : CrafterBuilding
 
     void BindVisuals()
     {
+        Transform l1 = BuildingPrefabLayout.FindLevel1(transform);
+        Transform l2 = BuildingPrefabLayout.FindLevel2(transform);
+        if (level1Visual == null && l1 != null)
+            level1Visual = l1.gameObject;
+        if (level2Visual == null && l2 != null)
+            level2Visual = l2.gameObject;
         if (level1Visual == null)
             level1Visual = FindNamedChild("Assembler_Level_1");
         if (level2Visual == null)

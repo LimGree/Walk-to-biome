@@ -1,18 +1,8 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ChemicalPlant : CrafterBuilding
 {
     protected override string WorkClip => "bld_chem_loop";
-    static readonly Vector2Int[] Cardinals =
-    {
-        new Vector2Int(0, 1),
-        new Vector2Int(1, 0),
-        new Vector2Int(0, -1),
-        new Vector2Int(-1, 0)
-    };
-
-    readonly List<Vector2Int> cells = new List<Vector2Int>(16);
 
     void Awake()
     {
@@ -39,17 +29,6 @@ public class ChemicalPlant : CrafterBuilding
         }
 
         return false;
-    }
-
-    protected override bool TryPushToConnections(ItemData item)
-    {
-        if (item == null)
-            return false;
-        if (base.TryPushToConnections(item))
-            return true;
-        if (item.isFluid)
-            return false;
-        return TryPushToAdjacentBelts(item);
     }
 
     void EnsureSetup()
@@ -88,31 +67,27 @@ public class ChemicalPlant : CrafterBuilding
 
     void EnsureSockets()
     {
-        BuildingSocket solidIn = FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -1.5f));
-        BuildingSocket fluidIn = FindOrCreateSocket("InputSocketFluid", SocketType.Input, new Vector3(-1.5f, 0.3f, 0f));
-        BuildingSocket output = FindOrCreateSocket("OutPutSocket", SocketType.Output, new Vector3(0f, 0.3f, 1.5f));
+        BuildingSocket solidIn = FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -1.5f), BuildingPrefabLayout.InputRotation);
+        BuildingSocket fluidIn = FindOrCreateSocket("InputSocketFluid", SocketType.Input, new Vector3(-1.5f, 0.3f, 0f), Quaternion.Euler(0f, -90f, 0f));
+        BuildingSocket output = FindOrCreateSocket("OutPutSocket", SocketType.Output, new Vector3(0f, 0.3f, 1.5f), BuildingPrefabLayout.OutputRotation);
         inputSockets = new[] { solidIn, fluidIn };
         outputSockets = new[] { output };
     }
 
-    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos)
+    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos, Quaternion localRot)
     {
         Transform existing = transform.Find(socketName);
         GameObject go;
         if (existing != null)
         {
             go = existing.gameObject;
-            Vector3 local = existing.localPosition;
-            local.y = 0f;
-            if (local.sqrMagnitude < 0.04f)
-                existing.localPosition = localPos;
+            BuildingPrefabLayout.PlaceSocket(existing, localPos, localRot);
         }
         else
         {
             go = new GameObject(socketName);
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = localPos;
-            go.transform.localRotation = Quaternion.identity;
+            BuildingPrefabLayout.PlaceSocket(go.transform, localPos, localRot);
         }
 
         BuildingSocket socket = go.GetComponent<BuildingSocket>();
@@ -120,24 +95,5 @@ public class ChemicalPlant : CrafterBuilding
             socket = go.AddComponent<BuildingSocket>();
         socket.socketType = type;
         return socket;
-    }
-
-    bool TryPushToAdjacentBelts(ItemData item)
-    {
-        GridFootprint.CollectCells(transform.position, FootprintSize, cells);
-        for (int i = 0; i < cells.Count; i++)
-        {
-            for (int d = 0; d < Cardinals.Length; d++)
-            {
-                BuildingBase other = BuildingLinker.GetBuildingAt(cells[i] + Cardinals[d]);
-                Conveyor belt = other as Conveyor;
-                if (belt == null || belt is Pipe)
-                    continue;
-                if (belt.TryAcceptTransfer(item, null, this))
-                    return true;
-            }
-        }
-
-        return false;
     }
 }

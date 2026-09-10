@@ -1,18 +1,8 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Refinery : CrafterBuilding
 {
     protected override string WorkClip => "bld_refinery_loop";
-    static readonly Vector2Int[] Cardinals =
-    {
-        new Vector2Int(0, 1),
-        new Vector2Int(1, 0),
-        new Vector2Int(0, -1),
-        new Vector2Int(-1, 0)
-    };
-
-    readonly List<Vector2Int> cells = new List<Vector2Int>(16);
 
     BuildingSocket pipeSocket;
     BuildingSocket beltSocket;
@@ -55,20 +45,6 @@ public class Refinery : CrafterBuilding
                 return true;
         }
         return false;
-    }
-
-    protected override bool TryPushToConnections(ItemData item)
-    {
-        if (item == null)
-            return false;
-
-        if (base.TryPushToConnections(item))
-            return true;
-
-        if (item.isFluid || RecipeOutputsFluid(currentRecipe))
-            return false;
-
-        return TryPushToAdjacentBelts(item);
     }
 
     void CacheDefaultSockets()
@@ -116,25 +92,6 @@ public class Refinery : CrafterBuilding
             if (item != null && item.isFluid)
                 return true;
         }
-        return false;
-    }
-
-    bool TryPushToAdjacentBelts(ItemData item)
-    {
-        GridFootprint.CollectCells(transform.position, FootprintSize, cells);
-        for (int i = 0; i < cells.Count; i++)
-        {
-            for (int d = 0; d < Cardinals.Length; d++)
-            {
-                BuildingBase other = BuildingLinker.GetBuildingAt(cells[i] + Cardinals[d]);
-                Conveyor belt = other as Conveyor;
-                if (belt == null || belt is Pipe)
-                    continue;
-                if (belt.TryAcceptTransfer(item, null, this))
-                    return true;
-            }
-        }
-
         return false;
     }
 }

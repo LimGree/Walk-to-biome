@@ -17,6 +17,15 @@ public abstract class BuildingBase : MonoBehaviour
     [Header("Footprint gizmo")]
     public bool drawFootprintGizmo = true;
 
+    static readonly Vector2Int[] PushCardinals =
+    {
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 0),
+        new Vector2Int(0, -1),
+        new Vector2Int(-1, 0)
+    };
+    static readonly List<Vector2Int> PushCells = new List<Vector2Int>(16);
+
     private readonly Queue<ItemData> outputBuffer = new Queue<ItemData>();
     Renderer[] cullRenderers;
     Collider[] cullColliders;
@@ -52,6 +61,7 @@ public abstract class BuildingBase : MonoBehaviour
     {
         worldPlaced = true;
         RegisterOnGrid();
+        BuildingVisuals.ApplyPlaced(this, ReadLevel());
         if (!BuildingLinker.SuppressRelink)
             BuildingLinker.RelinkAround(this);
     }
@@ -170,39 +180,108 @@ public abstract class BuildingBase : MonoBehaviour
 
     protected virtual bool TryPushToConnections(ItemData item)
     {
-        if (item == null || outputSockets == null)
+        if (item == null)
             return false;
 
-        for (int i = 0; i < outputSockets.Length; i++)
+        if (outputSockets != null)
         {
-            BuildingSocket socket = outputSockets[i];
-            if (socket == null)
-                continue;
-
-            if (socket.connectedSocket != null)
+            for (int i = 0; i < outputSockets.Length; i++)
             {
-                BuildingBase linked = socket.connectedSocket.GetComponentInParent<BuildingBase>();
-                if (linked != null
-                    && linked.CanAcceptFrom(this)
-                    && linked.TryReceiveItem(item, socket.connectedSocket))
-                    return true;
-            }
+                BuildingSocket socket = outputSockets[i];
+                if (socket == null)
+                    continue;
 
-            BuildingBase front = BuildingLinker.GetBuildingAt(BuildingLinker.GetSocketFrontCell(socket));
-            if (front != null && front != this)
-            {
-                Conveyor belt = front as Conveyor;
-                if (belt != null)
+                if (socket.connectedSocket != null)
                 {
-                    if (belt.TryAcceptTransfer(item, null, this))
+                    BuildingBase linked = socket.connectedSocket.GetComponentInParent<BuildingBase>();
+                    if (linked != null
+                        && linked.CanAcceptFrom(this)
+                        && linked.TryReceiveItem(item, socket.connectedSocket))
                         return true;
                 }
-                else if (front.CanAcceptFrom(this) && front.TryReceiveItem(item, socket))
+
+                if (TryGiveTo(BuildingLinker.GetBuildingAt(BuildingLinker.GetSocketFrontCell(socket)), item, socket))
+                    return true;
+
+                Vector2Int dir = BuildingLinker.SocketWorldCardinal(socket);
+                if (dir.x == 0 && dir.y == 0)
+                    continue;
+
+                GridFootprint.CollectCells(transform.position, FootprintSize, PushCells);
+                for (int c = 0; c < PushCells.Count; c++)
+                {
+                    if (TryGiveTo(BuildingLinker.GetBuildingAt(PushCells[c] + dir), item, socket))
+                        return true;
+                }
+            }
+        }
+
+        return TryPushToAdjacentBelts(item);
+    }
+
+    protected bool HasPushNeighbor()
+    {
+        GridFootprint.CollectCells(transform.position, FootprintSize, PushCells);
+        for (int i = 0; i < PushCells.Count; i++)
+        {
+            for (int d = 0; d < PushCardinals.Length; d++)
+            {
+                BuildingBase other = BuildingLinker.GetBuildingAt(PushCells[i] + PushCardinals[d]);
+                if (other != null && other != this)
                     return true;
             }
         }
 
         return false;
+    }
+
+    protected bool TryPushToAdjacentBelts(ItemData item)
+    {
+        if (item == null)
+            return false;
+
+        GridFootprint.CollectCells(transform.position, FootprintSize, PushCells);
+        for (int i = 0; i < PushCells.Count; i++)
+        {
+            for (int d = 0; d < PushCardinals.Length; d++)
+            {
+                BuildingBase other = BuildingLinker.GetBuildingAt(PushCells[i] + PushCardinals[d]);
+                if (TryGiveTo(other, item, null))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool TryGiveTo(BuildingBase dest, ItemData item, BuildingSocket fromSocket)
+    {
+        if (dest == null || dest == this || item == null)
+            return false;
+
+        Conveyor belt = dest as Conveyor;
+        if (belt != null)
+        {
+            bool pipe = belt is Pipe;
+            if (item.isFluid != pipe)
+                return false;
+            return belt.TryAcceptTransfer(item, null, this);
+        }
+
+        if (item.isFluid)
+            return false;
+
+        Splitter splitter = dest as Splitter;
+        if (splitter != null)
+        {
+            if (!splitter.CanAcceptFrom(this))
+                return false;
+            return splitter.TryAcceptTransfer(item, null);
+        }
+
+        if (!dest.CanAcceptFrom(this))
+            return false;
+        return dest.TryReceiveItem(item, fromSocket);
     }
 
     protected void FlushOutputBuffer()

@@ -831,13 +831,12 @@ public class BuildSelectionController : MonoBehaviour
     {
         if (data == null)
             return null;
-        GameObject source = data.ghostPrefab != null ? data.ghostPrefab : data.prefab;
+        GameObject source = BuildingVisuals.SourceForGhost(data);
         if (source == null)
             return null;
 
         GameObject ghost = Instantiate(source);
-        foreach (var col in ghost.GetComponentsInChildren<Collider>(true))
-            col.enabled = false;
+        BuildingVisuals.PrepareGhostInstance(ghost);
 
         Conveyor belt = ghost.GetComponent<Conveyor>();
         if (belt == null && data.IsConveyor)
@@ -860,15 +859,11 @@ public class BuildSelectionController : MonoBehaviour
 
     void TintPreview(bool allValid)
     {
-        Material mat = allValid ? builder.ghostValidMaterial : builder.ghostInvalidMaterial;
-        if (mat == null)
-            return;
         for (int i = 0; i < preview.Count; i++)
         {
             if (preview[i].ghost == null)
                 continue;
-            foreach (var r in preview[i].ghost.GetComponentsInChildren<Renderer>(true))
-                r.sharedMaterial = mat;
+            GhostTint.Apply(preview[i].ghost, allValid, builder.ghostValidMaterial, builder.ghostInvalidMaterial);
         }
     }
 

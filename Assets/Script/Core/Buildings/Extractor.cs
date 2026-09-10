@@ -93,6 +93,7 @@ public class Extractor : BuildingBase, IInteractable
             itemsPerCycle = Mathf.Max(1, upgradedItemsPerCycle);
         }
 
+        BuildingVisuals.ApplyLevel(this, level);
         if (level1Visual != null)
             level1Visual.SetActive(level < 2);
         if (level2Visual != null)
@@ -104,6 +105,12 @@ public class Extractor : BuildingBase, IInteractable
 
     void BindVisuals()
     {
+        Transform l1 = BuildingPrefabLayout.FindLevel1(transform);
+        Transform l2 = BuildingPrefabLayout.FindLevel2(transform);
+        if (level1Visual == null && l1 != null)
+            level1Visual = l1.gameObject;
+        if (level2Visual == null && l2 != null)
+            level2Visual = l2.gameObject;
         if (level1Visual == null)
             level1Visual = FindNamedChild("extractor_level_1");
         if (level2Visual == null)
@@ -241,7 +248,7 @@ public class Extractor : BuildingBase, IInteractable
                 return true;
         }
 
-        return false;
+        return HasPushNeighbor();
     }
 
     public void Interact(GameObject interactor)

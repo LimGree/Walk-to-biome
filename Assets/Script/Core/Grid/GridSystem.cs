@@ -21,7 +21,6 @@ public class GridSystem : MonoBehaviour
 
         GridOccupancy.ClearAll();
         EnsureComponent<BuildGridVisualizer>();
-        EnsureComponent<BuildIoArrowVisualizer>();
         EnsureComponent<WorldBiomeMap>();
         EnsureComponent<WorldResourceScatterer>();
     }

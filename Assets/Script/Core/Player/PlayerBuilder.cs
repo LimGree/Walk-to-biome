@@ -83,6 +83,7 @@ public class PlayerBuilder : MonoBehaviour
             selection = gameObject.AddComponent<BuildSelectionController>();
 
         isBuildMode = false;
+        SocketArrow.SetBuildMode(false);
     }
 
     void OnEnable()
@@ -295,6 +296,7 @@ public class PlayerBuilder : MonoBehaviour
     public void EnterBuildMode(bool openMenu)
     {
         isBuildMode = true;
+        SocketArrow.SetBuildMode(true);
 
         if (buildMenuUI != null && buildMenuUI.IsOpen)
             buildMenuUI.CloseMenu(restorePlayerControl: false);
@@ -306,6 +308,7 @@ public class PlayerBuilder : MonoBehaviour
     public void ExitBuildMode()
     {
         isBuildMode = false;
+        SocketArrow.SetBuildMode(false);
         EndStroke();
         DestroyGhost();
         ClearPlacementTarget();
@@ -362,16 +365,12 @@ public class PlayerBuilder : MonoBehaviour
         if (!isBuildMode || currentBuildingData == null)
             return;
 
-        GameObject ghostSource = currentBuildingData.ghostPrefab != null
-            ? currentBuildingData.ghostPrefab
-            : currentBuildingData.prefab;
+        GameObject ghostSource = BuildingVisuals.SourceForGhost(currentBuildingData);
         if (ghostSource == null)
             return;
 
         currentGhost = Instantiate(ghostSource);
-
-        foreach (var col in currentGhost.GetComponentsInChildren<Collider>(true))
-            col.enabled = false;
+        BuildingVisuals.PrepareGhostInstance(currentGhost);
 
         Conveyor belt = currentGhost.GetComponent<Conveyor>();
         if (belt == null && currentBuildingData.IsConveyor)
@@ -494,17 +493,7 @@ public class PlayerBuilder : MonoBehaviour
 
     void TintGhost(GameObject ghost, bool valid)
     {
-        if (ghost == null)
-            return;
-        Material mat = valid ? ghostValidMaterial : ghostInvalidMaterial;
-        if (mat == null)
-            return;
-        Renderer[] renderers = ghost.GetComponentsInChildren<Renderer>(true);
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (renderers[i] != null)
-                renderers[i].sharedMaterial = mat;
-        }
+        GhostTint.Apply(ghost, valid, ghostValidMaterial, ghostInvalidMaterial);
     }
 
     Vector3 SnapToGrid(Vector3 position)
@@ -932,15 +921,12 @@ public class PlayerBuilder : MonoBehaviour
         if (strokeBuilding == null)
             return null;
 
-        GameObject source = strokeBuilding.ghostPrefab != null
-            ? strokeBuilding.ghostPrefab
-            : strokeBuilding.prefab;
+        GameObject source = BuildingVisuals.SourceForGhost(strokeBuilding);
         if (source == null)
             return null;
 
         GameObject ghost = Instantiate(source);
-        foreach (var col in ghost.GetComponentsInChildren<Collider>(true))
-            col.enabled = false;
+        BuildingVisuals.PrepareGhostInstance(ghost);
 
         Conveyor belt = ghost.GetComponent<Conveyor>();
         if (belt == null && strokeBuilding.IsConveyor)

@@ -213,14 +213,53 @@ public class Splitter : BuildingBase
 
     bool TryHandOff(Cargo item)
     {
-        Vector2Int nextCell = Cell + item.exitDir;
-        BuildingBase dest = BuildingLinker.GetBuildingAt(nextCell);
-        if (dest == null)
+        EnsureSetup();
+        int count = outputSockets != null ? outputSockets.Length : 0;
+        if (count <= 0)
+            return TryGive(item, item.exitDir);
+
+        Vector2Int entry = item.entryDir;
+        int start = nextOutput;
+        for (int n = 0; n < count; n++)
+        {
+            int index = (start + n) % count;
+            BuildingSocket socket = outputSockets[index];
+            if (socket == null)
+                continue;
+
+            Vector2Int dir = BuildingLinker.ToCardinal(socket.GetOutward());
+            if (dir == Opposite(entry))
+                continue;
+            if (dir.x == 0 && dir.y == 0)
+                continue;
+
+            if (!TryGive(item, dir))
+                continue;
+
+            item.exitDir = dir;
+            nextOutput = (index + 1) % count;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool TryGive(Cargo item, Vector2Int dir)
+    {
+        if (dir.x == 0 && dir.y == 0)
+            return false;
+
+        BuildingBase dest = BuildingLinker.GetBuildingAt(Cell + dir);
+        if (dest == null || dest == this)
             return false;
 
         Conveyor nextBelt = dest as Conveyor;
         if (nextBelt != null)
+        {
+            if (nextBelt is Pipe)
+                return false;
             return nextBelt.TryAcceptTransfer(item.item, item.visual, this);
+        }
 
         Splitter nextSplit = dest as Splitter;
         if (nextSplit != null)
@@ -485,7 +524,7 @@ public class Splitter : BuildingBase
         {
             inputSockets = new[]
             {
-                FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0.5f, 0.3f, 0f))
+                FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -0.5f), BuildingPrefabLayout.InputRotation)
             };
         }
         else
@@ -497,9 +536,9 @@ public class Splitter : BuildingBase
         {
             outputSockets = new[]
             {
-                FindOrCreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, -0.5f)),
-                FindOrCreateSocket("OutputSocket (1)", SocketType.Output, new Vector3(0f, 0.3f, 0.5f)),
-                FindOrCreateSocket("OutputSocket (2)", SocketType.Output, new Vector3(-0.5f, 0.3f, 0f))
+                FindOrCreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, 0.5f), BuildingPrefabLayout.OutputRotation),
+                FindOrCreateSocket("OutputSocket (1)", SocketType.Output, new Vector3(0.5f, 0.3f, 0f), Quaternion.Euler(0f, 90f, 0f)),
+                FindOrCreateSocket("OutputSocket (2)", SocketType.Output, new Vector3(-0.5f, 0.3f, 0f), Quaternion.Euler(0f, -90f, 0f))
             };
         }
         else
@@ -532,20 +571,20 @@ public class Splitter : BuildingBase
         return sockets == null || sockets.Length == 0 || sockets[0] == null;
     }
 
-    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos)
+    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos, Quaternion localRot)
     {
         Transform existing = transform.Find(socketName);
         GameObject go;
         if (existing != null)
         {
             go = existing.gameObject;
+            BuildingPrefabLayout.PlaceSocket(existing, localPos, localRot);
         }
         else
         {
             go = new GameObject(socketName);
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = localPos;
-            go.transform.localRotation = Quaternion.identity;
+            BuildingPrefabLayout.PlaceSocket(go.transform, localPos, localRot);
         }
 
         BuildingSocket socket = go.GetComponent<BuildingSocket>();

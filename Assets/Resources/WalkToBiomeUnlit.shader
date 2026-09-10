@@ -28,6 +28,7 @@ Shader "Hidden/WalkToBiome/Unlit"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
+            #pragma skip_variants FOG_EXP FOG_EXP2
             #include "UnityCG.cginc"
 
             sampler2D _MainTex;
@@ -36,6 +37,7 @@ Shader "Hidden/WalkToBiome/Unlit"
             fixed4 _LightTint;
             float4 _WalkLightTint;
             float _WalkUvFog;
+            float _WalkFogAmount;
 
             struct appdata
             {
@@ -67,17 +69,16 @@ Shader "Hidden/WalkToBiome/Unlit"
                 clip(col.a - 0.01);
                 col.rgb *= _LightTint.rgb * _WalkLightTint.rgb;
 
-                #if defined(FOG_LINEAR) || defined(FOG_EXP) || defined(FOG_EXP2)
-                    float3 worldPos = i.worldPos;
-                    if (_WalkUvFog > 0.5)
-                    {
-                        float2 meshUv = i.meshUv;
-                        worldPos = mul(unity_ObjectToWorld, float4(meshUv.x - 0.5, meshUv.y - 0.5, 0, 1)).xyz;
-                    }
-                    float dist = distance(worldPos, _WorldSpaceCameraPos);
-                    UNITY_CALC_FOG_FACTOR_RAW(dist);
-                    col.rgb = lerp(unity_FogColor.rgb, col.rgb, saturate(unityFogFactor));
-                #endif
+                float3 worldPos = i.worldPos;
+                if (_WalkUvFog > 0.5)
+                {
+                    float2 meshUv = i.meshUv;
+                    worldPos = mul(unity_ObjectToWorld, float4(meshUv.x - 0.5, meshUv.y - 0.5, 0, 1)).xyz;
+                }
+                float dist = distance(worldPos, _WorldSpaceCameraPos);
+                UNITY_CALC_FOG_FACTOR_RAW(dist);
+                float fogMix = _WalkFogAmount > 0.5 ? saturate(unityFogFactor) : 1;
+                col.rgb = lerp(unity_FogColor.rgb, col.rgb, fogMix);
 
                 return col;
             }

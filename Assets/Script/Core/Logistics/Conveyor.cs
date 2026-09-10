@@ -615,6 +615,81 @@ public class Conveyor : BuildingBase
         PresentVisual(teeVisual, shown == BeltShape.Tee, extraYaw, mirrorX);
         PresentVisual(sidesVisual, shown == BeltShape.Sides, extraYaw, mirrorX);
         PresentVisual(tripleVisual, shown == BeltShape.Triple, extraYaw, mirrorX);
+        RefreshArrows();
+    }
+
+    public bool ShouldShowIoArrow(SocketArrow arrow)
+    {
+        if (arrow == null || !arrow.gameObject.activeInHierarchy)
+            return false;
+
+        RefreshExitFromTransform();
+        BeltShape shown = ResolveShownShape();
+        if (!ArrowBelongsToShownVisual(arrow, shown))
+            return false;
+
+        if (shown == BeltShape.Tee || shown == BeltShape.Sides || shown == BeltShape.Triple)
+            return true;
+
+        Vector2Int delta = ArrowNeighborDelta(arrow);
+        if (delta.x == 0 && delta.y == 0)
+            return false;
+        return !HasLogisticsAt(Cell + delta);
+    }
+
+    void RefreshArrows()
+    {
+        SocketArrow[] arrows = GetComponentsInChildren<SocketArrow>(true);
+        for (int i = 0; i < arrows.Length; i++)
+        {
+            if (arrows[i] != null)
+                arrows[i].Apply();
+        }
+    }
+
+    bool ArrowBelongsToShownVisual(SocketArrow arrow, BeltShape shown)
+    {
+        Transform t = arrow.transform;
+        if (UnderVisual(t, tripleVisual))
+            return shown == BeltShape.Triple;
+        if (UnderVisual(t, sidesVisual))
+            return shown == BeltShape.Sides;
+        if (UnderVisual(t, teeVisual))
+            return shown == BeltShape.Tee;
+        if (UnderVisual(t, cornerVisual))
+            return shown == BeltShape.Corner;
+        if (UnderVisual(t, straightVisual))
+            return shown == BeltShape.Straight;
+        return shown == BeltShape.Straight;
+    }
+
+    static bool UnderVisual(Transform t, GameObject visual)
+    {
+        return visual != null && t.IsChildOf(visual.transform);
+    }
+
+    Vector2Int ArrowNeighborDelta(SocketArrow arrow)
+    {
+        Vector3 local = transform.InverseTransformPoint(arrow.transform.position);
+        local.y = 0f;
+        if (local.sqrMagnitude < 0.04f)
+            return Vector2Int.zero;
+        if (Mathf.Abs(local.z) >= Mathf.Abs(local.x))
+            return local.z >= 0f ? ExitDir : BeltRules.BackNeighbor(ExitDir);
+        return local.x >= 0f ? BeltRules.RightNeighbor(ExitDir) : BeltRules.LeftNeighbor(ExitDir);
+    }
+
+    bool HasLogisticsAt(Vector2Int cell)
+    {
+        if (cell == Cell)
+            return false;
+        if (PreviewExits.ContainsKey(cell))
+            return true;
+
+        Conveyor other = BuildingLinker.GetBuildingAt(cell) as Conveyor;
+        if (other == null || other == this || other.IsPreview)
+            return false;
+        return (this is Pipe) == (other is Pipe);
     }
 
     BeltShape ResolveShownShape()

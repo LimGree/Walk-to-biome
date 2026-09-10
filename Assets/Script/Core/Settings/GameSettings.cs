@@ -212,18 +212,7 @@ public static class GameSettings
         RenderSettings.fogStartDistance = start;
         RenderSettings.fogEndDistance = end;
         RenderSettings.fogDensity = Mathf.Clamp(2.4f / end, 0.004f, 0.08f);
-        if (FogEnabled)
-        {
-            Shader.EnableKeyword("FOG_LINEAR");
-            Shader.DisableKeyword("FOG_EXP");
-            Shader.DisableKeyword("FOG_EXP2");
-        }
-        else
-        {
-            Shader.DisableKeyword("FOG_LINEAR");
-            Shader.DisableKeyword("FOG_EXP");
-            Shader.DisableKeyword("FOG_EXP2");
-        }
+        ApplyFogKeywords();
 
         QualitySettings.shadowDistance = Mathf.Clamp(objects * 0.8f, 20f, objects);
         ApplyAtmosphere();
@@ -252,6 +241,23 @@ public static class GameSettings
         }
 
         Changed?.Invoke();
+    }
+
+    static void ApplyFogKeywords()
+    {
+        Shader.SetGlobalFloat("_WalkFogAmount", FogEnabled ? 1f : 0f);
+        if (FogEnabled)
+        {
+            Shader.EnableKeyword("FOG_LINEAR");
+            Shader.DisableKeyword("FOG_EXP");
+            Shader.DisableKeyword("FOG_EXP2");
+        }
+        else
+        {
+            Shader.DisableKeyword("FOG_LINEAR");
+            Shader.DisableKeyword("FOG_EXP");
+            Shader.DisableKeyword("FOG_EXP2");
+        }
     }
 
     static void ApplyObjectCull(Camera cam, float dist)
@@ -301,7 +307,10 @@ public static class GameSettings
             fogColor = Color.Lerp(fogColor, sample.horizon, 0.35f);
         fogColor *= Mathf.Lerp(0.55f, 1.05f, sample.dayFactor);
         fogColor.a = 1f;
+        RenderSettings.fog = FogEnabled;
+        RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogColor = fogColor;
+        ApplyFogKeywords();
         if (FogEnabled)
         {
             float far = Mathf.Clamp(Mathf.Max(240f, RenderDistance * 4f), 240f, 700f);
@@ -310,6 +319,7 @@ public static class GameSettings
             end = Mathf.Lerp(end, Mathf.Max(start + 8f, end * 0.55f), Weather.Cloud);
             RenderSettings.fogStartDistance = start;
             RenderSettings.fogEndDistance = end;
+            RenderSettings.fogDensity = Mathf.Clamp(2.4f / end, 0.004f, 0.08f);
         }
 
         ApplySky(sample, fogColor, userMul);
