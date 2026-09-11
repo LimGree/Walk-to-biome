@@ -238,6 +238,8 @@ public class Conveyor : BuildingBase
     {
         if (!isLive || !AcceptsItem(item))
             return false;
+        if (!IsValidEntry(entry))
+            entry = ExitDir;
         if (!IsValidEntry(entry) || !CanAccept(entry))
             return false;
         SpawnCargo(item, 0f, visual, entry);

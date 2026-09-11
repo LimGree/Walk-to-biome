@@ -26,6 +26,8 @@
 
 Стрелки I/O в режиме стройки: на прямой и углу только незакрытый край; на T / боках / тройнике — на самой клетке перекрёстка.
 
+Под землёй — [[UndergroundConveyor]]: не клетка ленты, а пара вход/выход.
+
 ## Связи
 
 [[BeltRules]] · [[BuildingLinker]] · [[BeltItemView]] · [[Pipe]] · [[PlayerBuilder]] · [[BeltSpeedSystem]]

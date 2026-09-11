@@ -65,7 +65,7 @@
 Логистика:
 
 - [[BeltRules]] — таблица форм и путей ленты
-- [[Conveyor]] · [[Pipe]] (труба = конвейер только для жидкостей)
+- [[Conveyor]] · [[UndergroundConveyor]] · [[Pipe]] (труба = конвейер только для жидкостей)
 - [[Splitter]] · [[RoboticArm]]
 - [[StorageContainer]] · [[FluidStorageTank]]
 - [[BeltItemView]] — как предмет выглядит на ленте

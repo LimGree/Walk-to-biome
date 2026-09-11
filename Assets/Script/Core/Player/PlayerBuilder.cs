@@ -247,6 +247,8 @@ public class PlayerBuilder : MonoBehaviour
         BuildingBase building = hit.collider.GetComponentInParent<BuildingBase>();
         if (building == null)
             return false;
+        if (building is UndergroundConveyor)
+            return false;
 
         float prevYaw = building.transform.eulerAngles.y;
         float newYaw = prevYaw + 90f;
@@ -756,6 +758,11 @@ public class PlayerBuilder : MonoBehaviour
         strokeSlots.Clear();
         if (!strokeActive)
             return;
+        if (strokeBuilding != null && strokeBuilding.IsPairedStraight)
+        {
+            RebuildPairedSlots();
+            return;
+        }
 
         Vector2Int currentMin = GridFootprint.GetMinCell(CurrentPlacementPosition, strokeSize);
         Vector2Int delta = currentMin - strokeStartMin;
@@ -831,6 +838,70 @@ public class PlayerBuilder : MonoBehaviour
             - ResearchSystem.Instance.CountPlacedLabs());
     }
 
+    void RebuildPairedSlots()
+    {
+        Vector2Int currentMin = GridFootprint.GetMinCell(CurrentPlacementPosition, strokeSize);
+        Vector2Int delta = currentMin - strokeStartMin;
+
+        if (!strokeAxis.HasValue
+            && (Mathf.Abs(delta.x) >= strokeSize.x || Mathf.Abs(delta.y) >= strokeSize.y))
+        {
+            strokeAxis = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y)
+                ? new Vector2Int(1, 0)
+                : new Vector2Int(0, 1);
+        }
+
+        int extra = 0;
+        int dir = 1;
+        int step = 1;
+        int maxExtra = Mathf.Max(1, strokeBuilding.pairMaxGap) + 1;
+        if (strokeAxis.HasValue)
+        {
+            int axisDelta = strokeAxis.Value.x != 0 ? delta.x : delta.y;
+            step = strokeAxis.Value.x != 0 ? strokeSize.x : strokeSize.y;
+            dir = axisDelta >= 0 ? 1 : -1;
+            extra = Mathf.Min(Mathf.Abs(axisDelta) / step, maxExtra);
+        }
+
+        Quaternion rot = Quaternion.Euler(0f, strokeYaw, 0f);
+        Vector3 inPos = GridFootprint.MinCellToCenter(strokeStartMin, strokeSize, CurrentPlacementPosition.y);
+        bool inOk = IsPlacementValid(inPos, rot, checkLabLimit: false);
+        int cost = Economy.BuildCost(strokeBuilding);
+        bool canPay = PlayerWallet.Instance == null || cost <= 0 || PlayerWallet.Instance.CanAfford(cost);
+        float yaw = strokeYaw;
+        strokeSlots.Add(new LineSlot { min = strokeStartMin, pos = inPos, valid = inOk && extra >= 1 && canPay, yaw = yaw });
+
+        if (extra >= 1)
+        {
+            yaw = YawFromCellDir(strokeAxis.Value, dir);
+            rot = Quaternion.Euler(0f, yaw, 0f);
+            Vector2Int outMin = LineMinAt(extra, dir, step);
+            Vector3 outPos = GridFootprint.MinCellToCenter(outMin, strokeSize, CurrentPlacementPosition.y);
+            bool outOk = IsPlacementValid(outPos, rot, checkLabLimit: false);
+            LineSlot entrance = strokeSlots[0];
+            entrance.yaw = yaw;
+            entrance.valid = inOk && outOk && canPay;
+            strokeSlots[0] = entrance;
+            strokeSlots.Add(new LineSlot { min = outMin, pos = outPos, valid = inOk && outOk && canPay, yaw = yaw });
+            CurrentPlacementPosition = outPos;
+        }
+
+        CurrentFootprintSize = strokeSize;
+    }
+
+    static float YawFromCellDir(Vector2Int axis, int dir)
+    {
+        int x = axis.x * dir;
+        int y = axis.y * dir;
+        if (x > 0)
+            return 90f;
+        if (x < 0)
+            return 270f;
+        if (y < 0)
+            return 180f;
+        return 0f;
+    }
+
     void ApplySmartYawToLastSlot()
     {
         if (strokeSlots.Count == 0 || strokeBuilding == null || !strokeBuilding.IsConveyor)
@@ -867,7 +938,7 @@ public class PlayerBuilder : MonoBehaviour
         }
 
         while (lineGhosts.Count < strokeSlots.Count)
-            lineGhosts.Add(CreateLineGhost());
+            lineGhosts.Add(CreateLineGhost(lineGhosts.Count));
 
         for (int i = lineGhosts.Count - 1; i >= strokeSlots.Count; i--)
         {
@@ -888,7 +959,7 @@ public class PlayerBuilder : MonoBehaviour
             GameObject ghost = lineGhosts[i];
             if (ghost == null)
             {
-                ghost = CreateLineGhost();
+                ghost = CreateLineGhost(i);
                 lineGhosts[i] = ghost;
             }
             if (ghost == null)
@@ -916,12 +987,15 @@ public class PlayerBuilder : MonoBehaviour
         CanPlaceCurrent = lineOk;
     }
 
-    GameObject CreateLineGhost()
+    GameObject CreateLineGhost(int slotIndex = 0)
     {
         if (strokeBuilding == null)
             return null;
 
-        GameObject source = BuildingVisuals.SourceForGhost(strokeBuilding);
+        bool exit = strokeBuilding.IsPairedStraight && slotIndex > 0;
+        GameObject source = exit && strokeBuilding.pairExitPrefab != null
+            ? strokeBuilding.pairExitPrefab
+            : BuildingVisuals.SourceForGhost(strokeBuilding);
         if (source == null)
             return null;
 
@@ -952,7 +1026,7 @@ public class PlayerBuilder : MonoBehaviour
             }
         }
 
-        if (!lineOk)
+        if (!lineOk || (strokeBuilding.IsPairedStraight && strokeSlots.Count != 2))
         {
             if (playerCamera != null)
                 GameAudio.World("world_invalid", playerCamera.transform.position);
@@ -960,7 +1034,8 @@ public class PlayerBuilder : MonoBehaviour
             return;
         }
 
-        int lineCost = Economy.BuildCost(currentBuildingData) * strokeSlots.Count;
+        int pieces = strokeBuilding.IsPairedStraight ? 1 : strokeSlots.Count;
+        int lineCost = Economy.BuildCost(currentBuildingData) * pieces;
         if (PlayerWallet.Instance != null && !PlayerWallet.Instance.CanAfford(lineCost))
         {
             EndStroke();
@@ -968,21 +1043,60 @@ public class PlayerBuilder : MonoBehaviour
         }
 
         Vector3 soundPos = strokeSlots[strokeSlots.Count - 1].pos;
-        for (int i = 0; i < strokeSlots.Count; i++)
+        if (strokeBuilding.IsPairedStraight)
+            SpawnPaired(strokeSlots[0], strokeSlots[1]);
+        else
         {
-            Quaternion rot = Quaternion.Euler(0f, strokeSlots[i].yaw, 0f);
-            SpawnAt(strokeSlots[i].pos, rot);
+            for (int i = 0; i < strokeSlots.Count; i++)
+            {
+                Quaternion rot = Quaternion.Euler(0f, strokeSlots[i].yaw, 0f);
+                SpawnAt(strokeSlots[i].pos, rot);
+            }
         }
 
         if (currentBuildingData != null)
         {
-            if (currentBuildingData.IsConveyor)
+            if (currentBuildingData.IsConveyor || currentBuildingData.IsPairedStraight)
                 GameAudio.World("world_place_belt", soundPos);
             else
                 GameAudio.World("world_place", soundPos);
         }
 
         EndStroke();
+    }
+
+    void SpawnPaired(LineSlot entrance, LineSlot exit)
+    {
+        if (currentBuildingData == null || currentBuildingData.prefab == null || currentBuildingData.pairExitPrefab == null)
+            return;
+
+        int cost = Economy.BuildCost(currentBuildingData);
+        if (PlayerWallet.Instance != null && !PlayerWallet.Instance.TrySpendCoins(cost))
+        {
+            GameAudio.World("world_invalid", entrance.pos);
+            return;
+        }
+
+        Quaternion rot = Quaternion.Euler(0f, entrance.yaw, 0f);
+        GameObject inGo = Instantiate(currentBuildingData.prefab, entrance.pos, rot);
+        GameObject outGo = Instantiate(currentBuildingData.pairExitPrefab, exit.pos, rot);
+        inGo.name = inGo.name + indexBuilding;
+        indexBuilding += 1;
+        outGo.name = outGo.name + indexBuilding;
+        indexBuilding += 1;
+
+        UndergroundConveyor entranceBelt = inGo.GetComponent<UndergroundConveyor>();
+        UndergroundConveyor exitBelt = outGo.GetComponent<UndergroundConveyor>();
+        if (entranceBelt == null)
+            entranceBelt = inGo.AddComponent<UndergroundConveyor>();
+        if (exitBelt == null)
+            exitBelt = outGo.AddComponent<UndergroundConveyor>();
+
+        entranceBelt.data = currentBuildingData;
+        exitBelt.data = currentBuildingData;
+        UndergroundConveyor.BindPair(entranceBelt, exitBelt);
+        entranceBelt.OnPlaced();
+        exitBelt.OnPlaced();
     }
 
     void SpawnAt(Vector3 placePos, Quaternion placeRot)

@@ -31,6 +31,10 @@ public class BuildingData : ScriptableObject
     public GameObject tripleGhostPrefab;
     [Tooltip("Труба: ставится линией, как конвейер, но возит только жидкости.")]
     public bool isPipe;
+    [Tooltip("Парный выход подземного конвейера. Если задан — вход и выход ставятся одним жестом по прямой.")]
+    public GameObject pairExitPrefab;
+    [Tooltip("Максимум пустых клеток между входом и выходом (сами концы не считаются).")]
+    public int pairMaxGap = 5;
 
     [Header("Visuals")]
     public Sprite icon;
@@ -53,6 +57,7 @@ public class BuildingData : ScriptableObject
     public bool requiresWater;
 
     public bool IsConveyor => cornerPrefab != null || isPipe;
+    public bool IsPairedStraight => pairExitPrefab != null;
 
     public GameObject GetDefaultPlacePrefab()
     {
