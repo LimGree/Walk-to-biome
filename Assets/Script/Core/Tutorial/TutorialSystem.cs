@@ -272,7 +272,7 @@ public class TutorialSystem : MonoBehaviour
             case TutorialStep.Lab:
                 return FindLab() != null;
             case TutorialStep.StartResearch:
-                return IsBasicActive() || HasResearch(BasicId);
+                return HasResearch(BasicId) || CanStartBasic();
             case TutorialStep.Belts:
                 return HasResearch(BasicId) || (Submitted(IronOreId) > 0 && Submitted(CopperOreId) > 0);
             case TutorialStep.WaitChapter1:
@@ -392,10 +392,17 @@ public class TutorialSystem : MonoBehaviour
         return ResearchSystem.Instance != null && ResearchSystem.Instance.IsResearchIdUnlocked(id);
     }
 
+    static bool CanStartBasic()
+    {
+        if (ResearchSystem.Instance == null)
+            return false;
+        ResearchNodeData node = GameDatabase.FindResearch(BasicId);
+        return node != null && ResearchSystem.Instance.CanStartResearch(node);
+    }
+
     static bool IsBasicActive()
     {
-        ResearchNodeData cur = ResearchSystem.Instance != null ? ResearchSystem.Instance.CurrentResearch : null;
-        return cur != null && IdsEqual(cur.id, BasicId);
+        return CanStartBasic() || HasResearch(BasicId);
     }
 
     public static int CountExtractors(string resourceId)

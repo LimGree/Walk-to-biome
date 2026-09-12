@@ -24,12 +24,12 @@ public class WorldBiomeMap : MonoBehaviour
     public int seed = 17;
 
     [Header("Layout")]
-    [Range(2, 40)] public int oceanWidth = 14;
+    [Range(2, 40)] public int oceanWidth = 6;
     [Range(1, 8)] public int beachWidth = 2;
     [Range(0.55f, 0.9f)] public float lakeThreshold = 0.74f;
     [Range(0.4f, 0.8f)] public float forestThreshold = 0.58f;
     [Range(0.15f, 0.55f)] public float woodlandThreshold = 0.34f;
-    [Range(0.55f, 0.9f)] public float mountainPeakThreshold = 0.72f;
+    [Range(0.55f, 0.9f)] public float mountainPeakThreshold = 0.66f;
     [Range(1, 10)] public int mountainSlopeWidth = 4;
 
     [Header("Colors")]
@@ -55,7 +55,7 @@ public class WorldBiomeMap : MonoBehaviour
     Texture2D biomeTexture;
     Texture2D overlayTexture;
 
-    const float HorizonPadMeters = 720f;
+    const float HorizonPadMeters = 280f;
 
     public bool IsReady => ready;
     public int MapMinX => minX;

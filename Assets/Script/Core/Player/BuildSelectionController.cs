@@ -69,6 +69,8 @@ public class BuildSelectionController : MonoBehaviour
         public Vector2Int minOffset;
         public float yaw;
         public int level;
+        public bool pairExit;
+        public int pairId;
     }
 
     struct PreviewItem
@@ -77,6 +79,8 @@ public class BuildSelectionController : MonoBehaviour
         public Vector2Int minOffset;
         public float yaw;
         public int level;
+        public bool pairExit;
+        public int pairId;
         public GameObject ghost;
         public bool valid;
     }
@@ -223,11 +227,18 @@ public class BuildSelectionController : MonoBehaviour
             return;
 
         RefreshSelectedBuildings();
+        var skip = new HashSet<int>();
         for (int i = 0; i < selectedBuildings.Count; i++)
         {
             BuildingBase b = selectedBuildings[i];
             if (b == null)
                 continue;
+            int id = b.GetInstanceID();
+            if (skip.Contains(id))
+                continue;
+            UndergroundConveyor tunnel = b as UndergroundConveyor;
+            if (tunnel != null && tunnel.Paired != null)
+                skip.Add(tunnel.Paired.GetInstanceID());
             Economy.PayRefund(b);
             b.OnRemoved();
             Destroy(b.gameObject);
@@ -249,6 +260,7 @@ public class BuildSelectionController : MonoBehaviour
         if (!selectionMode || IsBlocked())
             return;
         RefreshSelectedBuildings();
+        ExpandUndergroundPairs();
         if (selectedBuildings.Count == 0)
             return;
 
@@ -270,12 +282,15 @@ public class BuildSelectionController : MonoBehaviour
             if (b.data == null)
                 continue;
             Vector2Int min = GridFootprint.GetMinCell(b.transform.position, b.FootprintSize);
+            UndergroundConveyor tunnel = b as UndergroundConveyor;
             clipboard.Add(new ClipItem
             {
                 data = b.data,
                 minOffset = min - origin,
                 yaw = b.transform.eulerAngles.y,
-                level = ReadLevel(b)
+                level = ReadLevel(b),
+                pairExit = tunnel != null && tunnel.isExit,
+                pairId = tunnel != null ? tunnel.PairId : 0
             });
         }
 
@@ -409,6 +424,46 @@ public class BuildSelectionController : MonoBehaviour
         }
     }
 
+    void ExpandUndergroundPairs()
+    {
+        int n = selectedBuildings.Count;
+        for (int i = 0; i < n; i++)
+        {
+            UndergroundConveyor tunnel = selectedBuildings[i] as UndergroundConveyor;
+            if (tunnel == null || tunnel.Paired == null)
+                continue;
+            if (selectedBuildings.Contains(tunnel.Paired))
+                continue;
+            selectedBuildings.Add(tunnel.Paired);
+            List<Vector2Int> cells = new List<Vector2Int>(4);
+            GridFootprint.CollectCells(tunnel.Paired.transform.position, tunnel.Paired.FootprintSize, cells);
+            for (int c = 0; c < cells.Count; c++)
+                selectedCells.Add(cells[c]);
+        }
+    }
+
+    static void BindPastedTunnels(List<BuildingBase> spawned)
+    {
+        if (spawned == null)
+            return;
+        var byPair = new Dictionary<int, UndergroundConveyor>();
+        for (int i = 0; i < spawned.Count; i++)
+        {
+            UndergroundConveyor tunnel = spawned[i] as UndergroundConveyor;
+            if (tunnel == null || tunnel.PairId <= 0)
+                continue;
+            if (byPair.TryGetValue(tunnel.PairId, out UndergroundConveyor other) && other != null)
+            {
+                UndergroundConveyor entrance = tunnel.isExit ? other : tunnel;
+                UndergroundConveyor exit = tunnel.isExit ? tunnel : other;
+                UndergroundConveyor.BindPair(entrance, exit);
+                byPair.Remove(tunnel.PairId);
+            }
+            else
+                byPair[tunnel.PairId] = tunnel;
+        }
+    }
+
     void RefreshSelectedBuildings()
     {
         selectedBuildings.Clear();
@@ -434,13 +489,16 @@ public class BuildSelectionController : MonoBehaviour
                 minOffset = c.minOffset,
                 yaw = c.yaw,
                 level = c.level,
-                ghost = CreateGhost(c.data)
+                pairExit = c.pairExit,
+                pairId = c.pairId,
+                ghost = CreateGhost(c.data, c.pairExit)
             });
         }
     }
 
     void BeginMove()
     {
+        ExpandUndergroundPairs();
         preview.Clear();
         moveRecords.Clear();
         moveIgnore.Clear();
@@ -614,6 +672,7 @@ public class BuildSelectionController : MonoBehaviour
             return;
         }
 
+        var spawned = new List<BuildingBase>(preview.Count);
         for (int i = 0; i < preview.Count; i++)
         {
             PreviewItem item = preview[i];
@@ -622,18 +681,26 @@ public class BuildSelectionController : MonoBehaviour
             Vector2Int size = GridFootprint.GetRotatedSize(item.data.size, item.yaw);
             Vector2Int min = origin + item.minOffset;
             Vector3 pos = GridFootprint.MinCellToCenter(min, size, y);
-            GameObject go = Instantiate(item.data.prefab, pos, Quaternion.Euler(0f, item.yaw, 0f));
+            GameObject prefab = UndergroundConveyor.PrefabFor(item.data, item.pairExit);
+            if (prefab == null)
+                continue;
+            GameObject go = Instantiate(prefab, pos, Quaternion.Euler(0f, item.yaw, 0f));
             BuildingBase b = go.GetComponent<BuildingBase>();
             if (b != null)
             {
                 b.data = item.data;
+                UndergroundConveyor tunnel = b as UndergroundConveyor;
+                if (tunnel != null)
+                    tunnel.SetPairMeta(item.pairExit, item.pairId);
                 b.OnPlaced();
                 ApplyLevel(b, item.level);
+                spawned.Add(b);
             }
             else
                 GridFootprint.Register(go, pos, size);
         }
 
+        BindPastedTunnels(spawned);
         CancelPreview(keepSelection: false);
         ClearSelectionOnly();
     }
@@ -827,11 +894,13 @@ public class BuildSelectionController : MonoBehaviour
             asb.TryUpgrade();
     }
 
-    GameObject CreateGhost(BuildingData data)
+    GameObject CreateGhost(BuildingData data, bool pairExit = false)
     {
         if (data == null)
             return null;
-        GameObject source = BuildingVisuals.SourceForGhost(data);
+        GameObject source = pairExit && data.pairExitPrefab != null
+            ? data.pairExitPrefab
+            : BuildingVisuals.SourceForGhost(data);
         if (source == null)
             return null;
 

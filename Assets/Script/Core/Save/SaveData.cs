@@ -50,6 +50,8 @@ public class SaveData
             data.buildings = new List<BuildingSaveData>();
         if (data.research == null)
             data.research = new ResearchSaveData();
+        if (data.research.inProgress == null)
+            data.research.inProgress = new List<ResearchProgressSave>();
         if (data.extras == null)
             data.extras = new List<SaveKeyValue>();
         if (data.hotbarBuildingIds == null)
@@ -115,6 +117,14 @@ public class ResearchSaveData
     public List<string> unlockedResearchIds = new List<string>();
     public string currentResearchId;
     public List<ItemAmountSave> submittedItems = new List<ItemAmountSave>();
+    public List<ResearchProgressSave> inProgress = new List<ResearchProgressSave>();
+}
+
+[Serializable]
+public class ResearchProgressSave
+{
+    public string researchId;
+    public List<ItemAmountSave> submitted = new List<ItemAmountSave>();
 }
 
 [Serializable]

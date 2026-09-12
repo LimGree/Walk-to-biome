@@ -354,6 +354,9 @@ public abstract class BuildingBase : MonoBehaviour
             }
         }
 
+        if (show)
+            SocketArrow.RefreshOn(transform);
+
         if (cullColliders != null)
         {
             for (int i = 0; i < cullColliders.Length; i++)

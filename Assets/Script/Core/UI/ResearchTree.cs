@@ -127,7 +127,7 @@ public static class ResearchTree
                 ItemStack stack = node.requiredItems[i];
                 if (stack == null || stack.item == null)
                     continue;
-                int have = ResearchSystem.Instance.GetSubmitted(stack.item);
+                int have = ResearchSystem.Instance.GetSubmitted(node, stack.item);
                 var chip = IndustryUi.El("Chip", "stack-chip");
                 chip.Add(IndustryUi.Icon(stack.item.icon, "stack-icon"));
                 chip.Add(IndustryUi.Text("N", have + "/" + stack.amount, "stack-count"));
@@ -143,7 +143,7 @@ public static class ResearchTree
         {
             VisualElement bar = IndustryUi.ProgressBar("TreeProgress");
             IndustryUi.SetProgress(bar, ResearchSystem.Instance != null
-                ? ResearchSystem.Instance.GetCurrentProgress01()
+                ? ResearchSystem.Instance.GetProgress01(node)
                 : 0f);
             detail.Add(bar);
         }
@@ -180,14 +180,8 @@ public static class ResearchTree
             detail.Add(reward);
         }
 
-        ResearchSystem rs = ResearchSystem.Instance;
-        bool canStart = rs != null && rs.CanStartResearch(node)
-            && (rs.CurrentResearch == null || rs.CurrentResearch == node);
-        Button start = IndustryUi.Btn(UiLocale.T("research.start"), onStart, "btn-primary");
-        start.name = "ResearchStart";
-        start.SetEnabled(canStart);
-        IndustryUi.Show(start, status != "DONE" && status != "ACTIVE");
-        detail.Add(start);
+        if (status == "ACTIVE")
+            detail.Add(IndustryUi.Text("Auto", UiLocale.T("research.auto"), "caption"));
     }
 
     public static ResearchNodeData DefaultSelection()
@@ -221,10 +215,8 @@ public static class ResearchTree
             return "LOCKED";
         if (rs.IsResearchUnlocked(node))
             return "DONE";
-        if (rs.CurrentResearch == node)
-            return "ACTIVE";
         if (rs.CanStartResearch(node))
-            return "READY";
+            return "ACTIVE";
         return "LOCKED";
     }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 public static class KeybindStore
 {
@@ -31,10 +32,67 @@ public static class KeybindStore
     }
 
     public static bool IsListening { get; private set; }
-    public static bool BlocksGameplayInput => IsListening || Time.unscaledTime < ignoreInputUntil;
+    public static bool BlocksGameplayInput =>
+        IsListening || IsTyping || Time.unscaledTime < ignoreInputUntil;
     public static event Action Changed;
 
     static float ignoreInputUntil;
+    static int typingFrame = -1;
+    static bool typingCached;
+
+    public static bool IsTyping
+    {
+        get
+        {
+            int frame = Time.frameCount;
+            if (typingFrame == frame)
+                return typingCached;
+            typingFrame = frame;
+            typingCached = DetectTyping();
+            return typingCached;
+        }
+    }
+
+    static bool DetectTyping()
+    {
+        UIDocument[] docs = UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
+        for (int i = 0; i < docs.Length; i++)
+        {
+            UIDocument doc = docs[i];
+            if (doc == null || !doc.isActiveAndEnabled || doc.rootVisualElement == null)
+                continue;
+            Focusable focused = doc.rootVisualElement.focusController != null
+                ? doc.rootVisualElement.focusController.focusedElement
+                : null;
+            if (IsEditableText(focused))
+                return true;
+        }
+
+        return false;
+    }
+
+    static bool IsEditableText(Focusable focused)
+    {
+        if (focused == null)
+            return false;
+        if (focused is TextField || focused is TextInputBaseField<string>
+            || focused is IntegerField || focused is FloatField)
+            return true;
+
+        VisualElement ve = focused as VisualElement;
+        for (int i = 0; i < 8 && ve != null; i++)
+        {
+            if (ve is TextField || ve is TextInputBaseField<string> || ve is IntegerField || ve is FloatField)
+                return true;
+            if (ve.ClassListContains("unity-base-text-field__input")
+                || ve.ClassListContains("unity-text-field")
+                || ve.ClassListContains("unity-base-text-field"))
+                return true;
+            ve = ve.parent;
+        }
+
+        return false;
+    }
 
     public static void SuppressGameplay(float seconds = 0.25f)
     {

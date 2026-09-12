@@ -247,12 +247,7 @@ public class WorldResourceScatterer : MonoBehaviour
         infos.Sort((a, b) => b.cells.Count.CompareTo(a.cells.Count));
 
         var assigned = new bool[infos.Count];
-        AssignOre(infos, assigned, MountainOre.Coal, needsPeak: false, limit: coalDeposits, preferSmaller: true);
-        AssignOre(infos, assigned, MountainOre.Stone, needsPeak: false, limit: stoneDeposits, preferSmaller: true);
-        AssignOre(infos, assigned, MountainOre.Iron, needsPeak: true, limit: ironDeposits, preferSmaller: false);
-        AssignOre(infos, assigned, MountainOre.Copper, needsPeak: true, limit: copperDeposits, preferSmaller: false);
-        AssignOre(infos, assigned, MountainOre.Sulfur, needsPeak: false, limit: sulfurDeposits, preferSmaller: true);
-        FillLeftoverMountains(infos, assigned);
+        AssignMountainOres(infos, assigned);
 
         int done = 0;
         int total = Mathf.Max(1, infos.Count);
@@ -268,50 +263,170 @@ public class WorldResourceScatterer : MonoBehaviour
         ScatterProgress = 0.95f;
     }
 
-    void AssignOre(List<MountainInfo> infos, bool[] assigned, MountainOre ore, bool needsPeak, int limit, bool preferSmaller)
+    void AssignMountainOres(List<MountainInfo> infos, bool[] assigned)
     {
-        int left = Mathf.Max(1, limit);
-        int start = preferSmaller ? infos.Count - 1 : 0;
-        int step = preferSmaller ? -1 : 1;
-        for (int i = start; i >= 0 && i < infos.Count && left > 0; i += step)
+        var peak = new List<int>(infos.Count);
+        var other = new List<int>(infos.Count);
+        for (int i = 0; i < infos.Count; i++)
         {
-            if (assigned[i])
+            if (infos[i].cells.Count < 12)
                 continue;
-            if (needsPeak && infos[i].peaks < 4)
-                continue;
-            if (ore == MountainOre.Stone && infos[i].slopes < 8)
-                continue;
-            if (infos[i].cells.Count < 20)
-                continue;
+            if (infos[i].peaks >= 2)
+                peak.Add(i);
+            else
+                other.Add(i);
+        }
 
-            MountainInfo info = infos[i];
+        int peakShare = Mathf.Max(1, peak.Count / 2);
+        int ironWant = Mathf.Clamp(Mathf.Max(2, ironDeposits / 5), 1, peakShare);
+        int copperWant = Mathf.Clamp(Mathf.Max(2, copperDeposits / 5), 1, peak.Count - ironWant);
+        if (peak.Count == 1)
+        {
+            ironWant = 1;
+            copperWant = 0;
+        }
+
+        AssignSpread(infos, assigned, peak, MountainOre.Iron, ironWant);
+        AssignSpread(infos, assigned, peak, MountainOre.Copper, copperWant);
+        if (CountOre(infos, assigned, MountainOre.Copper) == 0 && other.Count > 0)
+            AssignSpread(infos, assigned, other, MountainOre.Copper, 1);
+        if (CountOre(infos, assigned, MountainOre.Iron) == 0 && other.Count > 0)
+            AssignSpread(infos, assigned, other, MountainOre.Iron, 1);
+
+        AssignSpread(infos, assigned, other, MountainOre.Coal, Mathf.Max(2, coalDeposits / 5));
+        AssignSpread(infos, assigned, other, MountainOre.Stone, Mathf.Max(2, stoneDeposits / 5));
+        AssignSpread(infos, assigned, other, MountainOre.Sulfur, Mathf.Max(1, sulfurDeposits / 5));
+        FillLeftoverBalanced(infos, assigned);
+    }
+
+    void AssignSpread(List<MountainInfo> infos, bool[] assigned, List<int> pool, MountainOre ore, int want)
+    {
+        int made = 0;
+        while (made < want)
+        {
+            int best = -1;
+            int bestScore = int.MinValue;
+            for (int p = 0; p < pool.Count; p++)
+            {
+                int i = pool[p];
+                if (assigned[i])
+                    continue;
+                int same = MinChebyshevToOre(infos, assigned, i, ore);
+                int any = MinChebyshevToAssigned(infos, assigned, i);
+                int score = same * 3 + any;
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = i;
+                }
+            }
+
+            if (best < 0)
+                break;
+            MountainInfo info = infos[best];
             info.ore = ore;
-            infos[i] = info;
-            assigned[i] = true;
-            left--;
+            infos[best] = info;
+            assigned[best] = true;
+            made++;
         }
     }
 
-    void FillLeftoverMountains(List<MountainInfo> infos, bool[] assigned)
+    int CountOre(List<MountainInfo> infos, bool[] assigned, MountainOre ore)
+    {
+        int n = 0;
+        for (int i = 0; i < infos.Count; i++)
+        {
+            if (assigned[i] && infos[i].ore == ore)
+                n++;
+        }
+
+        return n;
+    }
+
+    int MinChebyshevToOre(List<MountainInfo> infos, bool[] assigned, int index, MountainOre ore)
+    {
+        Vector2Int center = MountainCenter(infos[index]);
+        int best = 9999;
+        bool any = false;
+        for (int i = 0; i < infos.Count; i++)
+        {
+            if (!assigned[i] || infos[i].ore != ore)
+                continue;
+            any = true;
+            int d = Chebyshev(center, MountainCenter(infos[i]));
+            if (d < best)
+                best = d;
+        }
+
+        return any ? best : 9999;
+    }
+
+    int MinChebyshevToAssigned(List<MountainInfo> infos, bool[] assigned, int index)
+    {
+        Vector2Int center = MountainCenter(infos[index]);
+        int best = 9999;
+        bool any = false;
+        for (int i = 0; i < infos.Count; i++)
+        {
+            if (!assigned[i])
+                continue;
+            any = true;
+            int d = Chebyshev(center, MountainCenter(infos[i]));
+            if (d < best)
+                best = d;
+        }
+
+        return any ? best : 9999;
+    }
+
+    static Vector2Int MountainCenter(MountainInfo info)
+    {
+        if (info.cells == null || info.cells.Count == 0)
+            return Vector2Int.zero;
+        int x = 0;
+        int y = 0;
+        for (int i = 0; i < info.cells.Count; i++)
+        {
+            x += info.cells[i].x;
+            y += info.cells[i].y;
+        }
+
+        return new Vector2Int(x / info.cells.Count, y / info.cells.Count);
+    }
+
+    void FillLeftoverBalanced(List<MountainInfo> infos, bool[] assigned)
     {
         for (int i = 0; i < infos.Count; i++)
         {
             if (assigned[i] || infos[i].cells.Count < 12)
                 continue;
 
-            MountainOre ore;
-            if (infos[i].peaks >= 4)
-                ore = (i % 2 == 0) ? MountainOre.Iron : MountainOre.Copper;
-            else if (infos[i].slopes >= 8)
-                ore = (i % 3 == 0) ? MountainOre.Stone : (i % 3 == 1) ? MountainOre.Coal : MountainOre.Sulfur;
-            else
-                ore = (i % 2 == 0) ? MountainOre.Coal : MountainOre.Sulfur;
-
+            MountainOre ore = PickRarestAllowed(infos, assigned, infos[i]);
             MountainInfo info = infos[i];
             info.ore = ore;
             infos[i] = info;
             assigned[i] = true;
         }
+    }
+
+    MountainOre PickRarestAllowed(List<MountainInfo> infos, bool[] assigned, MountainInfo mountain)
+    {
+        MountainOre[] peak = { MountainOre.Iron, MountainOre.Copper };
+        MountainOre[] slope = { MountainOre.Coal, MountainOre.Stone, MountainOre.Sulfur };
+        MountainOre[] pool = mountain.peaks >= 2 ? peak : slope;
+        MountainOre best = pool[0];
+        int lowest = int.MaxValue;
+        for (int i = 0; i < pool.Length; i++)
+        {
+            int n = CountOre(infos, assigned, pool[i]);
+            if (n < lowest)
+            {
+                lowest = n;
+                best = pool[i];
+            }
+        }
+
+        return best;
     }
 
     void SpawnMountain(WorldBiomeMap map, MountainInfo info)
@@ -342,13 +457,9 @@ public class WorldResourceScatterer : MonoBehaviour
         else if (info.ore == MountainOre.Stone)
             want = Mathf.Max(12, nodesPerCluster - 4);
 
-        int clusters = 2;
-        if (info.cells.Count > 80)
-            clusters = 4;
-        else if (info.cells.Count > 40)
-            clusters = 3;
-        if (info.ore == MountainOre.Iron || info.ore == MountainOre.Copper)
-            clusters = Mathf.Max(clusters, 3);
+        int clusters = 1;
+        if (info.cells.Count > 90)
+            clusters = 2;
 
         int minAccept = 5;
         int made = 0;
@@ -376,7 +487,7 @@ public class WorldResourceScatterer : MonoBehaviour
                 return WorldBiomeMap.IsMountain(biome);
             case MountainOre.Copper:
             case MountainOre.Iron:
-                return biome == WorldBiome.MountainPeak;
+                return WorldBiomeMap.IsMountain(biome);
             default:
                 return false;
         }

@@ -17,8 +17,35 @@ public class UndergroundConveyor : BuildingBase
     static readonly Dictionary<int, UndergroundConveyor> PendingPairs = new Dictionary<int, UndergroundConveyor>(32);
 
     public UndergroundConveyor Paired => paired;
+    public int PairId => pairId;
     public Vector2Int Cell => BuildingLinker.WorldToCell(transform.position);
     public Vector2Int ForwardCell => BuildingLinker.ToCardinal(transform.forward);
+    public static bool SuppressPairDestroy;
+
+    public static void BeginLoad()
+    {
+        PendingPairs.Clear();
+    }
+
+    public static bool IsExitSave(BuildingSaveData save)
+    {
+        return ReadExtraInt(save, "exit") != 0;
+    }
+
+    public static GameObject PrefabFor(BuildingData data, bool isExit)
+    {
+        if (data == null)
+            return null;
+        if (isExit && data.pairExitPrefab != null)
+            return data.pairExitPrefab;
+        return data.prefab;
+    }
+
+    public void SetPairMeta(bool exit, int id)
+    {
+        isExit = exit;
+        pairId = Mathf.Max(0, id);
+    }
 
     public static void BindPair(UndergroundConveyor entrance, UndergroundConveyor exit)
     {
@@ -105,7 +132,7 @@ public class UndergroundConveyor : BuildingBase
 
         base.OnRemoved();
 
-        if (other != null && !removingPair)
+        if (other != null && !removingPair && !SuppressPairDestroy)
         {
             removingPair = true;
             other.removingPair = true;

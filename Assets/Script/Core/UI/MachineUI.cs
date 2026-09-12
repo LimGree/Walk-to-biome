@@ -871,7 +871,6 @@ public class MachineUI : MonoBehaviour
         if (node == null)
             return;
         selectedResearchId = node.id;
-        StartPickedResearch(node);
         FillResearchTab();
     }
 
@@ -1095,17 +1094,15 @@ public class MachineUI : MonoBehaviour
         }
         else if (IsLabView || currentBuilding is ResearchLab)
         {
-            float t = ResearchSystem.Instance != null
-                ? ResearchSystem.Instance.GetCurrentProgress01()
-                : 0f;
+            ResearchSystem rs = ResearchSystem.Instance;
+            int active = rs != null ? rs.GetAvailableResearch().Count : 0;
+            float t = rs != null ? rs.GetCurrentProgress01() : 0f;
             IndustryUi.SetProgress(progress, t);
-            string name = ResearchSystem.Instance != null && ResearchSystem.Instance.CurrentResearch != null
-                ? ResearchSystem.Instance.CurrentResearch.displayName
-                : "None";
+            string name = active > 0
+                ? UiLocale.T("research.active_count", active)
+                : UiLocale.T("research.none");
             SetStatus(name + "  " + (t * 100f).ToString("0") + "%",
-                ResearchSystem.Instance != null && ResearchSystem.Instance.CurrentResearch != null
-                    ? UiStatus.Running
-                    : UiStatus.Ready);
+                active > 0 ? UiStatus.Running : UiStatus.Ready);
 
             if (labTab == TabStats && Time.unscaledTime >= nextStatsRefresh)
                 RebuildStatsList();

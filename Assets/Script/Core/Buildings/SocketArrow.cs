@@ -26,6 +26,18 @@ public class SocketArrow : MonoBehaviour
         RefreshAll();
     }
 
+    public static void RefreshOn(Transform root)
+    {
+        if (root == null)
+            return;
+        SocketArrow[] arrows = root.GetComponentsInChildren<SocketArrow>(true);
+        for (int i = 0; i < arrows.Length; i++)
+        {
+            if (arrows[i] != null)
+                arrows[i].Apply();
+        }
+    }
+
     public static void BindNamed(Transform root)
     {
         if (root == null)
