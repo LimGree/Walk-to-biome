@@ -9,6 +9,8 @@ public static class WorldView
     static Camera cam;
     static Vector3 pos;
     static int frame = -1;
+    static readonly Plane[] frustum = new Plane[6];
+    static bool frustumOk;
 
     public static bool HasPlayer
     {
@@ -62,6 +64,15 @@ public static class WorldView
         return dx * dx + dz * dz <= r * r;
     }
 
+    public static bool InCamera(Vector3 world, float pad = 1.2f)
+    {
+        Tick();
+        if (!frustumOk)
+            return InRange(world);
+        Bounds bounds = new Bounds(world, new Vector3(pad * 2f, pad * 2f, pad * 2f));
+        return GeometryUtility.TestPlanesAABB(frustum, bounds);
+    }
+
     static void Tick()
     {
         if (Time.frameCount == frame)
@@ -76,5 +87,8 @@ public static class WorldView
             pos = player.position;
         if (cam == null)
             cam = Camera.main;
+        frustumOk = cam != null;
+        if (frustumOk)
+            GeometryUtility.CalculateFrustumPlanes(cam, frustum);
     }
 }

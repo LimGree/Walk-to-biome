@@ -112,6 +112,18 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+        if (KeybindStore.BlocksGameplayInput || DevConsole.IsOpen)
+        {
+            moveInput = Vector2.zero;
+            lookInput = Vector2.zero;
+            jumpPressed = false;
+            isSprinting = false;
+            if (canMove)
+                HandleMovement();
+            HandleZoom();
+            return;
+        }
+
         if (canLook) HandleMouseLook();
         if (canMove) HandleMovement();
         HandleZoom();

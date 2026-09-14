@@ -25,6 +25,7 @@ public class Extractor : BuildingBase, IInteractable
     private float timer;
     private ResourceNode boundNode;
     private float nextFailLogTime;
+    float simCarry;
 
     public bool CanUpgrade => level < 2;
     public override bool CanUpgradeBuilding =>
@@ -184,6 +185,12 @@ public class Extractor : BuildingBase, IInteractable
 
     void Update()
     {
+        simCarry += Time.deltaTime;
+        if (simCarry < 0.12f)
+            return;
+        float dt = simCarry;
+        simCarry = 0f;
+
         if (resource == null)
         {
             GameAudio.Loop(this, "bld_extractor_loop", false);
@@ -191,10 +198,10 @@ public class Extractor : BuildingBase, IInteractable
         }
 
         bool working = boundNode != null && HasOutputSpace(1);
-        GameAudio.Loop(this, "bld_extractor_loop", working);
+        GameAudio.Loop(this, "bld_extractor_loop", working && WorldView.InRange(transform.position));
 
         float interval = CurrentInterval;
-        timer += Time.deltaTime;
+        timer += dt;
         if (timer < interval) return;
         timer -= interval;
 

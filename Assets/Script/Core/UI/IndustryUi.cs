@@ -44,18 +44,34 @@ public static class IndustryUi
         if (Panels.TryGetValue(sortingOrder, out PanelSettings existing) && existing != null)
             return existing;
 
-        PanelSettings settings = ScriptableObject.CreateInstance<PanelSettings>();
+        PanelSettings settings = LoadPanelTemplate();
+        if (settings == null)
+        {
+            settings = ScriptableObject.CreateInstance<PanelSettings>();
+            ThemeStyleSheet tss = RuntimeTheme();
+            if (tss != null)
+                settings.themeStyleSheet = tss;
+        }
         settings.name = "IndustryPanel_" + sortingOrder;
         settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
         settings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
         settings.referenceResolution = new Vector2Int(1920, 1080);
         settings.match = 0.5f;
         settings.sortingOrder = sortingOrder;
-        ThemeStyleSheet tss = RuntimeTheme();
-        if (tss != null)
-            settings.themeStyleSheet = tss;
+        if (settings.themeStyleSheet == null)
+            settings.themeStyleSheet = RuntimeTheme();
         Panels[sortingOrder] = settings;
         return settings;
+    }
+
+    static PanelSettings LoadPanelTemplate()
+    {
+        PanelSettings src = Resources.Load<PanelSettings>("UI/IndustryPanel");
+        if (src == null)
+            return null;
+        PanelSettings clone = UnityEngine.Object.Instantiate(src);
+        clone.hideFlags = HideFlags.HideAndDontSave;
+        return clone;
     }
 
     static ThemeStyleSheet RuntimeTheme()

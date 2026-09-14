@@ -46,6 +46,8 @@ public class WorldResourceScatterer : MonoBehaviour
 
     public static WorldResourceScatterer Instance { get; private set; }
     public IReadOnlyList<VeinMark> Veins => veins;
+    public IReadOnlyList<Vector2Int> ClusterCenters => clusterCenters;
+    public IReadOnlyList<string> ClusterKindKeys => clusterKindKeys;
     public bool IsScattered { get; private set; }
     public float ScatterProgress { get; private set; }
 
@@ -133,11 +135,12 @@ public class WorldResourceScatterer : MonoBehaviour
         if (!WorldView.HasPlayer)
             return;
         Vector3 p = WorldView.PlayerPos;
-        if ((p - lastCullPos).sqrMagnitude < 9f && Time.unscaledTime - lastCullTime < 0.2f)
-            return;
-        lastCullPos = p;
-        lastCullTime = Time.unscaledTime;
-        UpdateVisibility();
+        if ((p - lastCullPos).sqrMagnitude >= 9f || Time.unscaledTime - lastCullTime >= 0.2f)
+        {
+            lastCullPos = p;
+            lastCullTime = Time.unscaledTime;
+            UpdateVisibility();
+        }
     }
 
     [ContextMenu("Scatter")]
@@ -821,6 +824,38 @@ public class WorldResourceScatterer : MonoBehaviour
             }
         }
         return true;
+    }
+
+    public bool DevSpawnVein(string kind, Vector2Int cell)
+    {
+        if (used.Contains(cell) || ResourceNode.HasNode(cell))
+            return false;
+        if (rng == null)
+            rng = new System.Random(1);
+        if (root == null)
+        {
+            GameObject go = new GameObject("ResourceNodes");
+            root = go.transform;
+        }
+        pendingKind = kind;
+        GameObject prefab = PrefabOfKindName(kind);
+        return SpawnNode(prefab, cell);
+    }
+
+    GameObject PrefabOfKindName(string kind)
+    {
+        switch ((kind ?? "").ToLowerInvariant())
+        {
+            case "sand": return sandPrefab;
+            case "tree":
+            case "log": return treePrefab;
+            case "coal": return coalPrefab;
+            case "copper":
+            case "cooper": return copperPrefab;
+            case "iron": return ironPrefab;
+            case "sulfur": return sulfurPrefab;
+            default: return stonePrefab;
+        }
     }
 
     bool SpawnNode(GameObject prefab, Vector2Int cell)

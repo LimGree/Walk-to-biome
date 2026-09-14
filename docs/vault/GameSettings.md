@@ -34,7 +34,7 @@
 
 - слой `buildings` и `RESOURSES` — `Camera.layerCullDistances` (сферически);
 - жилы и деревья — `visualRadius` у [[WorldResourceScatterer]];
-- тени и деревья terrain — тот же радиус.
+- тени — тот же радиус. Деревья и детали Terrain **выключены** (`drawTreesAndFoliage = false`).
 
 Камера `farClipPlane` нарочно дальше (примерно 240–700 м), чтобы пол и небо не обрезались вместе с рудой.
 

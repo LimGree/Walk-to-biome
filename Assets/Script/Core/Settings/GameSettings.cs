@@ -214,7 +214,8 @@ public static class GameSettings
         RenderSettings.fogDensity = Mathf.Clamp(2.4f / end, 0.004f, 0.08f);
         ApplyFogKeywords();
 
-        QualitySettings.shadowDistance = Mathf.Clamp(objects * 0.8f, 20f, objects);
+        QualitySettings.shadowCascades = 1;
+        QualitySettings.shadowDistance = Mathf.Clamp(objects * 0.45f, 12f, Mathf.Min(40f, objects));
         ApplyAtmosphere();
         Camera[] cams = Camera.allCameras;
         for (int i = 0; i < cams.Length; i++)
@@ -235,9 +236,11 @@ public static class GameSettings
             Terrain terrain = terrains[i];
             if (terrain == null)
                 continue;
-            terrain.treeDistance = objects;
+            terrain.drawTreesAndFoliage = false;
+            terrain.treeDistance = 0f;
+            terrain.detailObjectDistance = 0f;
+            terrain.detailObjectDensity = 0f;
             terrain.basemapDistance = objects;
-            terrain.detailObjectDistance = Mathf.Clamp(objects * 0.5f, 16f, objects);
         }
 
         Changed?.Invoke();

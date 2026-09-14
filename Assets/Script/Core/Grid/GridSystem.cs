@@ -23,6 +23,7 @@ public class GridSystem : MonoBehaviour
         EnsureComponent<BuildGridVisualizer>();
         EnsureComponent<WorldBiomeMap>();
         EnsureComponent<WorldResourceScatterer>();
+        EnsureComponent<WorldSim>();
     }
 
     void EnsureComponent<T>() where T : Component

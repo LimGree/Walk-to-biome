@@ -1,14 +1,7 @@
 # BeltItemView
 
-**Файл:** `Assets/Script/Core/Logistics/BeltItemView.cs`  
-**Тип:** статический помощник
+**Файл:** `Assets/Script/Core/Logistics/BeltItemView.cs`
 
-## Зачем нужен
+Модель груза на ленте: `worldPrefab` предмета (пул `Rent` / `Release`). Рука робота — `Create`.
 
-Показать предмет на ленте: маленькая 3D-модель или цветной кубик, если модели нет.
-
-Берёт `worldPrefab` у [[ItemData]] или запасной меш. Материал — [[RuntimeMaterials]] (чтобы в билде шейдер не пропал).
-
-Слой объекта ставится в `buildings`, чтобы дальность прорисовки [[GameSettings.RenderDistance]] прятала груз вместе с лентой, а не оставляла летать предметы в пустоте.
-
-Вызывается из [[Conveyor]] при появлении груза.
+Дальность — [[WorldView]] / [[GameSettings.RenderDistance]]. Тик — [[WorldSim]]. При передаче на следующую клетку визуал не шарится: источник отпускает, приёмник берёт свой.

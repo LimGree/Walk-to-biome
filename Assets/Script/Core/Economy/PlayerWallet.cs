@@ -63,10 +63,11 @@ public class PlayerWallet : MonoBehaviour
 
     public void AddRubies(int amount)
     {
-        if (amount <= 0)
+        if (amount == 0)
             return;
-        Rubies += amount;
-        ProductionStats.Instance?.RecordRubiesGained(amount);
+        Rubies = Mathf.Max(0, Rubies + amount);
+        if (amount > 0)
+            ProductionStats.Instance?.RecordRubiesGained(amount);
         OnChanged?.Invoke();
     }
 

@@ -57,6 +57,8 @@ public static class KeybindStore
     {
         if (UiModal.IsOpen)
             return true;
+        if (DevConsole.IsOpen)
+            return true;
 
         UIDocument[] docs = UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
         for (int i = 0; i < docs.Length; i++)
@@ -102,6 +104,17 @@ public static class KeybindStore
     public static void SuppressGameplay(float seconds = 0.25f)
     {
         ignoreInputUntil = Mathf.Max(ignoreInputUntil, Time.unscaledTime + Mathf.Max(0.05f, seconds));
+    }
+
+    public static void SetPlayerMapEnabled(bool on)
+    {
+        EnsureShared();
+        if (reference == null)
+            return;
+        if (on)
+            reference.Player.Enable();
+        else
+            reference.Player.Disable();
     }
 
     public static InputActionAsset ReferenceAsset

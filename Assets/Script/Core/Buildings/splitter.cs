@@ -44,6 +44,7 @@ public class Splitter : BuildingBase
         isLive = true;
         EnsureSetup();
         nextOutput = 0;
+        WorldSim.RegisterSplitter(this);
         base.OnPlaced();
     }
 
@@ -51,6 +52,7 @@ public class Splitter : BuildingBase
     {
         isLive = false;
         ClearCargo();
+        WorldSim.UnregisterSplitter(this);
         base.OnRemoved();
     }
 
@@ -82,7 +84,7 @@ public class Splitter : BuildingBase
             return false;
 
         Vector3 from = visual != null ? visual.position : transform.position;
-        SpawnCargo(item, visual, InferEntryFromWorld(from), Vector2Int.zero);
+        SpawnCargo(item, null, InferEntryFromWorld(from), Vector2Int.zero);
         return true;
     }
 
@@ -143,7 +145,12 @@ public class Splitter : BuildingBase
         return nearest >= ItemGap;
     }
 
-    void Update()
+    public void SimDraw()
+    {
+        SubmitCargoDraws();
+    }
+
+    public void SimTick()
     {
         if (!isLive)
             return;
@@ -183,15 +190,18 @@ public class Splitter : BuildingBase
         if (front >= 0)
         {
             if (TryHandOff(cargo[front]))
+            {
+                ReleaseCargoVisual(cargo[front]);
                 cargo.RemoveAt(front);
+            }
             else
                 cargo[front].progress = 1f;
         }
 
-        RefreshCargoVisuals();
+        SimDraw();
     }
 
-    void RefreshCargoVisuals()
+    void SubmitCargoDraws()
     {
         bool show = WorldView.InRange(transform.position);
         for (int i = 0; i < cargo.Count; i++)
@@ -200,14 +210,13 @@ public class Splitter : BuildingBase
             if (show)
             {
                 if (item.visual == null)
-                    item.visual = BeltItemView.Create(item.item, itemScale);
-                UpdateCargoVisual(item);
+                    item.visual = BeltItemView.Rent(item.item, itemScale);
+                Vector3 pos = EvaluatePath(item, item.progress);
+                Vector3 look = EvaluatePath(item, Mathf.Min(1f, item.progress + 0.05f)) - pos;
+                BeltItemView.Update(item.visual, pos, look);
             }
-            else if (item.visual != null)
-            {
-                BeltItemView.Destroy(item.visual);
-                item.visual = null;
-            }
+            else
+                ReleaseCargoVisual(item);
         }
     }
 
@@ -275,12 +284,15 @@ public class Splitter : BuildingBase
         BuildingSocket destInput = dest.inputSockets != null && dest.inputSockets.Length > 0
             ? dest.inputSockets[0]
             : null;
-        if (!dest.TryReceiveItem(item.item, destInput))
-            return false;
+        return dest.TryReceiveItem(item.item, destInput);
+    }
 
-        BeltItemView.Destroy(item.visual);
+    static void ReleaseCargoVisual(Cargo item)
+    {
+        if (item == null || item.visual == null)
+            return;
+        BeltItemView.Release(item.visual, item.item);
         item.visual = null;
-        return true;
     }
 
     void SpawnCargo(ItemData item, Transform visual, Vector2Int entryDir, Vector2Int exitDir)
@@ -298,35 +310,19 @@ public class Splitter : BuildingBase
             entryDir = entryDir,
             exitDir = exitDir
         };
-
         if (WorldView.InRange(transform.position))
         {
             if (cargoItem.visual == null)
-                cargoItem.visual = BeltItemView.Create(item, itemScale);
+                cargoItem.visual = BeltItemView.Rent(item, itemScale);
             else
                 BeltItemView.Prepare(cargoItem.visual);
         }
         else if (cargoItem.visual != null)
         {
-            BeltItemView.Destroy(cargoItem.visual);
+            BeltItemView.Release(cargoItem.visual, item);
             cargoItem.visual = null;
         }
-
-        if (cargoItem.visual != null)
-            cargoItem.visual.SetParent(transform, true);
-
         cargo.Add(cargoItem);
-        if (cargoItem.visual != null)
-            UpdateCargoVisual(cargoItem);
-    }
-
-    void UpdateCargoVisual(Cargo item)
-    {
-        if (item.visual == null)
-            return;
-        Vector3 pos = EvaluatePath(item, item.progress);
-        Vector3 look = EvaluatePath(item, Mathf.Min(1f, item.progress + 0.05f)) - pos;
-        BeltItemView.Update(item.visual, pos, look);
     }
 
     Vector3 EvaluatePath(Cargo item, float t)
@@ -476,10 +472,15 @@ public class Splitter : BuildingBase
         }
     }
 
+    public void DevClearCargo()
+    {
+        ClearCargo();
+    }
+
     void ClearCargo()
     {
         for (int i = 0; i < cargo.Count; i++)
-            BeltItemView.Destroy(cargo[i].visual);
+            ReleaseCargoVisual(cargo[i]);
         cargo.Clear();
     }
 
@@ -616,14 +617,10 @@ public class Splitter : BuildingBase
         return height;
     }
 
-    protected override void LateUpdate()
-    {
-        base.LateUpdate();
-    }
-
     protected override void OnDestroy()
     {
         ClearCargo();
+        WorldSim.UnregisterSplitter(this);
         base.OnDestroy();
     }
 

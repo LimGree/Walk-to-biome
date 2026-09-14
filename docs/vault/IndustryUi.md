@@ -6,7 +6,7 @@
 
 ## Что делает
 
-- вешает `UIDocument` на объект, грузит тему и шрифт из `Resources/UI/`;
+- вешает `UIDocument` на объект, грузит `PanelSettings` с темой (`Resources/UI/IndustryPanel` + `IndustryTheme.tss`) и шрифт из `Resources/UI/`;
 - `Btn`, `Text`, `El`, карточки рецептов/зданий/исследований;
 - `Show` / `SetButtonLabel` / `SetOn` / `Money`;
 - прячет старые Canvas, если они ещё торчат на префабах.

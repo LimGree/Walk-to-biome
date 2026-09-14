@@ -18,6 +18,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
     public bool showDebug;
 
     protected readonly Dictionary<ItemData, int> inputBuffer = new Dictionary<ItemData, int>();
+    float simCarry;
 
     public virtual float CraftSpeed => level >= 2 ? 2f : 1f;
     public override bool CanUpgradeBuilding => false;
@@ -59,8 +60,14 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
 
     protected virtual void Update()
     {
+        simCarry += Time.deltaTime;
+        if (simCarry < 0.12f)
+            return;
+        float dt = simCarry;
+        simCarry = 0f;
+
         bool working = currentRecipe != null && HasEnoughInputs() && HasSpaceForRecipeOutputs();
-        GameAudio.Loop(this, WorkClip, working);
+        GameAudio.Loop(this, WorkClip, working && WorldView.InRange(transform.position));
 
         if (currentRecipe == null)
             return;
@@ -75,7 +82,7 @@ public abstract class CrafterBuilding : BuildingBase, IInteractable
             return;
         }
 
-        craftProgress += Time.deltaTime * CraftSpeed;
+        craftProgress += dt * CraftSpeed;
 
         if (craftProgress >= need)
         {

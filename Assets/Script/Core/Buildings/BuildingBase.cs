@@ -61,6 +61,7 @@ public abstract class BuildingBase : MonoBehaviour
     {
         worldPlaced = true;
         RegisterOnGrid();
+        WorldSim.RegisterBuilding(this);
         BuildingVisuals.ApplyPlaced(this, ReadLevel());
         if (!BuildingLinker.SuppressRelink)
             BuildingLinker.RelinkAround(this);
@@ -69,6 +70,7 @@ public abstract class BuildingBase : MonoBehaviour
     public virtual void OnRemoved()
     {
         worldPlaced = false;
+        WorldSim.UnregisterBuilding(this);
         var around = new List<Vector2Int>(8);
         BuildingLinker.CollectFootprintCells(this, around);
         DisconnectAllSockets();
@@ -84,6 +86,7 @@ public abstract class BuildingBase : MonoBehaviour
 
     protected virtual void OnDestroy()
     {
+        WorldSim.UnregisterBuilding(this);
         GridOccupancy.Unregister(gameObject);
     }
 
@@ -91,6 +94,7 @@ public abstract class BuildingBase : MonoBehaviour
     {
         GridOccupancy.Unregister(gameObject);
         RegisterOnGrid();
+        WorldSim.RegisterBuilding(this);
     }
 
     protected void RegisterOnGrid()
@@ -159,6 +163,7 @@ public abstract class BuildingBase : MonoBehaviour
         if (item == null || outputBuffer.Count >= maxOutputBuffer)
             return false;
         outputBuffer.Enqueue(item);
+        WorldSim.MarkFlush(this);
         return true;
     }
 
@@ -172,6 +177,7 @@ public abstract class BuildingBase : MonoBehaviour
         if (outputBuffer.Count < maxOutputBuffer)
         {
             outputBuffer.Enqueue(item);
+            WorldSim.MarkFlush(this);
             return true;
         }
 
@@ -332,19 +338,22 @@ public abstract class BuildingBase : MonoBehaviour
         SaveItems.ToQueue(save.outputBuffer, outputBuffer);
     }
 
-    protected virtual void LateUpdate()
+    public virtual void SimFlush()
     {
         if (outputBuffer.Count > 0)
             FlushOutputBuffer();
-        ApplyWorldCull();
     }
 
-    void ApplyWorldCull()
+    public void CullTick(bool show)
+    {
+        ApplyWorldCull(show);
+    }
+
+    void ApplyWorldCull(bool show)
     {
         if (!worldPlaced)
             return;
 
-        bool show = WorldView.InRange(transform.position);
         if (show == worldShown && cullRenderers != null)
             return;
 

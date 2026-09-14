@@ -39,6 +39,8 @@ public class Conveyor : BuildingBase
     bool isLive;
     bool isPreview;
     BeltInMask lastServed = BeltInMask.None;
+    float simCarry;
+    SocketArrow[] arrowCache;
     GameObject straightVisual;
     GameObject cornerVisual;
     GameObject teeVisual;
@@ -67,6 +69,7 @@ public class Conveyor : BuildingBase
         EnsureSetup();
         RefreshExitFromTransform();
         ClearBeltSockets();
+        WorldSim.RegisterBelt(this);
         base.OnPlaced();
     }
 
@@ -74,6 +77,7 @@ public class Conveyor : BuildingBase
     {
         isLive = false;
         ClearCargo();
+        WorldSim.UnregisterBelt(this);
         base.OnRemoved();
     }
 
@@ -231,7 +235,7 @@ public class Conveyor : BuildingBase
     public bool TryAcceptTransfer(ItemData item, Transform visual, BuildingBase source = null)
     {
         Vector2Int entry = InferEntryDir(null, source, visual);
-        return TryAccept(item, visual, entry);
+        return TryAccept(item, null, entry);
     }
 
     bool TryAccept(ItemData item, Transform visual, Vector2Int entry)
@@ -314,14 +318,21 @@ public class Conveyor : BuildingBase
         return BeltRules.SideFromTravel(ExitDir, entry) != BeltInMask.None;
     }
 
-    void Update()
+    public void SimDraw()
+    {
+        if (!ShowCargoVisual)
+            return;
+        SubmitCargoDraws();
+    }
+
+    public void SimStep(float dt)
     {
         if (!isLive)
             return;
 
         float cell = GridFootprint.CellSize;
         float boost = BeltSpeedSystem.Instance != null ? BeltSpeedSystem.Instance.Multiplier : 1f;
-        float move = speed * boost * Time.deltaTime / Mathf.Max(0.05f, cell);
+        float move = speed * boost * dt / Mathf.Max(0.05f, cell);
         float gap = ItemGap;
         BeltInMask served = NextServedSide();
 
@@ -375,15 +386,16 @@ public class Conveyor : BuildingBase
         if (front >= 0)
         {
             if (TryHandOff(cargo[front]))
+            {
+                ReleaseCargoVisual(cargo[front]);
                 cargo.RemoveAt(front);
+            }
             else
                 cargo[front].progress = 1f;
         }
-
-        RefreshCargoVisuals();
     }
 
-    void RefreshCargoVisuals()
+    void SubmitCargoDraws()
     {
         bool show = ShowCargoVisual && WorldView.InRange(transform.position);
         for (int i = 0; i < cargo.Count; i++)
@@ -392,14 +404,14 @@ public class Conveyor : BuildingBase
             if (show)
             {
                 if (item.visual == null)
-                    item.visual = BeltItemView.Create(item.item, itemScale);
-                UpdateCargoVisual(item);
+                    item.visual = BeltItemView.Rent(item.item, itemScale);
+                BeltInMask side = BeltRules.SideFromTravel(ExitDir, item.entryDir);
+                Vector3 pos = BeltRules.PathWorld(transform, side, item.progress, itemHeight);
+                Vector3 look = BeltRules.PathWorld(transform, side, Mathf.Min(1f, item.progress + 0.05f), itemHeight) - pos;
+                BeltItemView.Update(item.visual, pos, look);
             }
-            else if (item.visual != null)
-            {
-                BeltItemView.Destroy(item.visual);
-                item.visual = null;
-            }
+            else
+                ReleaseCargoVisual(item);
         }
     }
 
@@ -428,12 +440,15 @@ public class Conveyor : BuildingBase
         BuildingSocket destInput = dest.inputSockets != null && dest.inputSockets.Length > 0
             ? dest.inputSockets[0]
             : null;
-        if (!dest.TryReceiveItem(item.item, destInput))
-            return false;
+        return dest.TryReceiveItem(item.item, destInput);
+    }
 
-        BeltItemView.Destroy(item.visual);
+    static void ReleaseCargoVisual(BeltCargo item)
+    {
+        if (item == null || item.visual == null)
+            return;
+        BeltItemView.Release(item.visual, item.item);
         item.visual = null;
-        return true;
     }
 
     void SpawnCargo(ItemData item, float progress, Transform existingVisual, Vector2Int entryDir)
@@ -453,36 +468,30 @@ public class Conveyor : BuildingBase
         if (show)
         {
             if (cargoItem.visual == null)
-                cargoItem.visual = BeltItemView.Create(item, itemScale);
+                cargoItem.visual = BeltItemView.Rent(item, itemScale);
             else
                 BeltItemView.Prepare(cargoItem.visual);
         }
         else if (cargoItem.visual != null)
         {
-            BeltItemView.Destroy(cargoItem.visual);
+            BeltItemView.Release(cargoItem.visual, item);
             cargoItem.visual = null;
         }
 
         cargo.Add(cargoItem);
-        if (cargoItem.visual != null)
-            UpdateCargoVisual(cargoItem);
     }
 
-    void UpdateCargoVisual(BeltCargo item)
-    {
-        if (item.visual == null)
-            return;
+    public int CargoCount => cargo.Count;
 
-        BeltInMask side = BeltRules.SideFromTravel(ExitDir, item.entryDir);
-        Vector3 pos = BeltRules.PathWorld(transform, side, item.progress, itemHeight);
-        Vector3 look = BeltRules.PathWorld(transform, side, Mathf.Min(1f, item.progress + 0.05f), itemHeight) - pos;
-        BeltItemView.Update(item.visual, pos, look);
+    public void DevClearCargo()
+    {
+        ClearCargo();
     }
 
     void ClearCargo()
     {
         for (int i = 0; i < cargo.Count; i++)
-            BeltItemView.Destroy(cargo[i].visual);
+            ReleaseCargoVisual(cargo[i]);
         cargo.Clear();
     }
 
@@ -606,18 +615,67 @@ public class Conveyor : BuildingBase
 
     void ApplyVisual()
     {
-        EnsureSetup();
-        BeltShape shown = ResolveShownShape();
+        EnsureCollider();
+        if (straightVisual == null)
+            straightVisual = FindStraightVisual();
+
+        BeltShape shown = Shape;
         BeltRules.GetVisual(shown, InMask, out float extraYaw, out bool mirrorX);
-
         if (straightVisual != null)
+        {
             straightVisual.SetActive(shown == BeltShape.Straight);
+            if (shown == BeltShape.Straight)
+                EnableRenderers(straightVisual);
+        }
 
-        PresentVisual(cornerVisual, shown == BeltShape.Corner, extraYaw, mirrorX);
-        PresentVisual(teeVisual, shown == BeltShape.Tee, extraYaw, mirrorX);
-        PresentVisual(sidesVisual, shown == BeltShape.Sides, extraYaw, mirrorX);
-        PresentVisual(tripleVisual, shown == BeltShape.Triple, extraYaw, mirrorX);
+        GameObject form = EnsureForm(shown);
+        if (shown != BeltShape.Straight)
+            PresentVisual(form, true, extraYaw, mirrorX);
+        InvalidateArrows();
         RefreshArrows();
+    }
+
+    GameObject EnsureForm(BeltShape shown)
+    {
+        if (shown == BeltShape.Straight)
+        {
+            DestroyVisualRoot(ref cornerVisual);
+            DestroyVisualRoot(ref teeVisual);
+            DestroyVisualRoot(ref sidesVisual);
+            DestroyVisualRoot(ref tripleVisual);
+            return straightVisual;
+        }
+
+        if (shown != BeltShape.Corner)
+            DestroyVisualRoot(ref cornerVisual);
+        if (shown != BeltShape.Tee)
+            DestroyVisualRoot(ref teeVisual);
+        if (shown != BeltShape.Sides)
+            DestroyVisualRoot(ref sidesVisual);
+        if (shown != BeltShape.Triple)
+            DestroyVisualRoot(ref tripleVisual);
+
+        switch (shown)
+        {
+            case BeltShape.Corner:
+                if (cornerVisual == null)
+                    cornerVisual = CreateChildVisual("CornerVisual", data != null ? data.cornerPrefab : null, data != null ? data.cornerGhostPrefab : null);
+                return cornerVisual;
+            case BeltShape.Tee:
+                if (teeVisual == null)
+                    teeVisual = CreateChildVisual("TeeVisual", data != null ? data.teePrefab : null, data != null ? data.teeGhostPrefab : null);
+                return teeVisual;
+            case BeltShape.Sides:
+                if (sidesVisual == null)
+                    sidesVisual = CreateChildVisual("SidesVisual", data != null ? data.sidesPrefab : null, data != null ? data.sidesGhostPrefab : null);
+                return sidesVisual;
+            case BeltShape.Triple:
+                if (tripleVisual == null)
+                    tripleVisual = CreateChildVisual("TripleVisual", data != null ? data.triplePrefab : null, data != null ? data.tripleGhostPrefab : null);
+                return tripleVisual;
+            default:
+                return straightVisual;
+        }
     }
 
     public bool ShouldShowIoArrow(SocketArrow arrow)
@@ -639,13 +697,19 @@ public class Conveyor : BuildingBase
         return !HasLogisticsAt(Cell + delta);
     }
 
+    void InvalidateArrows()
+    {
+        arrowCache = null;
+    }
+
     void RefreshArrows()
     {
-        SocketArrow[] arrows = GetComponentsInChildren<SocketArrow>(true);
-        for (int i = 0; i < arrows.Length; i++)
+        if (arrowCache == null)
+            arrowCache = GetComponentsInChildren<SocketArrow>(true);
+        for (int i = 0; i < arrowCache.Length; i++)
         {
-            if (arrows[i] != null)
-                arrows[i].Apply();
+            if (arrowCache[i] != null)
+                arrowCache[i].Apply();
         }
     }
 
@@ -696,25 +760,7 @@ public class Conveyor : BuildingBase
 
     BeltShape ResolveShownShape()
     {
-        BeltShape shown = Shape;
-        if (shown == BeltShape.Triple && tripleVisual == null)
-        {
-            if (sidesVisual != null && FromLeft && FromRight)
-                return BeltShape.Sides;
-            if (teeVisual != null && (FromLeft || FromRight))
-                return BeltShape.Tee;
-            if (cornerVisual != null && (FromLeft || FromRight) && !FromBack)
-                return BeltShape.Corner;
-            return BeltShape.Straight;
-        }
-
-        if (shown == BeltShape.Sides && sidesVisual == null)
-            return BeltShape.Straight;
-        if (shown == BeltShape.Tee && teeVisual == null)
-            return (cornerVisual != null && !FromBack) ? BeltShape.Corner : BeltShape.Straight;
-        if (shown == BeltShape.Corner && cornerVisual == null)
-            return BeltShape.Straight;
-        return shown;
+        return Shape;
     }
 
     static void PresentVisual(GameObject visual, bool on, float extraYaw, bool mirrorX)
@@ -736,7 +782,10 @@ public class Conveyor : BuildingBase
     void EnsureSetup()
     {
         EnsureCollider();
-        EnsureVisuals();
+        if (straightVisual == null)
+            straightVisual = FindStraightVisual();
+        if (straightVisual != null)
+            StripBeltExtras(straightVisual);
         ClearBeltSockets();
     }
 
@@ -768,21 +817,6 @@ public class Conveyor : BuildingBase
         );
         box.center = new Vector3(0f, 0.18f, 0f);
         box.enabled = true;
-    }
-
-    void EnsureVisuals()
-    {
-        if (straightVisual == null)
-            straightVisual = FindStraightVisual();
-
-        if (cornerVisual == null)
-            cornerVisual = CreateChildVisual("CornerVisual", data != null ? data.cornerPrefab : null, data != null ? data.cornerGhostPrefab : null);
-        if (teeVisual == null)
-            teeVisual = CreateChildVisual("TeeVisual", data != null ? data.teePrefab : null, data != null ? data.teeGhostPrefab : null);
-        if (sidesVisual == null)
-            sidesVisual = CreateChildVisual("SidesVisual", data != null ? data.sidesPrefab : null, data != null ? data.sidesGhostPrefab : null);
-        if (tripleVisual == null)
-            tripleVisual = CreateChildVisual("TripleVisual", data != null ? data.triplePrefab : null, data != null ? data.tripleGhostPrefab : null);
     }
 
     void DestroyCreatedVisuals()
@@ -848,6 +882,7 @@ public class Conveyor : BuildingBase
         visual.transform.localRotation = Quaternion.identity;
         MatchLayer(visual, gameObject.layer);
         StripRuntimeComponents(visual);
+        StripBeltExtras(visual);
         visual.SetActive(false);
         return visual;
     }
@@ -879,6 +914,40 @@ public class Conveyor : BuildingBase
         {
             if (behaviours[i] != null)
                 behaviours[i].enabled = false;
+        }
+    }
+
+    static void EnableRenderers(GameObject root)
+    {
+        if (root == null)
+            return;
+        MeshRenderer[] rends = root.GetComponentsInChildren<MeshRenderer>(true);
+        for (int i = 0; i < rends.Length; i++)
+        {
+            if (rends[i] != null)
+                rends[i].enabled = true;
+        }
+    }
+
+    static void StripBeltExtras(GameObject root)
+    {
+        if (root == null)
+            return;
+        var kill = new List<GameObject>(8);
+        Transform[] all = root.GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < all.Length; i++)
+        {
+            Transform t = all[i];
+            if (t == null || t.gameObject == root)
+                continue;
+            string n = t.name;
+            if (n.StartsWith("IoArrow", System.StringComparison.OrdinalIgnoreCase))
+                kill.Add(t.gameObject);
+        }
+        for (int i = 0; i < kill.Count; i++)
+        {
+            if (kill[i] != null)
+                Object.Destroy(kill[i]);
         }
     }
 
@@ -926,6 +995,7 @@ public class Conveyor : BuildingBase
     protected override void OnDestroy()
     {
         ClearCargo();
+        WorldSim.UnregisterBelt(this);
         base.OnDestroy();
     }
 

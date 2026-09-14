@@ -1,10 +1,86 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public static class BeltItemView
 {
+    static readonly Dictionary<int, Stack<Transform>> pool = new Dictionary<int, Stack<Transform>>(16);
+    static readonly HashSet<Transform> pooled = new HashSet<Transform>();
+
+    public static void BeginFrame()
+    {
+    }
+
+    public static void Flush()
+    {
+    }
+
+    public static void ClearPool()
+    {
+        foreach (KeyValuePair<int, Stack<Transform>> pair in pool)
+        {
+            while (pair.Value.Count > 0)
+            {
+                Transform t = pair.Value.Pop();
+                if (t != null)
+                    Object.Destroy(t.gameObject);
+            }
+        }
+        pool.Clear();
+        pooled.Clear();
+    }
+
+    public static int PooledCount
+    {
+        get
+        {
+            int n = 0;
+            foreach (KeyValuePair<int, Stack<Transform>> pair in pool)
+                n += pair.Value.Count;
+            return n;
+        }
+    }
+
+    public static Transform Rent(ItemData item, float itemScale)
+    {
+        int key = item != null ? item.GetInstanceID() : 0;
+        Stack<Transform> stack;
+        if (pool.TryGetValue(key, out stack) && stack.Count > 0)
+        {
+            Transform recycled = stack.Pop();
+            if (recycled != null)
+            {
+                pooled.Remove(recycled);
+                recycled.gameObject.SetActive(true);
+                Prepare(recycled);
+                return recycled;
+            }
+        }
+        return Create(item, itemScale);
+    }
+
+    public static void Release(Transform visual, ItemData item)
+    {
+        if (visual == null)
+            return;
+        if (!pooled.Add(visual))
+            return;
+        visual.SetParent(null, false);
+        visual.gameObject.SetActive(false);
+        int key = item != null ? item.GetInstanceID() : 0;
+        Stack<Transform> stack;
+        if (!pool.TryGetValue(key, out stack))
+        {
+            stack = new Stack<Transform>(8);
+            pool[key] = stack;
+        }
+        stack.Push(visual);
+    }
+
     public static Transform Create(ItemData item, float itemScale)
     {
         GameObject root = new GameObject(item != null ? "BeltItem_" + item.id : "BeltItem");
+        root.hideFlags = HideFlags.DontSave;
         if (!TryAttachWorldModel(root, item, itemScale) && !TryAttachIcon(root, item, itemScale))
             AttachFallbackCube(root, itemScale);
 
@@ -80,7 +156,7 @@ public static class BeltItemView
 
         SpriteRenderer sr = root.AddComponent<SpriteRenderer>();
         sr.sprite = item.icon;
-        sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        sr.shadowCastingMode = ShadowCastingMode.Off;
         sr.receiveShadows = false;
 
         float maxDim = Mathf.Max(item.icon.bounds.size.x, item.icon.bounds.size.y, 0.001f);

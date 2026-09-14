@@ -278,9 +278,27 @@ public class ResearchSystem : MonoBehaviour
         return building != null && unlockedBuildings.Contains(building);
     }
 
+    public bool UnlockBuilding(BuildingData building)
+    {
+        if (building == null || unlockedBuildings.Contains(building))
+            return false;
+        unlockedBuildings.Add(building);
+        OnUnlocksChanged?.Invoke();
+        return true;
+    }
+
     public bool IsRecipeUnlocked(RecipeData recipe)
     {
         return recipe != null && unlockedRecipes.Contains(recipe);
+    }
+
+    public bool UnlockRecipe(RecipeData recipe)
+    {
+        if (recipe == null || unlockedRecipes.Contains(recipe))
+            return false;
+        unlockedRecipes.Add(recipe);
+        OnUnlocksChanged?.Invoke();
+        return true;
     }
 
     public float GetCurrentProgress01()

@@ -15,7 +15,6 @@ public class MainMenu : MonoBehaviour
     VisualElement create;
     ScrollView worldList;
     TextField nameField;
-    string settingsTab = "general";
     bool rebuildQueued;
 
     void Awake()

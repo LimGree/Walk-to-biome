@@ -203,6 +203,7 @@ public class RoboticArm : BuildingBase, IInteractable
             if (!belt.TryAcceptTransfer(item, visual, this))
                 return false;
             TakeFromHand(visual, false);
+            BeltItemView.Release(visual, item);
             return true;
         }
 
@@ -212,6 +213,7 @@ public class RoboticArm : BuildingBase, IInteractable
             if (!splitter.TryAcceptTransfer(item, visual))
                 return false;
             TakeFromHand(visual, false);
+            BeltItemView.Release(visual, item);
             return true;
         }
 
@@ -358,11 +360,6 @@ public class RoboticArm : BuildingBase, IInteractable
     {
         if (MachineUI.Instance != null)
             MachineUI.Instance.Open(this);
-    }
-
-    protected override void LateUpdate()
-    {
-        base.LateUpdate();
     }
 
     protected override void OnDestroy()

@@ -45,7 +45,6 @@ public class GameAudio : MonoBehaviour
     float ambField;
     float ambMountain;
     float ambWater;
-    Transform player;
 
     public static GameAudio Ensure()
     {
@@ -81,7 +80,6 @@ public class GameAudio : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        player = null;
         if (scene.name == MainMenu.MenuSceneName || scene.name == MainMenu.LoadingSceneName)
             PlayMusic("music/mus_menu");
         else

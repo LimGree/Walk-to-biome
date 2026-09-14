@@ -69,7 +69,8 @@ public class WorldBiomeMap : MonoBehaviour
     int height;
     bool ready;
 
-    MeshRenderer overlay;
+    Transform overlayRoot;
+    Material overlayMat;
     Texture2D biomeTexture;
     Texture2D overlayTexture;
 
@@ -693,25 +694,6 @@ public class WorldBiomeMap : MonoBehaviour
                 Debug.LogWarning("[WorldBiomeMap] " + rewritten + " frozen ocean/lake/peak cell(s) were rewritten.");
         }
 
-        int tiny = 0;
-        if (mountainIds != null)
-        {
-            var sizes = new int[Mathf.Max(1, mountainCount)];
-            for (int i = 0; i < mountainIds.Length; i++)
-            {
-                int id = mountainIds[i];
-                if (id >= 0 && id < sizes.Length)
-                    sizes[id]++;
-            }
-            for (int i = 0; i < mountainCount; i++)
-            {
-                if (sizes[i] > 0 && sizes[i] < mountainMinCells)
-                    tiny++;
-            }
-        }
-
-        if (tiny > 0)
-            Debug.LogWarning("[WorldBiomeMap] " + tiny + " mountain(s) smaller than mountainMinCells.");
         if (CountMountainCells() < minMountainCapableArea)
             Debug.LogWarning("[WorldBiomeMap] Mountain area below minMountainCapableArea after retries.");
     }
@@ -1110,35 +1092,63 @@ public class WorldBiomeMap : MonoBehaviour
 
         biomeTexture = BuildBiomeTexture(0, 0);
         Vector3 size = terrain.terrainData.size;
-        int padX = Mathf.Max(1, Mathf.CeilToInt(HorizonPadMeters * width / Mathf.Max(1f, size.x)));
-        int padZ = Mathf.Max(1, Mathf.CeilToInt(HorizonPadMeters * height / Mathf.Max(1f, size.z)));
+        int padX = Mathf.Max(1, Mathf.CeilToInt(HorizonPadMeters * width / Mathf.Max(1, size.x)));
+        int padZ = Mathf.Max(1, Mathf.CeilToInt(HorizonPadMeters * height / Mathf.Max(1, size.z)));
         overlayTexture = BuildBiomeTexture(padX, padZ);
 
-        if (overlay == null)
+        if (overlayRoot == null)
         {
-            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            go.name = "BiomeOverlay";
-            go.transform.SetParent(terrain.transform, false);
-            Collider col = go.GetComponent<Collider>();
-            if (col != null)
-                Destroy(col);
-            overlay = go.GetComponent<MeshRenderer>();
-            overlay.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            overlay.receiveShadows = false;
+            GameObject root = new GameObject("BiomeOverlay");
+            root.transform.SetParent(terrain.transform, false);
+            overlayRoot = root.transform;
+        }
+        for (int i = overlayRoot.childCount - 1; i >= 0; i--)
+            Destroy(overlayRoot.GetChild(i).gameObject);
+
+        overlayMat = RuntimeMaterials.Create(overlayTexture, Color.white);
+        if (overlayMat.HasProperty("_WalkUvFog"))
+            overlayMat.SetFloat("_WalkUvFog", 0f);
+
+        Vector3 origin = terrain.GetPosition();
+        float worldW = size.x + padX * 2f * (size.x / Mathf.Max(1, width));
+        float worldH = size.z + padZ * 2f * (size.z / Mathf.Max(1, height));
+        float tile = 64f;
+        int nx = Mathf.Max(1, Mathf.CeilToInt(worldW / tile));
+        int nz = Mathf.Max(1, Mathf.CeilToInt(worldH / tile));
+        float x0 = origin.x + size.x * 0.5f - worldW * 0.5f;
+        float z0 = origin.z + size.z * 0.5f - worldH * 0.5f;
+
+        for (int iz = 0; iz < nz; iz++)
+        {
+            for (int ix = 0; ix < nx; ix++)
+            {
+                float x = x0 + (ix + 0.5f) * tile;
+                float z = z0 + (iz + 0.5f) * tile;
+                float w = Mathf.Min(tile, x0 + worldW - (x0 + ix * tile));
+                float h = Mathf.Min(tile, z0 + worldH - (z0 + iz * tile));
+                GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                go.name = "Tile";
+                go.transform.SetParent(overlayRoot, false);
+                Collider col = go.GetComponent<Collider>();
+                if (col != null)
+                    Destroy(col);
+                go.transform.position = new Vector3(x, 0.01f, z);
+                go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                go.transform.localScale = new Vector3(w, h, 1f);
+                MeshRenderer rend = go.GetComponent<MeshRenderer>();
+                rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                rend.receiveShadows = false;
+                Material mat = new Material(overlayMat);
+                float u0 = (ix * tile) / worldW;
+                float v0 = (iz * tile) / worldH;
+                mat.mainTextureScale = new Vector2(w / worldW, h / worldH);
+                mat.mainTextureOffset = new Vector2(u0, v0);
+                if (mat.HasProperty("_WalkUvFog"))
+                    mat.SetFloat("_WalkUvFog", 0f);
+                rend.sharedMaterial = mat;
+            }
         }
 
-        Vector3 pos = terrain.GetPosition();
-        overlay.transform.position = new Vector3(
-            pos.x + size.x * 0.5f,
-            0.01f,
-            pos.z + size.z * 0.5f);
-        overlay.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-        overlay.transform.localScale = new Vector3(
-            size.x + padX * 2f * (size.x / Mathf.Max(1, width)),
-            size.z + padZ * 2f * (size.z / Mathf.Max(1, height)),
-            1f);
-
-        overlay.sharedMaterial = RuntimeMaterials.Create(overlayTexture, Color.white);
         RefreshOverlayGfx();
     }
 
@@ -1170,11 +1180,15 @@ public class WorldBiomeMap : MonoBehaviour
 
     public void RefreshOverlayGfx()
     {
-        if (overlay == null)
+        if (overlayRoot == null)
             return;
-        Material mat = overlay.sharedMaterial;
-        RuntimeMaterials.ApplyWorldGfx(mat);
-        if (mat != null && mat.HasProperty("_WalkUvFog"))
-            mat.SetFloat("_WalkUvFog", 1f);
+        MeshRenderer[] rends = overlayRoot.GetComponentsInChildren<MeshRenderer>(true);
+        for (int i = 0; i < rends.Length; i++)
+        {
+            Material mat = rends[i] != null ? rends[i].sharedMaterial : null;
+            RuntimeMaterials.ApplyWorldGfx(mat);
+            if (mat != null && mat.HasProperty("_WalkUvFog"))
+                mat.SetFloat("_WalkUvFog", 0f);
+        }
     }
 }

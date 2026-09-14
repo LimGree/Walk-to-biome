@@ -181,8 +181,13 @@ public class WalletHud : MonoBehaviour
         Refresh();
     }
 
+    float nextHudTick;
+
     void LateUpdate()
     {
+        if (Time.unscaledTime < nextHudTick)
+            return;
+        nextHudTick = Time.unscaledTime + 0.2f;
         RefreshBuildCost();
     }
 

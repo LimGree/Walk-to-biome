@@ -200,6 +200,8 @@ public class PlayerBuilder : MonoBehaviour
             return true;
         if (UiModal.IsOpen)
             return true;
+        if (DevConsole.IsOpen)
+            return true;
         return false;
     }
 

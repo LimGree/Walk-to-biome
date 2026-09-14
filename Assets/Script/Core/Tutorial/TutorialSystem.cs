@@ -171,6 +171,18 @@ public class TutorialSystem : MonoBehaviour
         Changed?.Invoke();
     }
 
+    public void Restart()
+    {
+        skipped = false;
+        IsFinished = false;
+        IsRunning = true;
+        floor = TutorialStep.Welcome;
+        Step = TutorialStep.Welcome;
+        stepEnteredAt = Time.unscaledTime;
+        fx?.Clear();
+        Changed?.Invoke();
+    }
+
     public void SkipStep()
     {
         if (!IsRunning)

@@ -161,22 +161,26 @@ public class WorldMapUI : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!IsOpen)
-        {
-            if (Time.unscaledTime < nextMiniTick)
-                return;
-            nextMiniTick = Time.unscaledTime + 0.08f;
-        }
-
         if (mapTex == null)
             Rebuild();
 
-        UpdateFogOverlay();
+        bool miniTick = Time.unscaledTime >= nextMiniTick;
+        if (miniTick)
+            nextMiniTick = Time.unscaledTime + 0.2f;
+
+        if (IsOpen || miniTick)
+            UpdateFogOverlay();
+
         UpdateMiniView();
         UpdatePlayerMark(miniMarker, miniOverlay, miniUv, MiniFollow ? PlayerYaw() : 0f, true);
-        UpdateMiniInfo();
-        UpdateMiniClock();
         UpdateCompass();
+        if (miniTick)
+        {
+            UpdateMiniInfo();
+            UpdateMiniClock();
+            LayoutPins();
+        }
+
         if (IsOpen)
         {
             if (fullImage != null)
@@ -189,10 +193,10 @@ public class WorldMapUI : MonoBehaviour
             UpdateMeasureVisual();
             PanWithKeys();
             IndustryUi.Show(worldCompass, MapSettings.WorldCompass);
+            LayoutPins();
         }
         else if (tooltip != null)
             IndustryUi.Show(tooltip, false);
-        LayoutPins();
     }
 
     void OnMapToggle(InputAction.CallbackContext ctx)

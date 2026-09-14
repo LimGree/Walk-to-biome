@@ -111,7 +111,8 @@ public class SocketArrow : MonoBehaviour
             }
         }
 
-        rends = GetComponentsInChildren<MeshRenderer>(true);
+        if (rends == null || rends.Length == 0)
+            rends = GetComponentsInChildren<MeshRenderer>(true);
         for (int i = 0; i < rends.Length; i++)
         {
             if (rends[i] != null)

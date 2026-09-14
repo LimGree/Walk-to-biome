@@ -207,12 +207,12 @@ public class UndergroundConveyor : BuildingBase
         return TryOutputToAny(item);
     }
 
-    protected override void LateUpdate()
+    public override void SimFlush()
     {
         if (!isExit)
             FlushToPair();
         else
-            base.LateUpdate();
+            base.SimFlush();
     }
 
     void FlushToPair()
