@@ -69,6 +69,9 @@ public class BuildSelectionController : MonoBehaviour
         public Vector2Int minOffset;
         public float yaw;
         public int level;
+        public RecipeData recipe;
+        public bool pairExit;
+        public int pairId;
     }
 
     struct PreviewItem
@@ -77,6 +80,9 @@ public class BuildSelectionController : MonoBehaviour
         public Vector2Int minOffset;
         public float yaw;
         public int level;
+        public RecipeData recipe;
+        public bool pairExit;
+        public int pairId;
         public GameObject ghost;
         public bool valid;
     }
@@ -223,11 +229,18 @@ public class BuildSelectionController : MonoBehaviour
             return;
 
         RefreshSelectedBuildings();
+        var skip = new HashSet<int>();
         for (int i = 0; i < selectedBuildings.Count; i++)
         {
             BuildingBase b = selectedBuildings[i];
             if (b == null)
                 continue;
+            int id = b.GetInstanceID();
+            if (skip.Contains(id))
+                continue;
+            UndergroundConveyor tunnel = b as UndergroundConveyor;
+            if (tunnel != null && tunnel.Paired != null)
+                skip.Add(tunnel.Paired.GetInstanceID());
             Economy.PayRefund(b);
             b.OnRemoved();
             Destroy(b.gameObject);
@@ -249,6 +262,7 @@ public class BuildSelectionController : MonoBehaviour
         if (!selectionMode || IsBlocked())
             return;
         RefreshSelectedBuildings();
+        ExpandUndergroundPairs();
         if (selectedBuildings.Count == 0)
             return;
 
@@ -270,12 +284,16 @@ public class BuildSelectionController : MonoBehaviour
             if (b.data == null)
                 continue;
             Vector2Int min = GridFootprint.GetMinCell(b.transform.position, b.FootprintSize);
+            UndergroundConveyor tunnel = b as UndergroundConveyor;
             clipboard.Add(new ClipItem
             {
                 data = b.data,
                 minOffset = min - origin,
                 yaw = b.transform.eulerAngles.y,
-                level = ReadLevel(b)
+                level = b.ReadLevel(),
+                recipe = ReadRecipe(b),
+                pairExit = tunnel != null && tunnel.isExit,
+                pairId = tunnel != null ? tunnel.PairId : 0
             });
         }
 
@@ -409,6 +427,46 @@ public class BuildSelectionController : MonoBehaviour
         }
     }
 
+    void ExpandUndergroundPairs()
+    {
+        int n = selectedBuildings.Count;
+        for (int i = 0; i < n; i++)
+        {
+            UndergroundConveyor tunnel = selectedBuildings[i] as UndergroundConveyor;
+            if (tunnel == null || tunnel.Paired == null)
+                continue;
+            if (selectedBuildings.Contains(tunnel.Paired))
+                continue;
+            selectedBuildings.Add(tunnel.Paired);
+            List<Vector2Int> cells = new List<Vector2Int>(4);
+            GridFootprint.CollectCells(tunnel.Paired.transform.position, tunnel.Paired.FootprintSize, cells);
+            for (int c = 0; c < cells.Count; c++)
+                selectedCells.Add(cells[c]);
+        }
+    }
+
+    static void BindPastedTunnels(List<BuildingBase> spawned)
+    {
+        if (spawned == null)
+            return;
+        var byPair = new Dictionary<int, UndergroundConveyor>();
+        for (int i = 0; i < spawned.Count; i++)
+        {
+            UndergroundConveyor tunnel = spawned[i] as UndergroundConveyor;
+            if (tunnel == null || tunnel.PairId <= 0)
+                continue;
+            if (byPair.TryGetValue(tunnel.PairId, out UndergroundConveyor other) && other != null)
+            {
+                UndergroundConveyor entrance = tunnel.isExit ? other : tunnel;
+                UndergroundConveyor exit = tunnel.isExit ? tunnel : other;
+                UndergroundConveyor.BindPair(entrance, exit);
+                byPair.Remove(tunnel.PairId);
+            }
+            else
+                byPair[tunnel.PairId] = tunnel;
+        }
+    }
+
     void RefreshSelectedBuildings()
     {
         selectedBuildings.Clear();
@@ -434,13 +492,17 @@ public class BuildSelectionController : MonoBehaviour
                 minOffset = c.minOffset,
                 yaw = c.yaw,
                 level = c.level,
-                ghost = CreateGhost(c.data)
+                recipe = c.recipe,
+                pairExit = c.pairExit,
+                pairId = c.pairId,
+                ghost = CreateGhost(c.data, c.pairExit, c.level)
             });
         }
     }
 
     void BeginMove()
     {
+        ExpandUndergroundPairs();
         preview.Clear();
         moveRecords.Clear();
         moveIgnore.Clear();
@@ -484,8 +546,9 @@ public class BuildSelectionController : MonoBehaviour
                 data = b.data,
                 minOffset = min - origin,
                 yaw = b.transform.eulerAngles.y,
-                level = ReadLevel(b),
-                ghost = CreateGhost(b.data)
+                level = b.ReadLevel(),
+                recipe = ReadRecipe(b),
+                ghost = CreateGhost(b.data, false, b.ReadLevel())
             });
         }
 
@@ -511,6 +574,17 @@ public class BuildSelectionController : MonoBehaviour
         bool allValid = true;
         int labUsed = 0;
         int labCap = LabCapacity();
+
+        Conveyor.PreviewExits.Clear();
+        for (int i = 0; i < preview.Count; i++)
+        {
+            PreviewItem feed = preview[i];
+            if (feed.data == null || !feed.data.IsConveyor)
+                continue;
+            Vector2Int feedSize = GridFootprint.GetRotatedSize(feed.data.size, feed.yaw);
+            Vector3 feedPos = GridFootprint.MinCellToCenter(origin + feed.minOffset, feedSize, y);
+            Conveyor.RegisterPreviewExit(feedPos, feed.yaw);
+        }
 
         for (int i = 0; i < preview.Count; i++)
         {
@@ -548,7 +622,9 @@ public class BuildSelectionController : MonoBehaviour
         }
 
         GridOccupancy.Reserve(reserveToken, cells);
+        Conveyor.ApplyWorldVisualOverrides();
         TintPreview(allValid);
+        Conveyor.PreviewExits.Clear();
     }
 
     bool PreviewAllValid()
@@ -601,6 +677,7 @@ public class BuildSelectionController : MonoBehaviour
             return;
         }
 
+        var spawned = new List<BuildingBase>(preview.Count);
         for (int i = 0; i < preview.Count; i++)
         {
             PreviewItem item = preview[i];
@@ -609,18 +686,27 @@ public class BuildSelectionController : MonoBehaviour
             Vector2Int size = GridFootprint.GetRotatedSize(item.data.size, item.yaw);
             Vector2Int min = origin + item.minOffset;
             Vector3 pos = GridFootprint.MinCellToCenter(min, size, y);
-            GameObject go = Instantiate(item.data.prefab, pos, Quaternion.Euler(0f, item.yaw, 0f));
+            GameObject prefab = UndergroundConveyor.PrefabFor(item.data, item.pairExit);
+            if (prefab == null)
+                continue;
+            GameObject go = Instantiate(prefab, pos, Quaternion.Euler(0f, item.yaw, 0f));
             BuildingBase b = go.GetComponent<BuildingBase>();
             if (b != null)
             {
                 b.data = item.data;
+                UndergroundConveyor tunnel = b as UndergroundConveyor;
+                if (tunnel != null)
+                    tunnel.SetPairMeta(item.pairExit, item.pairId);
                 b.OnPlaced();
-                ApplyLevel(b, item.level);
+                b.ApplyLevel(item.level);
+                ApplyRecipe(b, item.recipe);
+                spawned.Add(b);
             }
             else
                 GridFootprint.Register(go, pos, size);
         }
 
+        BindPastedTunnels(spawned);
         CancelPreview(keepSelection: false);
         ClearSelectionOnly();
     }
@@ -788,43 +874,35 @@ public class BuildSelectionController : MonoBehaviour
             - ResearchSystem.Instance.CountPlacedLabs());
     }
 
-    static int ReadLevel(BuildingBase b)
+    static RecipeData ReadRecipe(BuildingBase b)
     {
-        Extractor ex = b as Extractor;
-        if (ex != null)
-            return ex.level;
-        Assembler asb = b as Assembler;
-        if (asb != null)
-            return asb.level;
-        return 1;
+        CrafterBuilding crafter = b as CrafterBuilding;
+        return crafter != null ? crafter.currentRecipe : null;
     }
 
-    static void ApplyLevel(BuildingBase b, int level)
+    static void ApplyRecipe(BuildingBase b, RecipeData recipe)
     {
-        if (level < 2)
+        CrafterBuilding crafter = b as CrafterBuilding;
+        if (crafter == null)
             return;
-        Extractor ex = b as Extractor;
-        if (ex != null)
-        {
-            ex.TryUpgrade();
-            return;
-        }
-        Assembler asb = b as Assembler;
-        if (asb != null)
-            asb.TryUpgrade();
+        crafter.SetRecipe(recipe);
     }
 
-    GameObject CreateGhost(BuildingData data)
+    GameObject CreateGhost(BuildingData data, bool pairExit = false, int level = 1)
     {
         if (data == null)
             return null;
-        GameObject source = data.ghostPrefab != null ? data.ghostPrefab : data.prefab;
+        GameObject source = pairExit && data.pairExitPrefab != null
+            ? data.pairExitPrefab
+            : BuildingVisuals.SourceForGhost(data);
         if (source == null)
             return null;
 
         GameObject ghost = Instantiate(source);
-        foreach (var col in ghost.GetComponentsInChildren<Collider>(true))
-            col.enabled = false;
+        BuildingVisuals.PrepareGhostInstance(ghost);
+        BuildingBase ghostBuilding = ghost.GetComponent<BuildingBase>();
+        if (ghostBuilding != null)
+            BuildingVisuals.ApplyLevel(ghostBuilding, level);
 
         Conveyor belt = ghost.GetComponent<Conveyor>();
         if (belt == null && data.IsConveyor)
@@ -847,20 +925,18 @@ public class BuildSelectionController : MonoBehaviour
 
     void TintPreview(bool allValid)
     {
-        Material mat = allValid ? builder.ghostValidMaterial : builder.ghostInvalidMaterial;
-        if (mat == null)
-            return;
         for (int i = 0; i < preview.Count; i++)
         {
             if (preview[i].ghost == null)
                 continue;
-            foreach (var r in preview[i].ghost.GetComponentsInChildren<Renderer>())
-                r.material = mat;
+            GhostTint.Apply(preview[i].ghost, allValid, builder.ghostValidMaterial, builder.ghostInvalidMaterial);
         }
     }
 
     void CancelPreview(bool keepSelection = false)
     {
+        Conveyor.ClearWorldVisualOverrides();
+        Conveyor.PreviewExits.Clear();
         GridOccupancy.Release(reserveToken);
         for (int i = 0; i < preview.Count; i++)
         {

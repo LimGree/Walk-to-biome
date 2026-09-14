@@ -17,6 +17,15 @@ public abstract class BuildingBase : MonoBehaviour
     [Header("Footprint gizmo")]
     public bool drawFootprintGizmo = true;
 
+    static readonly Vector2Int[] PushCardinals =
+    {
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 0),
+        new Vector2Int(0, -1),
+        new Vector2Int(-1, 0)
+    };
+    static readonly List<Vector2Int> PushCells = new List<Vector2Int>(16);
+
     private readonly Queue<ItemData> outputBuffer = new Queue<ItemData>();
     Renderer[] cullRenderers;
     Collider[] cullColliders;
@@ -52,6 +61,7 @@ public abstract class BuildingBase : MonoBehaviour
     {
         worldPlaced = true;
         RegisterOnGrid();
+        BuildingVisuals.ApplyPlaced(this, ReadLevel());
         if (!BuildingLinker.SuppressRelink)
             BuildingLinker.RelinkAround(this);
     }
@@ -59,12 +69,12 @@ public abstract class BuildingBase : MonoBehaviour
     public virtual void OnRemoved()
     {
         worldPlaced = false;
-        List<BuildingBase> neighbors = new List<BuildingBase>(8);
-        BuildingLinker.CollectNeighbors(this, neighbors);
+        var around = new List<Vector2Int>(8);
+        BuildingLinker.CollectFootprintCells(this, around);
         DisconnectAllSockets();
         GridOccupancy.Unregister(gameObject);
         if (!BuildingLinker.SuppressRelink)
-            BuildingLinker.Relink(neighbors);
+            BuildingLinker.RefreshRemoved(around);
     }
 
     public virtual void OnRotated()
@@ -170,33 +180,115 @@ public abstract class BuildingBase : MonoBehaviour
 
     protected virtual bool TryPushToConnections(ItemData item)
     {
-        if (item == null || outputSockets == null)
+        if (item == null)
             return false;
 
-        for (int i = 0; i < outputSockets.Length; i++)
+        if (outputSockets != null)
         {
-            BuildingSocket socket = outputSockets[i];
-            if (socket == null)
-                continue;
-
-            if (socket.connectedSocket != null)
+            for (int i = 0; i < outputSockets.Length; i++)
             {
-                BuildingBase linked = socket.connectedSocket.GetComponentInParent<BuildingBase>();
-                if (linked != null
-                    && linked.CanAcceptFrom(this)
-                    && linked.TryReceiveItem(item, socket.connectedSocket))
+                BuildingSocket socket = outputSockets[i];
+                if (socket == null)
+                    continue;
+
+                if (socket.connectedSocket != null)
+                {
+                    BuildingBase linked = socket.connectedSocket.GetComponentInParent<BuildingBase>();
+                    if (linked != null
+                        && linked.CanAcceptFrom(this)
+                        && linked.TryReceiveItem(item, socket.connectedSocket))
+                        return true;
+                }
+
+                if (TryGiveTo(BuildingLinker.GetBuildingAt(BuildingLinker.GetSocketFrontCell(socket)), item, socket))
+                    return true;
+
+                Vector2Int dir = BuildingLinker.SocketWorldCardinal(socket);
+                if (dir.x == 0 && dir.y == 0)
+                    continue;
+
+                GridFootprint.CollectCells(transform.position, FootprintSize, PushCells);
+                for (int c = 0; c < PushCells.Count; c++)
+                {
+                    if (TryGiveTo(BuildingLinker.GetBuildingAt(PushCells[c] + dir), item, socket))
+                        return true;
+                }
+            }
+        }
+
+        return TryPushToAdjacentBelts(item);
+    }
+
+    protected bool HasPushNeighbor()
+    {
+        GridFootprint.CollectCells(transform.position, FootprintSize, PushCells);
+        for (int i = 0; i < PushCells.Count; i++)
+        {
+            for (int d = 0; d < PushCardinals.Length; d++)
+            {
+                BuildingBase other = BuildingLinker.GetBuildingAt(PushCells[i] + PushCardinals[d]);
+                if (other != null && other != this)
                     return true;
             }
-
-            BuildingBase front = BuildingLinker.GetBuildingAt(BuildingLinker.GetSocketFrontCell(socket));
-            if (front != null
-                && front != this
-                && front.CanAcceptFrom(this)
-                && front.TryReceiveItem(item, socket))
-                return true;
         }
 
         return false;
+    }
+
+    protected bool TryPushToAdjacentBelts(ItemData item)
+    {
+        if (item == null)
+            return false;
+
+        GridFootprint.CollectCells(transform.position, FootprintSize, PushCells);
+        for (int i = 0; i < PushCells.Count; i++)
+        {
+            for (int d = 0; d < PushCardinals.Length; d++)
+            {
+                BuildingBase other = BuildingLinker.GetBuildingAt(PushCells[i] + PushCardinals[d]);
+                if (TryGiveTo(other, item, null))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool TryGiveTo(BuildingBase dest, ItemData item, BuildingSocket fromSocket)
+    {
+        if (dest == null || dest == this || item == null)
+            return false;
+
+        Conveyor belt = dest as Conveyor;
+        if (belt != null)
+        {
+            bool pipe = belt is Pipe;
+            if (item.isFluid != pipe)
+                return false;
+            if (fromSocket != null)
+            {
+                if (BuildingLinker.GetSocketCell(fromSocket) != belt.Cell)
+                    return false;
+            }
+            else if (!BuildingLinker.FeedsInto(this, belt.Cell))
+                return false;
+            return belt.TryAcceptTransfer(item, null, this);
+        }
+
+        if (item.isFluid)
+            return false;
+
+        Splitter splitter = dest as Splitter;
+        if (splitter != null)
+        {
+            if (!splitter.CanAcceptFrom(this))
+                return false;
+            return splitter.TryAcceptTransfer(item, null);
+        }
+
+        if (!dest.CanAcceptFrom(this))
+            return false;
+        return dest.TryReceiveItem(item, fromSocket);
     }
 
     protected void FlushOutputBuffer()
@@ -264,10 +356,14 @@ public abstract class BuildingBase : MonoBehaviour
         {
             for (int i = 0; i < cullRenderers.Length; i++)
             {
-                if (cullRenderers[i] != null)
-                    cullRenderers[i].enabled = show;
+                Renderer rend = cullRenderers[i];
+                if (rend == null || rend.GetComponentInParent<SocketArrow>() != null)
+                    continue;
+                rend.enabled = show;
             }
         }
+
+        SocketArrow.RefreshOn(transform);
 
         if (cullColliders != null)
         {

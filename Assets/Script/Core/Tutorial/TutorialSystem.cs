@@ -16,15 +16,19 @@ public enum TutorialStep
     Belts = 10,
     WaitChapter1 = 11,
     PlaceSmelter = 12,
-    PickRecipe = 13,
-    FirstSmelt = 14,
-    CopySmelter = 15,
-    Farewell = 16
+    ResearchIronIngot = 13,
+    PickRecipe = 14,
+    FirstSmelt = 15,
+    ResearchCopperIngot = 16,
+    CopySmelter = 17,
+    Farewell = 18
 }
 
 public class TutorialSystem : MonoBehaviour
 {
-    public const string BasicId = "research_basic_automation";
+    public const string BasicId = "research_smelter";
+    public const string IronIngotResearchId = "research_iron_ingot";
+    public const string CopperIngotResearchId = "research_cooper_ingot";
     public const string IronOreId = "iron_ore";
     public const string CopperOreId = "cooper_ore";
     public const string IronIngotId = "iron_ingot";
@@ -54,6 +58,7 @@ public class TutorialSystem : MonoBehaviour
     float lastWaitOre;
     float lastWaitCheck;
     bool skipped;
+    TutorialStep floor;
     TutorialFx fx;
 
     void Awake()
@@ -82,7 +87,8 @@ public class TutorialSystem : MonoBehaviour
             Advance();
 
         if (Step >= TutorialStep.Belts && Step <= TutorialStep.WaitChapter1
-            && !HasResearch(BasicId) && !IsBasicActive())
+            && !HasResearch(BasicId) && !IsBasicActive()
+            && TutorialStep.StartResearch >= floor)
             SetStep(TutorialStep.StartResearch);
 
         fx?.Sync();
@@ -95,6 +101,7 @@ public class TutorialSystem : MonoBehaviour
             IsRunning = true;
             IsFinished = false;
             Step = TutorialStep.Welcome;
+            floor = TutorialStep.Welcome;
             return;
         }
 
@@ -121,6 +128,7 @@ public class TutorialSystem : MonoBehaviour
         IsFinished = false;
         int step = Mathf.Clamp(data.tutorialStep, 0, (int)TutorialStep.Farewell);
         Step = (TutorialStep)step;
+        floor = Step;
         stepEnteredAt = Time.unscaledTime;
         CapturePose();
     }
@@ -161,6 +169,32 @@ public class TutorialSystem : MonoBehaviour
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();
         Changed?.Invoke();
+    }
+
+    public void SkipStep()
+    {
+        if (!IsRunning)
+            return;
+        if (Step == TutorialStep.Welcome)
+        {
+            AcceptWelcome();
+            return;
+        }
+
+        if (Step == TutorialStep.Farewell)
+        {
+            FinishFarewell();
+            return;
+        }
+
+        TutorialStep next = Step + 1;
+        if (next > TutorialStep.Farewell)
+            next = TutorialStep.Farewell;
+        if (next > floor)
+            floor = next;
+        SetStep(next);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
     }
 
     public void FinishFarewell()
@@ -238,17 +272,21 @@ public class TutorialSystem : MonoBehaviour
             case TutorialStep.Lab:
                 return FindLab() != null;
             case TutorialStep.StartResearch:
-                return IsBasicActive() || HasResearch(BasicId);
+                return HasResearch(BasicId) || CanStartBasic();
             case TutorialStep.Belts:
                 return HasResearch(BasicId) || (Submitted(IronOreId) > 0 && Submitted(CopperOreId) > 0);
             case TutorialStep.WaitChapter1:
                 return HasResearch(BasicId);
             case TutorialStep.PlaceSmelter:
                 return CountBuildings(SmelterId) >= 1;
+            case TutorialStep.ResearchIronIngot:
+                return HasResearch(IronIngotResearchId);
             case TutorialStep.PickRecipe:
                 return HasSmelterRecipe(IronIngotRecipeId);
             case TutorialStep.FirstSmelt:
                 return SmelterGotIron();
+            case TutorialStep.ResearchCopperIngot:
+                return HasResearch(CopperIngotResearchId);
             case TutorialStep.CopySmelter:
                 return CountBuildings(SmelterId) >= 2 && HasSmelterRecipe(CopperIngotRecipeId);
             case TutorialStep.Farewell:
@@ -287,7 +325,10 @@ public class TutorialSystem : MonoBehaviour
         startYaw = move.transform.eulerAngles.y;
     }
 
-    public bool WaitStuck => Step == TutorialStep.WaitChapter1
+    public bool WaitStuck =>
+        (Step == TutorialStep.WaitChapter1
+            || Step == TutorialStep.ResearchIronIngot
+            || Step == TutorialStep.ResearchCopperIngot)
         && Time.unscaledTime - lastWaitCheck > 45f
         && CurrentOreProgress() <= lastWaitOre + 0.5f;
 
@@ -303,6 +344,10 @@ public class TutorialSystem : MonoBehaviour
 
     float CurrentOreProgress()
     {
+        if (Step == TutorialStep.ResearchIronIngot)
+            return Submitted(IronOreId);
+        if (Step == TutorialStep.ResearchCopperIngot)
+            return Submitted(CopperOreId);
         return Submitted(IronOreId) + Submitted(CopperOreId);
     }
 
@@ -316,16 +361,30 @@ public class TutorialSystem : MonoBehaviour
 
     public int Required(string itemId)
     {
-        ResearchNodeData node = GameDatabase.FindResearch(BasicId);
+        return Required(itemId, ResearchIdForStep(Step));
+    }
+
+    public int Required(string itemId, string researchId)
+    {
+        ResearchNodeData node = GameDatabase.FindResearch(researchId);
         if (node == null || node.requiredItems == null)
-            return 125;
+            return 1;
         ItemData item = GameDatabase.FindItem(itemId);
         for (int i = 0; i < node.requiredItems.Count; i++)
         {
             if (node.requiredItems[i].item == item)
                 return Mathf.Max(1, node.requiredItems[i].amount);
         }
-        return 125;
+        return 1;
+    }
+
+    static string ResearchIdForStep(TutorialStep step)
+    {
+        if (step == TutorialStep.ResearchIronIngot)
+            return IronIngotResearchId;
+        if (step == TutorialStep.ResearchCopperIngot)
+            return CopperIngotResearchId;
+        return BasicId;
     }
 
     static bool HasResearch(string id)
@@ -333,10 +392,17 @@ public class TutorialSystem : MonoBehaviour
         return ResearchSystem.Instance != null && ResearchSystem.Instance.IsResearchIdUnlocked(id);
     }
 
+    static bool CanStartBasic()
+    {
+        if (ResearchSystem.Instance == null)
+            return false;
+        ResearchNodeData node = GameDatabase.FindResearch(BasicId);
+        return node != null && ResearchSystem.Instance.CanStartResearch(node);
+    }
+
     static bool IsBasicActive()
     {
-        ResearchNodeData cur = ResearchSystem.Instance != null ? ResearchSystem.Instance.CurrentResearch : null;
-        return cur != null && IdsEqual(cur.id, BasicId);
+        return CanStartBasic() || HasResearch(BasicId);
     }
 
     public static int CountExtractors(string resourceId)

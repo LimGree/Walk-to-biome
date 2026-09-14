@@ -1524,7 +1524,7 @@ public class WorldMapUI : MonoBehaviour
 
     void PanWithKeys()
     {
-        if (dragging || measuring)
+        if (dragging || measuring || KeybindStore.BlocksGameplayInput)
             return;
         Keyboard kb = Keyboard.current;
         if (kb == null)

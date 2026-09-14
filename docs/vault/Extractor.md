@@ -9,7 +9,7 @@
 
 Каждый `CurrentInterval` секунд (интервал × [[Economy.ExtractTimeMul]]) пытается забрать 1 единицу у жилы и вытолкнуть в выход.
 
-Уровень 2: более частый цикл (`upgradedExtractInterval`) и другая модель `extractor_level_2`.
+Уровень 2: более частый цикл (`upgradedExtractInterval`) и другая модель `extractor_level_2`. Кнопка апгрейда только после `research_extractor_2`.
 
 ## Методы
 

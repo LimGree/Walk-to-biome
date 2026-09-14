@@ -68,44 +68,11 @@ public class BuildingSocket : MonoBehaviour
         DisconnectSocket();
     }
 
-    public bool IsNearOwnerCenter()
-    {
-        BuildingBase owner = Owner;
-        if (owner == null)
-            return false;
-
-        Vector3 local = owner.transform.InverseTransformPoint(transform.position);
-        local.y = 0f;
-        return local.sqrMagnitude < 0.04f;
-    }
-
-    /// <summary>
-    /// Наружу от здания: по смещению сокета, а не по transform.forward
-    /// (на префабах forward часто смотрит не туда).
-    /// </summary>
     public Vector3 GetOutward()
     {
-        BuildingBase owner = Owner;
-        if (owner == null)
-            return Flatten(transform.forward);
-
-        Vector3 local = owner.transform.InverseTransformPoint(transform.position);
-        local.y = 0f;
-
-        if (local.sqrMagnitude < 0.04f)
-            return Flatten(transform.forward);
-
-        Vector3 localOut = Mathf.Abs(local.x) >= Mathf.Abs(local.z)
-            ? new Vector3(Mathf.Sign(local.x), 0f, 0f)
-            : new Vector3(0f, 0f, Mathf.Sign(local.z));
-
-        return Flatten(owner.transform.TransformDirection(localOut));
-    }
-
-    static Vector3 Flatten(Vector3 v)
-    {
-        v.y = 0f;
-        return v.sqrMagnitude > 0.0001f ? v.normalized : Vector3.forward;
+        Vector3 world = transform.forward;
+        world.y = 0f;
+        return world.sqrMagnitude > 0.0001f ? world.normalized : Vector3.forward;
     }
 
     void OnDestroy()
@@ -115,8 +82,10 @@ public class BuildingSocket : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        Gizmos.color = socketType == SocketType.Input ? Color.green : Color.cyan;
-        Gizmos.DrawSphere(transform.position, 0.15f);
-        Gizmos.DrawLine(transform.position, transform.position + transform.forward * 0.5f);
+        Gizmos.color = socketType == SocketType.Input
+            ? new Color(1f, 0.5f, 0.12f, 0.9f)
+            : new Color(0.2f, 0.9f, 0.35f, 0.9f);
+        Gizmos.DrawSphere(transform.position, 0.08f);
+        Gizmos.DrawLine(transform.position, transform.position + GetOutward() * 0.55f);
     }
 }

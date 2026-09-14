@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum WorldBiome
@@ -24,13 +25,30 @@ public class WorldBiomeMap : MonoBehaviour
     public int seed = 17;
 
     [Header("Layout")]
-    [Range(2, 40)] public int oceanWidth = 14;
+    [Range(2, 40)] public int oceanWidth = 6;
     [Range(1, 8)] public int beachWidth = 2;
     [Range(0.55f, 0.9f)] public float lakeThreshold = 0.74f;
     [Range(0.4f, 0.8f)] public float forestThreshold = 0.58f;
     [Range(0.15f, 0.55f)] public float woodlandThreshold = 0.34f;
-    [Range(0.55f, 0.9f)] public float mountainPeakThreshold = 0.72f;
+    [Range(0.55f, 0.9f)] public float mountainPeakThreshold = 0.60f;
     [Range(1, 10)] public int mountainSlopeWidth = 4;
+
+    [Header("Land growth")]
+    [Range(4, 60)] public int mountainMinSpacing = 42;
+    [Range(0.35f, 0.75f)] public float mountainGrowThreshold = 0.56f;
+    [Range(8, 120)] public int mountainMinCells = 24;
+    [Range(20, 600)] public int mountainMaxCellsPerSeed = 460;
+    [Range(3, 24)] public int mountainGrowRadius = 16;
+    [Range(1, 120)] public int maxMountainSeeds = 90;
+    [Range(6, 40)] public int lakeMinSpacing = 16;
+    [Range(0.4f, 0.8f)] public float lakeGrowThreshold = 0.68f;
+    [Range(8, 80)] public int lakeMinCells = 20;
+    [Range(1, 20)] public int maxLakeSeeds = 8;
+    [Range(0f, 0.2f)] public float lakeWinMargin = 0.08f;
+    [Range(4, 24)] public int lakeMountainSeparation = 4;
+    [Range(40, 8000)] public int minMountainCapableArea = 4000;
+    [Range(1000, 80000)] public int maxMountainCells = 80000;
+    [Range(1, 12)] public int landRetryLimit = 8;
 
     [Header("Colors")]
     public Color forest = new Color(0.13f, 0.30f, 0.16f);
@@ -55,7 +73,7 @@ public class WorldBiomeMap : MonoBehaviour
     Texture2D biomeTexture;
     Texture2D overlayTexture;
 
-    const float HorizonPadMeters = 720f;
+    const float HorizonPadMeters = 280f;
 
     public bool IsReady => ready;
     public int MapMinX => minX;
@@ -157,45 +175,556 @@ public class WorldBiomeMap : MonoBehaviour
     void BuildMap()
     {
         cells = new WorldBiome[width * height];
-        float seedOff = seed * 17.13f;
+        float oceanOff = seed * 17.13f;
+        PaintOcean(oceanOff);
 
+        int salt = 0;
+        int retries = Mathf.Max(1, landRetryLimit);
+        WorldBiome[] frozenCore = null;
+        for (int attempt = 0; attempt < retries; attempt++)
+        {
+            float landOff = oceanOff + salt * 97.13f;
+            PaintLand(landOff);
+            frozenCore = SnapshotCore();
+            ApplySlopes();
+            if (TrimExcessMountainArea())
+                ApplySlopes();
+            if (CountMountainCells() >= Mathf.Max(1, minMountainCapableArea))
+                break;
+            salt++;
+        }
+
+        ApplyBeaches();
+        ApplyVegetation(oceanOff);
+        BuildMountainIds();
+        ValidateLandInvariants(frozenCore);
+        int mountainCells = CountMountainCells();
+        float avg = mountainCount > 0 ? mountainCells / (float)mountainCount : 0f;
+        Debug.Log("[WorldBiomeMap] mountains: " + mountainCount + " massifs, "
+            + mountainCells + " cells (peak+slope), avg " + avg.ToString("0") + " per massif.");
+    }
+
+    void PaintOcean(float seedOff)
+    {
         for (int z = 0; z < height; z++)
         {
             for (int x = 0; x < width; x++)
             {
                 int edge = Mathf.Min(x, z, width - 1 - x, height - 1 - z);
                 float wobble = (Mathf.PerlinNoise(x * 0.08f + seedOff, z * 0.08f) - 0.5f) * 4f;
-                if (edge + wobble < oceanWidth)
-                {
-                    Set(x, z, WorldBiome.Ocean);
+                Set(x, z, edge + wobble < oceanWidth ? WorldBiome.Ocean : WorldBiome.Field);
+            }
+        }
+    }
+
+    void PaintLand(float seedOff)
+    {
+        int n = width * height;
+        var mRaw = new float[n];
+        var lRaw = new float[n];
+        var mScore = new float[n];
+        var lScore = new float[n];
+
+        for (int z = 0; z < height; z++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int i = z * width + x;
+                if (GetLocal(x, z) == WorldBiome.Ocean)
                     continue;
+                Set(x, z, WorldBiome.Field);
+                mRaw[i] = MountainNoise(x, z, seedOff);
+                lRaw[i] = LakeNoise(x, z, seedOff);
+                mScore[i] = mRaw[i] - mountainPeakThreshold;
+                lScore[i] = lRaw[i] - lakeThreshold;
+            }
+        }
+
+        List<Vector2Int> mountainSeeds = PickSeeds(
+            mScore, true, mScore, lScore, mountainMinSpacing, maxMountainSeeds);
+        List<Vector2Int> lakeSeeds = PickSeeds(
+            lScore, false, mScore, lScore, lakeMinSpacing, maxLakeSeeds);
+        SeparateLakeSeeds(mountainSeeds, lakeSeeds);
+        GrowPeaksAndLakes(mountainSeeds, lakeSeeds, mRaw, lRaw, mScore, lScore);
+        DropTinyRegions(WorldBiome.MountainPeak, mountainMinCells);
+        DropTinyRegions(WorldBiome.Lake, lakeMinCells);
+    }
+
+    bool MountainOwns(int i, float[] mScore, float[] lScore)
+    {
+        return mScore[i] > 0f && mScore[i] >= lScore[i];
+    }
+
+    bool LakeOwns(int i, float[] mScore, float[] lScore)
+    {
+        return lScore[i] > 0f && lScore[i] > mScore[i] + lakeWinMargin;
+    }
+
+    bool MountainCanGrow(int i, float[] mRaw, float[] mScore, float[] lScore)
+    {
+        return mRaw[i] >= mountainGrowThreshold && mScore[i] >= lScore[i];
+    }
+
+    bool LakeCanGrow(int i, float[] lRaw, float[] mScore, float[] lScore)
+    {
+        return lRaw[i] >= lakeGrowThreshold && lScore[i] > mScore[i] + lakeWinMargin;
+    }
+
+    List<Vector2Int> PickSeeds(
+        float[] scores,
+        bool mountains,
+        float[] mScore,
+        float[] lScore,
+        int spacing,
+        int maxSeeds)
+    {
+        var ranked = new List<SeedRank>(256);
+        var fill = mountains ? new List<SeedRank>(512) : null;
+        for (int z = 0; z < height; z++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (GetLocal(x, z) == WorldBiome.Ocean)
+                    continue;
+                int i = z * width + x;
+                if (mountains)
+                {
+                    if (mScore[i] < lScore[i])
+                        continue;
+                    if (scores[i] + mountainPeakThreshold < mountainGrowThreshold)
+                        continue;
+                }
+                else
+                {
+                    if (scores[i] <= 0f || !LakeOwns(i, mScore, lScore))
+                        continue;
                 }
 
-                if (LakeNoise(x, z, seedOff) > lakeThreshold)
+                var rank = new SeedRank { cell = new Vector2Int(x, z), score = scores[i] };
+                if (IsLocalMax(scores, x, z))
+                    ranked.Add(rank);
+                else if (fill != null)
+                    fill.Add(rank);
+            }
+        }
+
+        ranked.Sort((a, b) => b.score.CompareTo(a.score));
+        if (fill != null)
+            fill.Sort((a, b) => b.score.CompareTo(a.score));
+
+        int gap = Mathf.Max(1, spacing);
+        int cap = Mathf.Max(1, maxSeeds);
+        var picked = new List<Vector2Int>(cap);
+        AppendSeeds(ranked, picked, gap, cap);
+        if (fill != null && picked.Count < cap)
+            AppendSeeds(fill, picked, gap, cap);
+        return picked;
+    }
+
+    static void AppendSeeds(List<SeedRank> ranked, List<Vector2Int> picked, int gap, int cap)
+    {
+        for (int i = 0; i < ranked.Count && picked.Count < cap; i++)
+        {
+            Vector2Int cell = ranked[i].cell;
+            bool far = true;
+            for (int p = 0; p < picked.Count; p++)
+            {
+                if (Chebyshev(picked[p], cell) < gap)
                 {
-                    Set(x, z, WorldBiome.Lake);
+                    far = false;
+                    break;
+                }
+            }
+            if (!far)
+                continue;
+            picked.Add(cell);
+        }
+    }
+
+    void SeparateLakeSeeds(List<Vector2Int> mountainSeeds, List<Vector2Int> lakeSeeds)
+    {
+        int sep = Mathf.Max(1, lakeMountainSeparation);
+        for (int i = lakeSeeds.Count - 1; i >= 0; i--)
+        {
+            Vector2Int lake = lakeSeeds[i];
+            for (int m = 0; m < mountainSeeds.Count; m++)
+            {
+                if (Chebyshev(lake, mountainSeeds[m]) < sep)
+                {
+                    lakeSeeds.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    bool IsLocalMax(float[] scores, int x, int z)
+    {
+        float s = scores[z * width + x];
+        for (int dz = -1; dz <= 1; dz++)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (dx == 0 && dz == 0)
                     continue;
+                int nx = x + dx;
+                int nz = z + dz;
+                if (nx < 0 || nz < 0 || nx >= width || nz >= height)
+                    continue;
+                if (GetLocal(nx, nz) == WorldBiome.Ocean)
+                    continue;
+                if (scores[nz * width + nx] > s)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    struct PeakFront
+    {
+        public Vector2Int cell;
+        public int seed;
+    }
+
+    void GrowPeaksAndLakes(
+        List<Vector2Int> mountainSeeds,
+        List<Vector2Int> lakeSeeds,
+        float[] mRaw,
+        float[] lRaw,
+        float[] mScore,
+        float[] lScore)
+    {
+        var mountainFrontier = new Queue<PeakFront>();
+        int[] seedSize = new int[Mathf.Max(1, mountainSeeds.Count)];
+        int maxPer = Mathf.Max(mountainMinCells, mountainMaxCellsPerSeed);
+        int maxR = Mathf.Max(2, mountainGrowRadius);
+
+        for (int i = 0; i < mountainSeeds.Count; i++)
+        {
+            Vector2Int s = mountainSeeds[i];
+            Set(s.x, s.y, WorldBiome.MountainPeak);
+            seedSize[i] = 1;
+            mountainFrontier.Enqueue(new PeakFront { cell = s, seed = i });
+        }
+
+        var lakeFrontier = new HashSet<Vector2Int>();
+        for (int i = 0; i < lakeSeeds.Count; i++)
+        {
+            Vector2Int s = lakeSeeds[i];
+            if (GetLocal(s.x, s.y) != WorldBiome.Field)
+                continue;
+            Set(s.x, s.y, WorldBiome.Lake);
+            lakeFrontier.Add(s);
+        }
+
+        var proposedL = new HashSet<Vector2Int>();
+        var nextL = new HashSet<Vector2Int>();
+
+        while (mountainFrontier.Count > 0 || lakeFrontier.Count > 0)
+        {
+            int wave = mountainFrontier.Count;
+            for (int n = 0; n < wave; n++)
+            {
+                PeakFront front = mountainFrontier.Dequeue();
+                if (seedSize[front.seed] >= maxPer)
+                    continue;
+                Vector2Int origin = mountainSeeds[front.seed];
+                for (int dir = 0; dir < 8; dir++)
+                {
+                    TryExpandPeak(
+                        front.cell.x + DirX[dir],
+                        front.cell.y + DirZ[dir],
+                        front.seed,
+                        origin,
+                        maxR,
+                        maxPer,
+                        seedSize,
+                        mRaw,
+                        mScore,
+                        lScore,
+                        mountainFrontier);
+                }
+            }
+
+            proposedL.Clear();
+            foreach (Vector2Int cell in lakeFrontier)
+            {
+                TryProposeLake(cell.x + 1, cell.y, lRaw, mScore, lScore, proposedL);
+                TryProposeLake(cell.x - 1, cell.y, lRaw, mScore, lScore, proposedL);
+                TryProposeLake(cell.x, cell.y + 1, lRaw, mScore, lScore, proposedL);
+                TryProposeLake(cell.x, cell.y - 1, lRaw, mScore, lScore, proposedL);
+            }
+
+            nextL.Clear();
+            foreach (Vector2Int cell in proposedL)
+            {
+                if (GetLocal(cell.x, cell.y) != WorldBiome.Field)
+                    continue;
+                Set(cell.x, cell.y, WorldBiome.Lake);
+                nextL.Add(cell);
+            }
+            lakeFrontier = new HashSet<Vector2Int>(nextL);
+        }
+    }
+
+    static readonly int[] DirX = { 1, -1, 0, 0, 1, 1, -1, -1 };
+    static readonly int[] DirZ = { 0, 0, 1, -1, 1, -1, 1, -1 };
+
+    bool InsidePeakShape(Vector2Int origin, Vector2Int cell, int seedId, int maxR)
+    {
+        float dx = cell.x - origin.x;
+        float dz = cell.y - origin.y;
+        float off = seed * 17.13f + seedId * 3.17f;
+        float wx = dx + (Mathf.PerlinNoise(cell.x * 0.07f + off, cell.y * 0.07f) - 0.5f) * 9f;
+        float wz = dz + (Mathf.PerlinNoise(cell.x * 0.07f + off + 8.4f, cell.y * 0.07f) - 0.5f) * 9f;
+        float dist = Mathf.Sqrt(wx * wx + wz * wz);
+        float ang = Mathf.Atan2(wz, wx);
+        float n1 = Mathf.PerlinNoise(Mathf.Cos(ang) * 0.85f + off, Mathf.Sin(ang) * 0.85f);
+        float n2 = Mathf.PerlinNoise(Mathf.Cos(ang * 2.2f) * 1.6f + off + 5.1f, Mathf.Sin(ang * 2.2f) * 1.6f);
+        float radius = maxR * (0.58f + 0.32f * n1 + 0.28f * n2);
+        return dist <= radius;
+    }
+
+    void TryExpandPeak(
+        int x,
+        int z,
+        int seedId,
+        Vector2Int origin,
+        int maxR,
+        int maxPer,
+        int[] seedSize,
+        float[] mRaw,
+        float[] mScore,
+        float[] lScore,
+        Queue<PeakFront> frontier)
+    {
+        if (seedSize[seedId] >= maxPer)
+            return;
+        if (x < 0 || z < 0 || x >= width || z >= height)
+            return;
+        Vector2Int cell = new Vector2Int(x, z);
+        if (!InsidePeakShape(origin, cell, seedId, maxR))
+            return;
+        if (GetLocal(x, z) != WorldBiome.Field)
+            return;
+        int i = z * width + x;
+        if (!MountainCanGrow(i, mRaw, mScore, lScore))
+            return;
+        Set(x, z, WorldBiome.MountainPeak);
+        seedSize[seedId]++;
+        frontier.Enqueue(new PeakFront { cell = cell, seed = seedId });
+    }
+
+    void TryProposeLake(
+        int x,
+        int z,
+        float[] lRaw,
+        float[] mScore,
+        float[] lScore,
+        HashSet<Vector2Int> proposed)
+    {
+        if (x < 0 || z < 0 || x >= width || z >= height)
+            return;
+        if (GetLocal(x, z) != WorldBiome.Field)
+            return;
+        int i = z * width + x;
+        if (!LakeCanGrow(i, lRaw, mScore, lScore))
+            return;
+        proposed.Add(new Vector2Int(x, z));
+    }
+
+    void DropTinyRegions(WorldBiome biome, int minCells)
+    {
+        int need = Mathf.Max(1, minCells);
+        var seen = new bool[cells.Length];
+        var stack = new Stack<int>();
+        var region = new List<int>(64);
+
+        for (int z = 0; z < height; z++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int start = z * width + x;
+                if (seen[start] || GetLocal(x, z) != biome)
+                    continue;
+
+                region.Clear();
+                stack.Push(start);
+                seen[start] = true;
+                while (stack.Count > 0)
+                {
+                    int cur = stack.Pop();
+                    region.Add(cur);
+                    int cx = cur % width;
+                    int cz = cur / width;
+                    TryPushRegion(stack, seen, biome, cx + 1, cz);
+                    TryPushRegion(stack, seen, biome, cx - 1, cz);
+                    TryPushRegion(stack, seen, biome, cx, cz + 1);
+                    TryPushRegion(stack, seen, biome, cx, cz - 1);
                 }
 
-                if (MountainNoise(x, z, seedOff) > mountainPeakThreshold)
-                {
-                    Set(x, z, WorldBiome.MountainPeak);
+                if (region.Count >= need)
                     continue;
-                }
+                for (int i = 0; i < region.Count; i++)
+                    cells[region[i]] = WorldBiome.Field;
+            }
+        }
+    }
 
+    void TryPushRegion(Stack<int> stack, bool[] seen, WorldBiome biome, int x, int z)
+    {
+        if (x < 0 || z < 0 || x >= width || z >= height)
+            return;
+        int i = z * width + x;
+        if (seen[i] || GetLocal(x, z) != biome)
+            return;
+        seen[i] = true;
+        stack.Push(i);
+    }
+
+    int CountMountainCells()
+    {
+        int n = 0;
+        for (int i = 0; i < cells.Length; i++)
+        {
+            if (IsMountain(cells[i]))
+                n++;
+        }
+        return n;
+    }
+
+    bool TrimExcessMountainArea()
+    {
+        int cap = Mathf.Max(minMountainCapableArea, maxMountainCells);
+        if (CountMountainCells() <= cap)
+            return false;
+
+        var regions = new List<List<int>>();
+        var seen = new bool[cells.Length];
+        var stack = new Stack<int>();
+        for (int z = 0; z < height; z++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int start = z * width + x;
+                if (seen[start] || cells[start] != WorldBiome.MountainPeak)
+                    continue;
+                var region = new List<int>(64);
+                stack.Push(start);
+                seen[start] = true;
+                while (stack.Count > 0)
+                {
+                    int cur = stack.Pop();
+                    region.Add(cur);
+                    int cx = cur % width;
+                    int cz = cur / width;
+                    TryPushRegion(stack, seen, WorldBiome.MountainPeak, cx + 1, cz);
+                    TryPushRegion(stack, seen, WorldBiome.MountainPeak, cx - 1, cz);
+                    TryPushRegion(stack, seen, WorldBiome.MountainPeak, cx, cz + 1);
+                    TryPushRegion(stack, seen, WorldBiome.MountainPeak, cx, cz - 1);
+                }
+                regions.Add(region);
+            }
+        }
+
+        regions.Sort((a, b) => b.Count.CompareTo(a.Count));
+        int kept = 0;
+        for (int r = 0; r < regions.Count; r++)
+        {
+            if (kept + regions[r].Count <= cap)
+            {
+                kept += regions[r].Count;
+                continue;
+            }
+            for (int i = 0; i < regions[r].Count; i++)
+                cells[regions[r][i]] = WorldBiome.Field;
+        }
+
+        for (int i = 0; i < cells.Length; i++)
+        {
+            if (cells[i] == WorldBiome.MountainSlope)
+                cells[i] = WorldBiome.Field;
+        }
+        return true;
+    }
+
+    void ApplyVegetation(float seedOff)
+    {
+        for (int z = 0; z < height; z++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (GetLocal(x, z) != WorldBiome.Field)
+                    continue;
                 float veg = VegNoise(x, z, seedOff);
                 if (veg > forestThreshold)
                     Set(x, z, WorldBiome.Forest);
                 else if (veg > woodlandThreshold)
                     Set(x, z, WorldBiome.Woodland);
-                else
-                    Set(x, z, WorldBiome.Field);
+            }
+        }
+    }
+
+    WorldBiome[] SnapshotCore()
+    {
+        var copy = new WorldBiome[cells.Length];
+        System.Array.Copy(cells, copy, cells.Length);
+        return copy;
+    }
+
+    static bool IsFrozenCore(WorldBiome biome)
+    {
+        return biome == WorldBiome.Ocean
+            || biome == WorldBiome.Lake
+            || biome == WorldBiome.MountainPeak;
+    }
+
+    void ValidateLandInvariants(WorldBiome[] frozenCore)
+    {
+        if (frozenCore != null && frozenCore.Length == cells.Length)
+        {
+            int rewritten = 0;
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (IsFrozenCore(frozenCore[i]) && cells[i] != frozenCore[i])
+                    rewritten++;
+            }
+            if (rewritten > 0)
+                Debug.LogWarning("[WorldBiomeMap] " + rewritten + " frozen ocean/lake/peak cell(s) were rewritten.");
+        }
+
+        int tiny = 0;
+        if (mountainIds != null)
+        {
+            var sizes = new int[Mathf.Max(1, mountainCount)];
+            for (int i = 0; i < mountainIds.Length; i++)
+            {
+                int id = mountainIds[i];
+                if (id >= 0 && id < sizes.Length)
+                    sizes[id]++;
+            }
+            for (int i = 0; i < mountainCount; i++)
+            {
+                if (sizes[i] > 0 && sizes[i] < mountainMinCells)
+                    tiny++;
             }
         }
 
-        ApplySlopes();
-        ApplyBeaches();
-        BuildMountainIds();
+        if (tiny > 0)
+            Debug.LogWarning("[WorldBiomeMap] " + tiny + " mountain(s) smaller than mountainMinCells.");
+        if (CountMountainCells() < minMountainCapableArea)
+            Debug.LogWarning("[WorldBiomeMap] Mountain area below minMountainCapableArea after retries.");
+    }
+
+    struct SeedRank
+    {
+        public Vector2Int cell;
+        public float score;
+    }
+
+    static int Chebyshev(Vector2Int a, Vector2Int b)
+    {
+        return Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
     }
 
     void ApplyBeaches()
@@ -209,7 +738,10 @@ public class WorldBiomeMap : MonoBehaviour
             for (int x = 0; x < width; x++)
             {
                 WorldBiome current = GetLocal(x, z);
-                if (current == WorldBiome.Lake || current == WorldBiome.Ocean || current == WorldBiome.MountainPeak)
+                if (current == WorldBiome.Lake
+                    || current == WorldBiome.Ocean
+                    || current == WorldBiome.MountainPeak
+                    || current == WorldBiome.MountainSlope)
                     continue;
                 if (NearLake(x, z, ring))
                     next[z * width + x] = WorldBiome.Beach;
@@ -225,15 +757,53 @@ public class WorldBiomeMap : MonoBehaviour
         var next = new WorldBiome[cells.Length];
         System.Array.Copy(cells, next, cells.Length);
 
+        var queue = new Queue<int>();
+        var dist = new int[cells.Length];
+        for (int i = 0; i < dist.Length; i++)
+            dist[i] = -1;
+
         for (int z = 0; z < height; z++)
         {
             for (int x = 0; x < width; x++)
             {
-                WorldBiome current = GetLocal(x, z);
-                if (current == WorldBiome.Ocean || current == WorldBiome.Lake || current == WorldBiome.MountainPeak)
+                if (GetLocal(x, z) != WorldBiome.MountainPeak)
                     continue;
-                if (NearBiome(x, z, ring, WorldBiome.MountainPeak))
-                    next[z * width + x] = WorldBiome.MountainSlope;
+                int i = z * width + x;
+                dist[i] = 0;
+                queue.Enqueue(i);
+            }
+        }
+
+        float off = seed * 17.13f + 2.7f;
+        while (queue.Count > 0)
+        {
+            int cur = queue.Dequeue();
+            int cx = cur % width;
+            int cz = cur / width;
+            int cd = dist[cur];
+            for (int dir = 0; dir < 8; dir++)
+            {
+                int x = cx + DirX[dir];
+                int z = cz + DirZ[dir];
+                if (x < 0 || z < 0 || x >= width || z >= height)
+                    continue;
+                int i = z * width + x;
+                if (dist[i] >= 0)
+                    continue;
+                WorldBiome biome = GetLocal(x, z);
+                if (biome == WorldBiome.Ocean || biome == WorldBiome.Lake || biome == WorldBiome.MountainPeak)
+                    continue;
+
+                int nd = cd + 1;
+                float n1 = Mathf.PerlinNoise(x * 0.11f + off, z * 0.11f);
+                float n2 = Mathf.PerlinNoise(x * 0.04f + off + 6.2f, z * 0.04f);
+                float allow = ring * (0.45f + 0.7f * n1 + 0.5f * n2);
+                if (nd > allow + 0.51f)
+                    continue;
+
+                dist[i] = nd;
+                next[i] = WorldBiome.MountainSlope;
+                queue.Enqueue(i);
             }
         }
 

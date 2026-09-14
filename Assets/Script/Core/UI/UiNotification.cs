@@ -6,6 +6,21 @@ public static class UiNotification
     const int LifeMs = 3200;
 
     static VisualElement host;
+    static VisualElement boundHost;
+
+    public static void BindHost(VisualElement el)
+    {
+        boundHost = el;
+        host = el;
+    }
+
+    public static void UnbindHost(VisualElement el)
+    {
+        if (boundHost != el)
+            return;
+        boundHost = null;
+        host = null;
+    }
 
     public static void Push(string heading, string detail, UiStatus status = UiStatus.Neutral)
     {
@@ -33,6 +48,11 @@ public static class UiNotification
 
     static void Ensure()
     {
+        if (boundHost != null && boundHost.panel != null)
+        {
+            host = boundHost;
+            return;
+        }
         if (host != null && host.panel != null)
             return;
         VisualElement root = UiRuntime.HostRoot;

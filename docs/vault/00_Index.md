@@ -38,7 +38,7 @@
 - [[PlayerInteractor]] — кнопка «взаимодействие» по взгляду, интерфейс [[IInteractable]]
 - [[BuildSelectionController]] — выделение, копирование, вставка, перенос группы зданий
 - [[BuildGridVisualizer]] — сетка под ногами в режиме стройки (`BuildGridPlane`, не белый квадрат)
-- [[BuildIoArrowVisualizer]] — стрелки входов/выходов у призрака здания
+- [[BuildIoArrowVisualizer]] — выключен; стрелки I/O только на префабах ([[SocketArrow]])
 
 ---
 
@@ -49,6 +49,9 @@
 - [[BuildingSocket]] / [[SocketType]] — «розетки» входа и выхода
 - [[BuildingLinker]] — кто с кем соседствует на сетке
 - [[BuildingData]] — карточка здания в каталоге (цена, префаб, размер)
+- [[BuildingPrefabLayout]] — +Z выход, −Z вход; гост и уровни в одном префабе
+- [[BuildingVisuals]] · [[GhostTint]] — призрак с albedo и прозрачностью
+- [[SocketArrow]] — стрелки I/O на префабе; в игре только в режиме стройки
 
 Станки-крафтеры (почти близнецы, разный звук/модель):
 
@@ -61,7 +64,8 @@
 
 Логистика:
 
-- [[Conveyor]] · [[Pipe]] (труба = конвейер только для жидкостей)
+- [[BeltRules]] — таблица форм и путей ленты
+- [[Conveyor]] · [[UndergroundConveyor]] · [[Pipe]] (труба = конвейер только для жидкостей)
 - [[Splitter]] · [[RoboticArm]]
 - [[StorageContainer]] · [[FluidStorageTank]]
 - [[BeltItemView]] — как предмет выглядит на ленте
@@ -82,6 +86,8 @@
 - [[GridOccupancy]] — кто стоит в какой клетке
 - [[WorldBiomeMap]] / [[WorldBiome]] — лес, поле, горы, вода (океан за горизонт, ходить по нему нельзя; озёра можно)
 - [[WorldResourceScatterer]] — расстановка жил и деревьев
+- Полный разбор генерации (биомы, скопления, жилы) — `docs/Генерация_биомов_и_жил.md`
+- Спека переделки — `Генерация_биомов_и_жил_v2.md` на рабочем столе; в коде уже фазы A/B из неё
 - [[WorldView]] — радиус прогрузки картинки (логика зданий не гасится)
 - [[ResourceNodePrefabs]] — какие модели жил использовать
 - [[RuntimeMaterials]] — материалы, которые точно есть в билде
@@ -95,6 +101,7 @@
 - [[Economy]] — цены продажи, стоимость лент, замедление крафта
 - [[PlayerWallet]] — монеты и рубины
 - [[ResearchSystem]] — дерево исследований
+- [[ResearchTree]] — граф в окне лаборатории (зум колесом, ПКМ — панорама)
 - [[ResearchNodeData]] · [[RecipeData]] · [[ItemData]] · [[ItemStack]] · [[ItemInstance]]
 - [[GameDatabase]] — каталог всего (здания, предметы, рецепты, исследования)
 - [[ProductionStats]] — сколько чего произведено
@@ -129,7 +136,8 @@
 - [[IndustryUi]] — фабрика кнопок и панелей UI Toolkit
 - [[UiRuntime]] · [[UiTheme]] · [[UiFactory]] · [[UiMotion]]
 - [[UiModal]] · [[UiNotification]] · [[UiTooltip]] · [[UiAudio]] · [[UiStatus]]
-- [[BuildMenuUI]] · [[InventoryUI]] · [[MachineUI]] · [[ResearchUI]]
+- [[BuildMenuUI]] · [[InventoryUI]] · [[MachineUI]] · [[ResearchUI]] · [[ResearchTree]] · [[RecipeCodex]]
+- [[BuildingPrefabLayout]] · [[SocketArrow]]
 - [[OverlayUi]] · [[WalletHud]] · [[InputHintUI]] · [[CrosshairHud]]
 - [[SelectionActionsUI]] · [[LoadingScreen]] · [[HotbarSlotView]] · [[BagBuildingCard]]
 - [[GameHudIcons]] · [[GameBranding]]

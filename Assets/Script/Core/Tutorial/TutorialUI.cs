@@ -10,6 +10,7 @@ public class TutorialUI : MonoBehaviour
     VisualElement modal;
     Label modalTitle;
     Label modalBody;
+    Label modalHint;
     Button modalStart;
     Button modalSkip;
     Button modalPlay;
@@ -115,6 +116,8 @@ public class TutorialUI : MonoBehaviour
         panel.Add(modalTitle);
         panel.Add(modalBody);
         panel.Add(actions);
+        modalHint = IndustryUi.Text("Hint", "", "tut-skip-hint");
+        panel.Add(modalHint);
         modal.Add(dim);
         modal.Add(panel);
         IndustryUi.Show(modal, false);
@@ -177,6 +180,8 @@ public class TutorialUI : MonoBehaviour
             modalBody.text = UiLocale.T("tut.welcome.body");
             IndustryUi.SetButtonLabel(modalStart, UiLocale.T("tut.start"));
             IndustryUi.SetButtonLabel(modalSkip, UiLocale.T("tut.skip"));
+            if (modalHint != null)
+                modalHint.text = UiLocale.T("tut.skip_key", "F1", "F2");
         }
         else if (bye)
         {
@@ -184,12 +189,14 @@ public class TutorialUI : MonoBehaviour
             modalBody.text = UiLocale.T("tut.bye.body");
             IndustryUi.SetButtonLabel(modalPlay, UiLocale.T("tut.play"));
             IndustryUi.SetButtonLabel(modalSkip, UiLocale.T("tut.skip"));
+            if (modalHint != null)
+                modalHint.text = UiLocale.T("tut.skip_key", "F1", "F2");
         }
 
         hudGoal.text = GoalText(tut);
         hudBody.text = BodyText(tut);
         if (hudSkipHint != null)
-            hudSkipHint.text = UiLocale.T("tut.skip_key", "F1");
+            hudSkipHint.text = UiLocale.T("tut.skip_key", "F1", "F2");
     }
 
     static string GoalText(TutorialSystem tut)
@@ -234,10 +241,24 @@ public class TutorialUI : MonoBehaviour
                     tut.Required(TutorialSystem.CopperOreId));
             case TutorialStep.PlaceSmelter:
                 return UiLocale.T("tut.obj.smelter");
+            case TutorialStep.ResearchIronIngot:
+                return UiLocale.T(
+                    "tut.obj.ingot_iron",
+                    interact,
+                    research,
+                    tut.Submitted(TutorialSystem.IronOreId),
+                    tut.Required(TutorialSystem.IronOreId));
             case TutorialStep.PickRecipe:
                 return UiLocale.T("tut.obj.recipe", interact);
             case TutorialStep.FirstSmelt:
                 return UiLocale.T("tut.obj.smelt");
+            case TutorialStep.ResearchCopperIngot:
+                return UiLocale.T(
+                    "tut.obj.ingot_copper",
+                    interact,
+                    research,
+                    tut.Submitted(TutorialSystem.CopperOreId),
+                    tut.Required(TutorialSystem.CopperOreId));
             case TutorialStep.CopySmelter:
                 return UiLocale.T("tut.obj.copy_smelter", tab, copy, paste);
             default:
@@ -285,10 +306,14 @@ public class TutorialUI : MonoBehaviour
                 return UiLocale.T("tut.body.wait", interact);
             case TutorialStep.PlaceSmelter:
                 return UiLocale.T("tut.body.smelter");
+            case TutorialStep.ResearchIronIngot:
+                return UiLocale.T("tut.body.ingot_iron", interact, research);
             case TutorialStep.PickRecipe:
                 return UiLocale.T("tut.body.recipe");
             case TutorialStep.FirstSmelt:
                 return UiLocale.T("tut.body.smelt");
+            case TutorialStep.ResearchCopperIngot:
+                return UiLocale.T("tut.body.ingot_copper", interact, research);
             case TutorialStep.CopySmelter:
                 return UiLocale.T("tut.body.copy_smelter");
             default:
@@ -330,22 +355,11 @@ public class TutorialUI : MonoBehaviour
                     return FindHint(KeybindStore.Hint("Copy"));
                 return FindHint(KeybindStore.Hint("SelectMode"));
             case TutorialStep.StartResearch:
-                VisualElement start = FindNamed("ResearchStart");
-                if (start != null)
-                    return start;
-                VisualElement node = FindNamed("Res_" + TutorialSystem.BasicId);
-                if (node != null)
-                    return node;
-                if (tut.StepAge > 15f)
-                {
-                    PlayerInteractor interactor = TutorialSystem.Builder != null
-                        ? TutorialSystem.Builder.GetComponent<PlayerInteractor>()
-                        : null;
-                    if (interactor != null && interactor.HasInteractableTarget)
-                        return FindHint(KeybindStore.Hint("Interact"));
-                    return FindHint(KeybindStore.Hint("Research"));
-                }
-                return null;
+                return GlowResearch(tut, TutorialSystem.BasicId);
+            case TutorialStep.ResearchIronIngot:
+                return GlowResearch(tut, TutorialSystem.IronIngotResearchId);
+            case TutorialStep.ResearchCopperIngot:
+                return GlowResearch(tut, TutorialSystem.CopperIngotResearchId);
             case TutorialStep.PlaceSmelter:
                 if (InventoryUI.Instance != null)
                 {
@@ -372,6 +386,26 @@ public class TutorialUI : MonoBehaviour
             default:
                 return null;
         }
+    }
+
+    VisualElement GlowResearch(TutorialSystem tut, string researchId)
+    {
+        VisualElement node = FindNamed("Res_" + researchId);
+        if (node != null)
+            return node;
+        VisualElement start = FindNamed("ResearchStart");
+        if (start != null)
+            return start;
+        if (tut.StepAge > 15f)
+        {
+            PlayerInteractor interactor = TutorialSystem.Builder != null
+                ? TutorialSystem.Builder.GetComponent<PlayerInteractor>()
+                : null;
+            if (interactor != null && interactor.HasInteractableTarget)
+                return FindHint(KeybindStore.Hint("Interact"));
+            return FindHint(KeybindStore.Hint("Research"));
+        }
+        return null;
     }
 
     static string NextHotbarNeed()
@@ -437,9 +471,16 @@ public class TutorialUI : MonoBehaviour
         if (KeybindStore.IsListening)
             return;
         Keyboard keyboard = Keyboard.current;
-        if (keyboard == null || !keyboard.f1Key.wasPressedThisFrame)
+        if (keyboard == null)
             return;
-        tut.Skip();
+        if (keyboard.f1Key.wasPressedThisFrame)
+        {
+            tut.Skip();
+            return;
+        }
+
+        if (keyboard.f2Key.wasPressedThisFrame)
+            tut.SkipStep();
     }
 
     void HoldModalFocus()

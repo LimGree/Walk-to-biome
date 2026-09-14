@@ -189,6 +189,7 @@ public class SaveSystem : MonoBehaviour
 
         BuildingData[] catalog = GameDatabase.AllBuildings();
         BuildingLinker.SuppressRelink = true;
+        UndergroundConveyor.BeginLoad();
         ClearWorldBuildings();
         Report(0.08f);
         yield return null;
@@ -300,6 +301,7 @@ public class SaveSystem : MonoBehaviour
 
     static void ClearWorldBuildings()
     {
+        UndergroundConveyor.SuppressPairDestroy = true;
         BuildingBase[] buildings = Object.FindObjectsByType<BuildingBase>(FindObjectsSortMode.None);
         for (int i = 0; i < buildings.Length; i++)
         {
@@ -309,6 +311,7 @@ public class SaveSystem : MonoBehaviour
             b.OnRemoved();
             Object.Destroy(b.gameObject);
         }
+        UndergroundConveyor.SuppressPairDestroy = false;
     }
 
     static BuildingBase SpawnBuilding(BuildingSaveData bsd, BuildingData[] catalog)
@@ -317,14 +320,16 @@ public class SaveSystem : MonoBehaviour
             return null;
 
         BuildingData data = FindBuildingData(bsd.buildingId, catalog);
-        if (data == null || data.prefab == null)
+        bool pairExit = data != null && data.IsPairedStraight && UndergroundConveyor.IsExitSave(bsd);
+        GameObject prefab = UndergroundConveyor.PrefabFor(data, pairExit);
+        if (data == null || prefab == null)
         {
             Debug.LogWarning("[SaveSystem] Нет префаба для id=" + bsd.buildingId);
             return null;
         }
 
         Quaternion rot = Quaternion.Euler(0f, bsd.rotationY, 0f);
-        GameObject go = Object.Instantiate(data.prefab, bsd.position, rot);
+        GameObject go = Object.Instantiate(prefab, bsd.position, rot);
         BuildingBase building = go.GetComponent<BuildingBase>();
         if (building != null)
         {

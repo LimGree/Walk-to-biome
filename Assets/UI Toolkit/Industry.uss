@@ -562,11 +562,17 @@ Button.card-on {
     align-items: center;
 }
 
+.hud-stack {
+    position: absolute;
+    left: var(--hud-inset);
+    top: var(--hud-inset);
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 340px;
+}
+
 .resource-chip,
 .hud-chip {
-    position: absolute;
-    left: 24px;
-    top: 24px;
     min-width: 0;
     background-color: var(--surface-overlay);
     border-color: var(--border-subtle);
@@ -575,6 +581,17 @@ Button.card-on {
     padding: 8px 12px;
     flex-direction: column;
     align-items: flex-start;
+}
+
+.hud-toasts {
+    margin-top: 8px;
+    width: 280px;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.hud-toasts .toast {
+    margin-bottom: 6px;
 }
 
 .hud-line {
@@ -1034,6 +1051,76 @@ TextField {
     margin-top: 6px;
 }
 
+.codex-card {
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.codex-head {
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.codex-icon {
+    width: 56px;
+    height: 56px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.codex-source {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 6px;
+}
+
+.codex-building {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 12px;
+    margin-bottom: 4px;
+}
+
+.codex-recipe {
+    background-color: var(--surface-0);
+    border-width: 1px;
+    border-color: var(--border-subtle);
+    border-radius: 2px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+}
+
+.codex-recipe.is-locked {
+    opacity: 0.72;
+}
+
+.codex-search-row {
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.codex-search-plus {
+    width: 36px;
+    height: 40px;
+    margin-right: 8px;
+    margin-bottom: 0;
+    font-size: 22px;
+    color: var(--accent);
+    -unity-text-align: middle-center;
+    background-color: var(--surface-0);
+    border-width: 1px;
+    border-color: var(--border-subtle);
+    border-radius: 2px;
+}
+
+.codex-search-row .search-field {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
 /* ===== MAP ===== */
 
 .mini-host {
@@ -1334,6 +1421,31 @@ TextField {
     flex-direction: row;
     flex-grow: 1;
     min-height: 0;
+    min-width: 0;
+}
+
+.research-scroll,
+.research-view {
+    flex-grow: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.research-view {
+    position: relative;
+    background-color: rgb(48, 60, 74);
+}
+
+.research-view.is-panning {
+    cursor: grab;
+}
+
+.research-canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    flex-shrink: 0;
 }
 
 .research-tree {
@@ -1357,9 +1469,131 @@ TextField {
     padding: 12px;
 }
 
+.research-tree-node {
+    flex-direction: row;
+    align-items: stretch;
+    width: 216px;
+    height: 80px;
+    min-height: 80px;
+    margin: 0;
+    padding: 8px 10px 8px 0;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: rgb(64, 78, 94);
+    border-width: 2px;
+    border-color: rgb(112, 132, 150);
+    border-radius: 4px;
+}
+
+Button.research-tree-node > .unity-text-element,
+Button.research-tree-node > .unity-button__text {
+    display: none;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.research-tree-pip {
+    width: 6px;
+    min-height: 64px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    background-color: rgb(140, 156, 170);
+}
+
+.research-tree-icon {
+    width: 52px;
+    height: 52px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.research-tree-meta {
+    justify-content: center;
+    min-width: 0;
+}
+
+.research-tree-title {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: rgb(245, 248, 250);
+    white-space: nowrap;
+    overflow: hidden;
+    margin-bottom: 2px;
+}
+
+.research-tree-status {
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: rgb(186, 198, 208);
+}
+
+.research-tree-node.is-complete {
+    background-color: rgb(46, 78, 62);
+    border-color: rgb(92, 176, 118);
+    opacity: 1;
+}
+
+.research-tree-node.is-complete .research-tree-pip {
+    background-color: rgb(92, 176, 118);
+}
+
+.research-tree-node.is-complete .research-tree-status {
+    color: rgb(140, 210, 160);
+}
+
+.research-tree-node.is-active {
+    background-color: rgb(92, 68, 40);
+    border-color: rgb(232, 168, 78);
+    opacity: 1;
+}
+
+.research-tree-node.is-active .research-tree-pip {
+    background-color: rgb(232, 168, 78);
+}
+
+.research-tree-node.is-active .research-tree-status {
+    color: rgb(232, 168, 78);
+}
+
+.research-tree-node.is-locked {
+    background-color: rgb(52, 62, 74);
+    border-color: rgb(86, 100, 114);
+    opacity: 1;
+}
+
+.research-tree-node.is-locked .research-tree-title {
+    color: rgb(206, 214, 220);
+}
+
+.research-tree-node.is-locked .research-tree-pip {
+    background-color: rgb(96, 110, 124);
+}
+
+.research-tree-node.is-ready {
+    background-color: rgb(86, 72, 48);
+    border-color: rgb(232, 168, 78);
+    opacity: 1;
+}
+
+.research-tree-node.is-ready .research-tree-pip {
+    background-color: rgb(232, 168, 78);
+}
+
+.research-tree-node.is-ready .research-tree-status {
+    color: rgb(232, 168, 78);
+}
+
+.research-tree-node.is-selected {
+    border-width: 3px;
+    border-color: rgb(255, 196, 96);
+    background-color: rgb(102, 80, 46);
+}
+
 .research-node.is-complete {
     border-color: var(--success);
-    opacity: 0.72;
 }
 
 .research-node.is-active {
@@ -1368,17 +1602,37 @@ TextField {
 }
 
 .research-node.is-locked {
-    opacity: 0.45;
+    opacity: 1;
+}
+
+.research-node.is-ready {
+    border-color: var(--accent);
+}
+
+.research-node.is-selected {
+    border-width: 2px;
+    border-color: var(--accent);
+    background-color: var(--accent-muted);
 }
 
 .research-detail {
-    width: 320px;
+    width: 300px;
     flex-shrink: 0;
-    background-color: var(--surface-0);
+    background-color: rgb(42, 52, 64);
     border-width: 1px;
-    border-color: var(--border-subtle);
-    padding: 16px;
+    border-color: rgb(90, 108, 124);
+    padding: 12px;
     margin-left: 8px;
+    overflow: auto;
+}
+
+.research-detail .label-caps {
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.research-detail .btn-primary {
+    margin-top: 12px;
 }
 
 /* ===== STORAGE ===== */
@@ -1526,6 +1780,50 @@ Button.research-node:hover {
 Button.card:hover,
 Button.research-node:hover {
     background-color: rgb(24, 30, 38);
+}
+
+Button.research-tree-node,
+Button.research-tree-node:hover,
+Button.research-tree-node:focus {
+    background-image: none;
+    background-color: rgb(64, 78, 94);
+    color: rgb(245, 248, 250);
+    border-color: rgb(112, 132, 150);
+}
+
+Button.research-tree-node:hover {
+    background-color: rgb(76, 92, 110);
+    border-color: rgb(232, 168, 78);
+}
+
+Button.research-tree-node.is-ready,
+Button.research-tree-node.is-ready:hover {
+    background-color: rgb(86, 72, 48);
+    border-color: rgb(232, 168, 78);
+}
+
+Button.research-tree-node.is-active,
+Button.research-tree-node.is-active:hover {
+    background-color: rgb(92, 68, 40);
+    border-color: rgb(232, 168, 78);
+}
+
+Button.research-tree-node.is-complete,
+Button.research-tree-node.is-complete:hover {
+    background-color: rgb(46, 78, 62);
+    border-color: rgb(92, 176, 118);
+}
+
+Button.research-tree-node.is-locked,
+Button.research-tree-node.is-locked:hover {
+    background-color: rgb(52, 62, 74);
+    border-color: rgb(86, 100, 114);
+}
+
+Button.research-tree-node.is-selected,
+Button.research-tree-node.is-selected:hover {
+    background-color: rgb(102, 80, 46);
+    border-color: rgb(255, 196, 96);
 }
 
 Button.card-on,

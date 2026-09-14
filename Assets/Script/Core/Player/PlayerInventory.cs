@@ -100,6 +100,8 @@ public class PlayerInventory : MonoBehaviour
 
     void OnInventoryToggle(InputAction.CallbackContext ctx)
     {
+        if (KeybindStore.BlocksGameplayInput)
+            return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
@@ -132,6 +134,8 @@ public class PlayerInventory : MonoBehaviour
 
     bool CanUseHotbar()
     {
+        if (KeybindStore.BlocksGameplayInput)
+            return false;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
             return false;
         if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)

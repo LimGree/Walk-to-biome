@@ -15,6 +15,7 @@ public class WalletHud : MonoBehaviour
     Label offer1;
     Label offer5;
     Label offerAll;
+    VisualElement toastHost;
     InputAction shopAction;
 
     bool shopOpen;
@@ -29,6 +30,7 @@ public class WalletHud : MonoBehaviour
     {
         Build();
         BindInput();
+        UiNotification.BindHost(toastHost);
         if (PlayerWallet.Instance != null)
             PlayerWallet.Instance.OnChanged += Refresh;
         Refresh();
@@ -50,6 +52,7 @@ public class WalletHud : MonoBehaviour
     {
         if (PlayerWallet.Instance != null)
             PlayerWallet.Instance.OnChanged -= Refresh;
+        UiNotification.UnbindHost(toastHost);
         if (Instance == this)
             Instance = null;
     }
@@ -86,6 +89,7 @@ public class WalletHud : MonoBehaviour
     void Build()
     {
         VisualElement root = IndustryUi.Mount(this, 80);
+        var stack = IndustryUi.El("HudStack", "hud-stack");
         var chip = IndustryUi.El("Chip", "hud-chip");
         var coinLine = IndustryUi.El("Coins", "hud-line");
         coinLine.Add(IndustryUi.Icon(GameHudIcons.Coin, "resource-chip__icon"));
@@ -104,7 +108,11 @@ public class WalletHud : MonoBehaviour
         buildCostText = IndustryUi.Text("BuildCost", "", "hud-cost", "gold");
         IndustryUi.Show(buildCostText, false);
         chip.Add(buildCostText);
-        root.Add(chip);
+        stack.Add(chip);
+        toastHost = IndustryUi.El("HudToasts", "hud-toasts");
+        toastHost.pickingMode = PickingMode.Ignore;
+        stack.Add(toastHost);
+        root.Add(stack);
 
         shop = IndustryUi.OverlayPanel(UiLocale.T("overlay.shop"), GameHudIcons.Ruby, () => SetShopOpen(false));
         IndustryUi.Show(shop, false);

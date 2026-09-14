@@ -27,17 +27,19 @@ public class WorldResourceScatterer : MonoBehaviour
 
     [Header("Deposits")]
     [Tooltip("Россыпь с зазором: к каждой ноде можно подвести ленту.")]
-    public int treeDeposits = 40;
-    public int ironDeposits = 14;
-    public int copperDeposits = 14;
-    public int stoneDeposits = 12;
-    public int coalDeposits = 12;
-    public int sulfurDeposits = 8;
-    public int sandDeposits = 14;
-    public int nodesPerCluster = 20;
-    public int clusterRadius = 11;
+    public int treeDeposits = 12;
+    public int ironDeposits = 3;
+    public int copperDeposits = 3;
+    public int stoneDeposits = 3;
+    public int coalDeposits = 3;
+    public int sulfurDeposits = 3;
+    public int sandDeposits = 3;
+    public int nodesPerCluster = 24;
+    public int clusterRadius = 16;
     public int nodeGap = 2;
-    public int clusterGap = 9;
+    public int clusterGap = 14;
+    [Range(1, 6)] public int minOresPerType = 2;
+    [Range(20, 400)] public int maxCenterAttempts = 200;
 
     [Header("Streaming")]
     public float visualRadius = 38f;
@@ -51,6 +53,9 @@ public class WorldResourceScatterer : MonoBehaviour
     Transform player;
     readonly HashSet<Vector2Int> used = new HashSet<Vector2Int>();
     readonly List<Vector2Int> clusterCenters = new List<Vector2Int>();
+    readonly List<int> clusterKinds = new List<int>();
+    readonly List<string> clusterKindKeys = new List<string>();
+    readonly List<int> clusterSizes = new List<int>();
     readonly List<VeinMark> veins = new List<VeinMark>(256);
     readonly Dictionary<Vector2Int, string> veinLookup = new Dictionary<Vector2Int, string>();
     readonly List<NodeVisual> visuals = new List<NodeVisual>(256);
@@ -100,6 +105,15 @@ public class WorldResourceScatterer : MonoBehaviour
     }
 
     Coroutine scatterRoutine;
+    List<KeptVein> pendingKeep;
+
+    struct KeptVein
+    {
+        public Vector2Int cell;
+        public ItemData resource;
+        public GameObject prefab;
+        public string kind;
+    }
 
     void Start()
     {
@@ -136,6 +150,14 @@ public class WorldResourceScatterer : MonoBehaviour
         scatterRoutine = StartCoroutine(ScatterRoutine());
     }
 
+    [ContextMenu("Scatter Keep Extractor Veins")]
+    public void ScatterPreservingExtractorVeins()
+    {
+        pendingKeep = CollectExtractorVeins();
+        Debug.Log("[Scatter] Keep " + pendingKeep.Count + " vein cells under extractors.");
+        Scatter();
+    }
+
     IEnumerator ScatterRoutine()
     {
         WorldBiomeMap map = WorldBiomeMap.Instance;
@@ -148,23 +170,35 @@ public class WorldResourceScatterer : MonoBehaviour
         ClearSpawned();
         used.Clear();
         clusterCenters.Clear();
+        clusterKinds.Clear();
+        clusterKindKeys.Clear();
+        clusterSizes.Clear();
         veins.Clear();
         veinLookup.Clear();
         visuals.Clear();
         rng = new System.Random(map.seed * 31 + 9);
         root = new GameObject("WorldResources").transform;
+        if (pendingKeep != null)
+        {
+            for (int i = 0; i < pendingKeep.Count; i++)
+            {
+                used.Add(pendingKeep[i].cell);
+                clusterCenters.Add(pendingKeep[i].cell);
+                clusterKinds.Add(-1);
+            }
+        }
         yield return null;
 
-        pendingKind = "sand";
-        yield return SpawnBiomeDepositsRoutine(WorldBiome.Beach, sandPrefab, sandDeposits, clusterGap, 0.02f, 0.18f);
-        pendingKind = "tree";
-        yield return SpawnBiomeDepositsRoutine(WorldBiome.Forest, treePrefab, treeDeposits, 6, 0.18f, 0.48f);
-        yield return SpawnBiomeDepositsRoutine(WorldBiome.Woodland, treePrefab, Mathf.Max(12, treeDeposits / 2), 7, 0.48f, 0.62f);
-        yield return SpawnMountainOresRoutine(map);
+        yield return PlaceAllPatchesRoutine(map);
+        RestoreKeptVeins();
+        ValidateVeinInvariants(map);
+        LogClusterStats();
+        RebindExtractors();
         HideAllVisuals();
         ScatterProgress = 1f;
         IsScattered = true;
         scatterRoutine = null;
+        pendingKeep = null;
         if (WorldMapUI.Instance != null)
             WorldMapUI.Instance.Rebuild();
     }
@@ -178,220 +212,570 @@ public class WorldResourceScatterer : MonoBehaviour
             Destroy(existing);
     }
 
-    IEnumerator SpawnBiomeDepositsRoutine(WorldBiome biome, GameObject prefab, int deposits, int gap, float p0, float p1)
+    List<KeptVein> CollectExtractorVeins()
     {
-        if (prefab == null || deposits <= 0)
-            yield break;
+        ResolvePrefabs();
+        var kept = new Dictionary<Vector2Int, KeptVein>();
+        Extractor[] extractors = Object.FindObjectsByType<Extractor>(FindObjectsSortMode.None);
+        var seen = new HashSet<Vector2Int>();
+        var queue = new Queue<Vector2Int>();
 
-        var cells = new List<Vector2Int>(256);
-        WorldBiomeMap.Instance.CollectBiomeCells(biome, cells);
-        Shuffle(cells);
-
-        int made = 0;
-        int want = Mathf.Max(10, nodesPerCluster);
-        int steps = 0;
-        for (int i = 0; i < cells.Count && made < deposits; i++)
+        for (int e = 0; e < extractors.Length; e++)
         {
-            if (!CanStartCluster(cells[i], gap))
+            Extractor extractor = extractors[e];
+            if (extractor == null)
                 continue;
-            if (SpawnScatter(cells[i], cells, prefab, want) >= 5)
+            Vector2Int start = BuildingLinker.WorldToCell(extractor.transform.position);
+            ResourceNode startNode = ResourceNode.GetAt(start);
+            if (startNode == null || startNode.resource == null)
+                continue;
+
+            ItemData res = startNode.resource;
+            queue.Clear();
+            queue.Enqueue(start);
+            while (queue.Count > 0)
             {
-                made++;
-                ScatterProgress = Mathf.Lerp(p0, p1, made / (float)Mathf.Max(1, deposits));
+                Vector2Int cell = queue.Dequeue();
+                if (!seen.Add(cell))
+                    continue;
+                ResourceNode node = ResourceNode.GetAt(cell);
+                if (node == null || node.resource != res)
+                    continue;
+
+                string kind = KindOfItem(res);
+                kept[cell] = new KeptVein
+                {
+                    cell = cell,
+                    resource = res,
+                    prefab = PrefabOfItem(res),
+                    kind = kind
+                };
+
+                for (int y = -1; y <= 1; y++)
+                {
+                    for (int x = -1; x <= 1; x++)
+                    {
+                        if (x == 0 && y == 0)
+                            continue;
+                        queue.Enqueue(cell + new Vector2Int(x, y));
+                    }
+                }
             }
-            steps++;
-            if (steps % 2 == 0)
-                yield return null;
         }
-        ScatterProgress = p1;
+
+        return new List<KeptVein>(kept.Values);
     }
 
-    IEnumerator SpawnMountainOresRoutine(WorldBiomeMap map)
+    void RestoreKeptVeins()
     {
-        int count = map.MountainCount;
-        if (count <= 0)
+        if (pendingKeep == null)
+            return;
+        for (int i = 0; i < pendingKeep.Count; i++)
         {
-            ScatterProgress = 0.95f;
-            yield break;
-        }
-
-        var infos = new List<MountainInfo>(count);
-        for (int id = 0; id < count; id++)
-        {
-            var cells = new List<Vector2Int>(64);
-            map.CollectMountainCells(id, cells);
-            if (cells.Count == 0)
+            KeptVein vein = pendingKeep[i];
+            if (ResourceNode.HasNode(vein.cell))
                 continue;
+            pendingKind = vein.kind;
+            if (vein.prefab != null)
+                SpawnNode(vein.prefab, vein.cell);
+        }
+    }
 
-            int peaks = 0;
-            int slopes = 0;
-            for (int i = 0; i < cells.Count; i++)
-            {
-                WorldBiome b = map.Get(cells[i]);
-                if (b == WorldBiome.MountainPeak)
-                    peaks++;
-                else if (b == WorldBiome.MountainSlope)
-                    slopes++;
-            }
+    static void RebindExtractors()
+    {
+        Extractor[] extractors = Object.FindObjectsByType<Extractor>(FindObjectsSortMode.None);
+        for (int i = 0; i < extractors.Length; i++)
+        {
+            if (extractors[i] != null)
+                extractors[i].BindToNearbyNode();
+        }
+    }
 
-            infos.Add(new MountainInfo
-            {
-                id = id,
-                cells = cells,
-                peaks = peaks,
-                slopes = slopes,
-                ore = MountainOre.Stone
-            });
+    GameObject PrefabOfItem(ItemData item)
+    {
+        if (item == null)
+            return stonePrefab;
+        GameObject[] all =
+        {
+            sandPrefab, stonePrefab, coalPrefab, copperPrefab, ironPrefab, sulfurPrefab, treePrefab
+        };
+        for (int i = 0; i < all.Length; i++)
+        {
+            if (all[i] != null && ResourceOf(all[i]) == item)
+                return all[i];
         }
 
-        infos.Sort((a, b) => b.cells.Count.CompareTo(a.cells.Count));
+        string id = item.id != null ? item.id.ToLowerInvariant() : "";
+        if (id.Contains("sand"))
+            return sandPrefab;
+        if (id.Contains("coal"))
+            return coalPrefab;
+        if (id.Contains("cooper") || id.Contains("copper"))
+            return copperPrefab;
+        if (id.Contains("iron"))
+            return ironPrefab;
+        if (id.Contains("sulfur"))
+            return sulfurPrefab;
+        if (id.Contains("wood") || id.Contains("tree") || id.Contains("log"))
+            return treePrefab;
+        return stonePrefab;
+    }
 
-        var assigned = new bool[infos.Count];
-        AssignOre(infos, assigned, MountainOre.Coal, needsPeak: false, limit: coalDeposits, preferSmaller: true);
-        AssignOre(infos, assigned, MountainOre.Stone, needsPeak: false, limit: stoneDeposits, preferSmaller: true);
-        AssignOre(infos, assigned, MountainOre.Iron, needsPeak: true, limit: ironDeposits, preferSmaller: false);
-        AssignOre(infos, assigned, MountainOre.Copper, needsPeak: true, limit: copperDeposits, preferSmaller: false);
-        AssignOre(infos, assigned, MountainOre.Sulfur, needsPeak: false, limit: sulfurDeposits, preferSmaller: true);
-        FillLeftoverMountains(infos, assigned);
+    static string KindOfItem(ItemData item)
+    {
+        if (item == null || string.IsNullOrEmpty(item.id))
+            return "stone";
+        string id = item.id.ToLowerInvariant();
+        if (id.Contains("sand"))
+            return "sand";
+        if (id.Contains("coal"))
+            return "coal";
+        if (id.Contains("cooper") || id.Contains("copper"))
+            return "copper";
+        if (id.Contains("iron"))
+            return "iron";
+        if (id.Contains("sulfur"))
+            return "sulfur";
+        if (id.Contains("wood") || id.Contains("tree") || id.Contains("log"))
+            return "tree";
+        return "stone";
+    }
 
+    enum PatchKind
+    {
+        Iron,
+        Copper,
+        Stone,
+        Coal,
+        Sulfur,
+        Sand,
+        Tree
+    }
+
+    struct PatchRequest
+    {
+        public PatchKind kind;
+        public int minPick;
+        public int kindId;
+    }
+
+    IEnumerator PlaceAllPatchesRoutine(WorldBiomeMap map)
+    {
+        var mountainPool = new List<Vector2Int>(256);
+        var sandPool = new List<Vector2Int>(128);
+        var treePool = new List<Vector2Int>(256);
+        CollectSuitable(map, mountainPool, sandPool, treePool);
+
+        var requests = BuildPatchRequests(sandPool.Count, treePool.Count);
         int done = 0;
-        int total = Mathf.Max(1, infos.Count);
-        for (int i = 0; i < infos.Count; i++)
+        for (int i = 0; i < requests.Count; i++)
         {
-            if (!assigned[i])
-                continue;
-            SpawnMountain(map, infos[i]);
+            PatchRequest req = requests[i];
+            List<Vector2Int> pool = PoolOf(req.kind, mountainPool, sandPool, treePool);
+            TryFulfillRequest(req, pool);
             done++;
-            ScatterProgress = Mathf.Lerp(0.62f, 0.95f, done / (float)total);
-            yield return null;
+            ScatterProgress = Mathf.Lerp(0.02f, 0.88f, done / (float)Mathf.Max(1, requests.Count));
+            if (i % 2 == 0)
+                yield return null;
         }
+
+        yield return CoverEmptyMountainsRoutine(map, mountainPool);
         ScatterProgress = 0.95f;
     }
 
-    void AssignOre(List<MountainInfo> infos, bool[] assigned, MountainOre ore, bool needsPeak, int limit, bool preferSmaller)
+    List<PatchRequest> BuildPatchRequests(int sandCells, int treeCells)
     {
-        int left = Mathf.Max(1, limit);
-        int start = preferSmaller ? infos.Count - 1 : 0;
-        int step = preferSmaller ? -1 : 1;
-        for (int i = start; i >= 0 && i < infos.Count && left > 0; i += step)
+        var list = new List<PatchRequest>(48);
+        int ores = Mathf.Max(2, minOresPerType);
+        MountainOre[] cycle =
         {
-            if (assigned[i])
-                continue;
-            if (needsPeak && infos[i].peaks < 4)
-                continue;
-            if (ore == MountainOre.Stone && infos[i].slopes < 8)
-                continue;
-            if (infos[i].cells.Count < 20)
-                continue;
-
-            MountainInfo info = infos[i];
-            info.ore = ore;
-            infos[i] = info;
-            assigned[i] = true;
-            left--;
+            MountainOre.Iron,
+            MountainOre.Copper,
+            MountainOre.Stone,
+            MountainOre.Coal,
+            MountainOre.Sulfur
+        };
+        for (int t = 0; t < cycle.Length; t++)
+        {
+            for (int n = 0; n < ores; n++)
+                list.Add(MakeRequest(KindOfOre(cycle[t]), 10, (int)cycle[t]));
         }
+
+        int sandWant = sandCells >= 8 ? Mathf.Clamp(sandDeposits, 2, 3) : 0;
+        for (int i = 0; i < sandWant; i++)
+            list.Add(MakeRequest(PatchKind.Sand, 8, -1));
+
+        int treeWant = 0;
+        if (treeCells > 0)
+            treeWant = Mathf.Clamp(treeCells / 250, Mathf.Max(8, treeDeposits), 28);
+        for (int i = 0; i < treeWant; i++)
+            list.Add(MakeRequest(PatchKind.Tree, 10, -1));
+
+        return list;
     }
 
-    void FillLeftoverMountains(List<MountainInfo> infos, bool[] assigned)
+    static PatchRequest MakeRequest(PatchKind kind, int minPick, int kindId)
     {
-        for (int i = 0; i < infos.Count; i++)
-        {
-            if (assigned[i] || infos[i].cells.Count < 12)
-                continue;
-
-            MountainOre ore;
-            if (infos[i].peaks >= 4)
-                ore = (i % 2 == 0) ? MountainOre.Iron : MountainOre.Copper;
-            else if (infos[i].slopes >= 8)
-                ore = (i % 3 == 0) ? MountainOre.Stone : (i % 3 == 1) ? MountainOre.Coal : MountainOre.Sulfur;
-            else
-                ore = (i % 2 == 0) ? MountainOre.Coal : MountainOre.Sulfur;
-
-            MountainInfo info = infos[i];
-            info.ore = ore;
-            infos[i] = info;
-            assigned[i] = true;
-        }
+        return new PatchRequest { kind = kind, minPick = minPick, kindId = kindId };
     }
 
-    void SpawnMountain(WorldBiomeMap map, MountainInfo info)
-    {
-        GameObject prefab = PrefabOf(info.ore);
-        if (prefab == null)
-            return;
-
-        var valid = new List<Vector2Int>(info.cells.Count);
-        for (int i = 0; i < info.cells.Count; i++)
-        {
-            WorldBiome biome = map.Get(info.cells[i]);
-            if (OreAllows(info.ore, biome))
-                valid.Add(info.cells[i]);
-        }
-
-        Shuffle(valid);
-
-        pendingKind = info.ore == MountainOre.Coal ? "coal"
-            : info.ore == MountainOre.Copper ? "copper"
-            : info.ore == MountainOre.Iron ? "iron"
-            : info.ore == MountainOre.Sulfur ? "sulfur"
-            : "stone";
-
-        int want = Mathf.Max(12, nodesPerCluster);
-        if (info.ore == MountainOre.Iron || info.ore == MountainOre.Copper)
-            want = Mathf.Max(18, nodesPerCluster);
-        else if (info.ore == MountainOre.Stone)
-            want = Mathf.Max(12, nodesPerCluster - 4);
-
-        int clusters = 2;
-        if (info.cells.Count > 80)
-            clusters = 4;
-        else if (info.cells.Count > 40)
-            clusters = 3;
-        if (info.ore == MountainOre.Iron || info.ore == MountainOre.Copper)
-            clusters = Mathf.Max(clusters, 3);
-
-        int minAccept = 5;
-        int made = 0;
-        int localGap = Mathf.Max(6, clusterGap);
-        for (int i = 0; i < valid.Count && made < clusters; i++)
-        {
-            if (!CanStartCluster(valid[i], localGap))
-                continue;
-            if (SpawnScatter(valid[i], valid, prefab, want) >= minAccept)
-                made++;
-        }
-
-        if (made == 0 && valid.Count >= 4)
-            SpawnScatter(valid[0], valid, prefab, want);
-    }
-
-    static bool OreAllows(MountainOre ore, WorldBiome biome)
+    static PatchKind KindOfOre(MountainOre ore)
     {
         switch (ore)
         {
-            case MountainOre.Stone:
-                return biome == WorldBiome.MountainSlope;
-            case MountainOre.Coal:
-            case MountainOre.Sulfur:
-                return WorldBiomeMap.IsMountain(biome);
-            case MountainOre.Copper:
-            case MountainOre.Iron:
-                return biome == WorldBiome.MountainPeak;
-            default:
+            case MountainOre.Coal: return PatchKind.Coal;
+            case MountainOre.Copper: return PatchKind.Copper;
+            case MountainOre.Iron: return PatchKind.Iron;
+            case MountainOre.Sulfur: return PatchKind.Sulfur;
+            default: return PatchKind.Stone;
+        }
+    }
+
+    static List<Vector2Int> PoolOf(
+        PatchKind kind,
+        List<Vector2Int> mountain,
+        List<Vector2Int> sand,
+        List<Vector2Int> tree)
+    {
+        if (kind == PatchKind.Sand)
+            return sand;
+        if (kind == PatchKind.Tree)
+            return tree;
+        return mountain;
+    }
+
+    void CollectSuitable(
+        WorldBiomeMap map,
+        List<Vector2Int> mountain,
+        List<Vector2Int> sand,
+        List<Vector2Int> tree)
+    {
+        int x0 = map.MapMinX;
+        int z0 = map.MapMinZ;
+        int w = map.MapWidth;
+        int h = map.MapHeight;
+        for (int z = 0; z < h; z++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                Vector2Int cell = new Vector2Int(x0 + x, z0 + z);
+                WorldBiome biome = map.Get(cell);
+                if (WorldBiomeMap.IsMountain(biome))
+                    mountain.Add(cell);
+                else if (biome == WorldBiome.Beach)
+                    sand.Add(cell);
+                else if (biome == WorldBiome.Forest || biome == WorldBiome.Woodland)
+                    tree.Add(cell);
+            }
+        }
+    }
+
+    bool TryFulfillRequest(PatchRequest req, List<Vector2Int> pool)
+    {
+        GameObject prefab = PrefabOfKind(req.kind);
+        if (prefab == null || pool == null || pool.Count == 0)
+            return false;
+
+        pendingKind = KindKey(req.kind);
+        int gap = Mathf.Max(2, clusterGap);
+        int minPick = Mathf.Max(1, req.minPick);
+        int want = rng.Next(Mathf.Max(minPick, 14), Mathf.Max(minPick, nodesPerCluster) + 1);
+        int attempts = Mathf.Max(20, maxCenterAttempts);
+
+        for (int round = 0; round < 4; round++)
+        {
+            int tries = Mathf.Min(attempts, pool.Count);
+            for (int t = 0; t < tries; t++)
+            {
+                Vector2Int center = pool[rng.Next(pool.Count)];
+                if (!CanStartCluster(center, gap))
+                    continue;
+                if (CountSuitableNearby(center, req.kind, clusterRadius) < minPick * 2)
+                    continue;
+                if (CommitPatch(center, req.kind, prefab, want, minPick, req.kindId))
+                    return true;
+            }
+
+            gap = Mathf.Max(4, gap / 2);
+            if (round >= 1)
+                minPick = Mathf.Max(8, minPick - 2);
+        }
+
+        return false;
+    }
+
+    bool CommitPatch(Vector2Int center, PatchKind kind, GameObject prefab, int want, int minPick, int kindId)
+    {
+        List<Vector2Int> pick = GrowPatch(center, kind, want, minPick);
+        if (pick.Count < Mathf.Max(1, minPick))
+            return false;
+
+        for (int i = 0; i < pick.Count; i++)
+            SpawnNode(prefab, pick[i]);
+
+        clusterCenters.Add(center);
+        clusterKinds.Add(kindId);
+        clusterKindKeys.Add(KindKey(kind));
+        clusterSizes.Add(pick.Count);
+        return true;
+    }
+
+    List<Vector2Int> GrowPatch(Vector2Int center, PatchKind kind, int want, int minPick)
+    {
+        int radius = Mathf.Max(8, clusterRadius) + rng.Next(0, 6);
+        int r2 = radius * radius;
+        var candidates = new List<Vector2Int>(64);
+
+        for (int dz = -radius; dz <= radius; dz++)
+        {
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                if (dx * dx + dz * dz > r2)
+                    continue;
+                Vector2Int cell = new Vector2Int(center.x + dx, center.y + dz);
+                if (!CellSuitable(cell, kind))
+                    continue;
+                if (used.Contains(cell) || ResourceNode.HasNode(cell))
+                    continue;
+                if (!FarFromUsed(cell, nodeGap))
+                    continue;
+                candidates.Add(cell);
+            }
+        }
+
+        if (candidates.Count < Mathf.Max(1, minPick))
+            return new List<Vector2Int>();
+
+        var score = new float[candidates.Count];
+        var order = new List<int>(candidates.Count);
+        float jitter = radius * 0.28f;
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            int dx = candidates[i].x - center.x;
+            int dz = candidates[i].y - center.y;
+            score[i] = Mathf.Sqrt(dx * dx + dz * dz) + (float)rng.NextDouble() * jitter;
+            order.Add(i);
+        }
+        order.Sort((a, b) => score[a].CompareTo(score[b]));
+
+        int holeChance = kind == PatchKind.Tree ? 18 : 28;
+        var pick = new List<Vector2Int>(want);
+        var reserved = new HashSet<Vector2Int>();
+        for (int n = 0; n < order.Count && pick.Count < want; n++)
+        {
+            Vector2Int cell = candidates[order[n]];
+            if (pick.Count >= 4 && rng.Next(100) < holeChance)
+                continue;
+            if (reserved.Contains(cell) || !FarFromSet(cell, reserved, nodeGap))
+                continue;
+            if (!FarEuclidean(cell, pick, 2.05f))
+                continue;
+            pick.Add(cell);
+            reserved.Add(cell);
+        }
+
+        if (pick.Count < Mathf.Max(1, minPick))
+            return new List<Vector2Int>();
+        return pick;
+    }
+
+    static bool FarEuclidean(Vector2Int cell, List<Vector2Int> picked, float minDist)
+    {
+        float need = minDist * minDist;
+        for (int i = 0; i < picked.Count; i++)
+        {
+            int dx = cell.x - picked[i].x;
+            int dz = cell.y - picked[i].y;
+            if (dx * dx + dz * dz < need)
                 return false;
         }
+        return true;
     }
 
-    GameObject PrefabOf(MountainOre ore)
+    static bool CellSuitable(Vector2Int cell, PatchKind kind)
     {
-        switch (ore)
+        if (WorldBiomeMap.Instance == null)
+            return false;
+        WorldBiome biome = WorldBiomeMap.Instance.Get(cell);
+        switch (kind)
         {
-            case MountainOre.Stone: return stonePrefab;
-            case MountainOre.Coal: return coalPrefab;
-            case MountainOre.Copper: return copperPrefab;
-            case MountainOre.Iron: return ironPrefab;
-            case MountainOre.Sulfur: return sulfurPrefab;
-            default: return null;
+            case PatchKind.Sand:
+                return biome == WorldBiome.Beach;
+            case PatchKind.Tree:
+                return biome == WorldBiome.Forest || biome == WorldBiome.Woodland;
+            default:
+                return WorldBiomeMap.IsMountain(biome);
+        }
+    }
+
+    IEnumerator CoverEmptyMountainsRoutine(WorldBiomeMap map, List<Vector2Int> mountainPool)
+    {
+        if (map == null || mountainPool == null || mountainPool.Count == 0)
+            yield break;
+
+        MountainOre[] cycle =
+        {
+            MountainOre.Iron,
+            MountainOre.Copper,
+            MountainOre.Stone,
+            MountainOre.Coal,
+            MountainOre.Sulfur
+        };
+
+        var mountainCells = new List<Vector2Int>(64);
+        for (int id = 0; id < map.MountainCount; id++)
+        {
+            mountainCells.Clear();
+            map.CollectMountainCells(id, mountainCells);
+            if (mountainCells.Count < 8)
+                continue;
+            if (MountainHasNode(mountainCells))
+                continue;
+
+            MountainOre ore = cycle[id % cycle.Length];
+            var req = MakeRequest(KindOfOre(ore), 8, (int)ore);
+            TryFulfillRequest(req, mountainCells);
+            yield return null;
+        }
+    }
+
+    bool MountainHasNode(List<Vector2Int> cells)
+    {
+        for (int i = 0; i < cells.Count; i++)
+        {
+            if (used.Contains(cells[i]) || ResourceNode.HasNode(cells[i]) || veinLookup.ContainsKey(cells[i]))
+                return true;
+        }
+        return false;
+    }
+
+    void ValidateVeinInvariants(WorldBiomeMap map)
+    {
+        int need = Mathf.Max(1, minOresPerType);
+        WarnIfShort("iron", CountClusters((int)MountainOre.Iron), need);
+        WarnIfShort("copper", CountClusters((int)MountainOre.Copper), need);
+        WarnIfShort("stone", CountClusters((int)MountainOre.Stone), need);
+        WarnIfShort("coal", CountClusters((int)MountainOre.Coal), need);
+        WarnIfShort("sulfur", CountClusters((int)MountainOre.Sulfur), need);
+
+        if (map == null)
+            return;
+        int empty = 0;
+        var cells = new List<Vector2Int>(64);
+        for (int id = 0; id < map.MountainCount; id++)
+        {
+            cells.Clear();
+            map.CollectMountainCells(id, cells);
+            if (cells.Count < 8)
+                continue;
+            if (!MountainHasNode(cells))
+                empty++;
+        }
+        if (empty > 0)
+            Debug.LogWarning("[Scatter] " + empty + " mountain(s) have no resource nodes.");
+    }
+
+    int CountClusters(int kindId)
+    {
+        int n = 0;
+        for (int i = 0; i < clusterKinds.Count; i++)
+        {
+            if (clusterKinds[i] == kindId)
+                n++;
+        }
+        return n;
+    }
+
+    static void WarnIfShort(string name, int have, int need)
+    {
+        if (have < need)
+            Debug.LogWarning("[Scatter] " + name + " clusters " + have + " < guaranteed " + need + ".");
+    }
+
+    int CountSuitableNearby(Vector2Int center, PatchKind kind, int radius)
+    {
+        int r = Mathf.Max(4, radius);
+        int r2 = r * r;
+        int n = 0;
+        for (int dz = -r; dz <= r; dz++)
+        {
+            for (int dx = -r; dx <= r; dx++)
+            {
+                if (dx * dx + dz * dz > r2)
+                    continue;
+                if (CellSuitable(new Vector2Int(center.x + dx, center.y + dz), kind))
+                    n++;
+            }
+        }
+        return n;
+    }
+
+    void LogClusterStats()
+    {
+        string[] keys = { "iron", "copper", "stone", "coal", "sulfur", "sand", "tree" };
+        var sb = new System.Text.StringBuilder(256);
+        sb.Append("[Scatter] clusters after world gen");
+        int totalClusters = 0;
+        int totalNodes = 0;
+        for (int k = 0; k < keys.Length; k++)
+        {
+            int clusters = 0;
+            int nodes = 0;
+            for (int i = 0; i < clusterKindKeys.Count; i++)
+            {
+                if (clusterKindKeys[i] != keys[k])
+                    continue;
+                clusters++;
+                nodes += clusterSizes[i];
+            }
+            totalClusters += clusters;
+            totalNodes += nodes;
+            float avg = clusters > 0 ? nodes / (float)clusters : 0f;
+            sb.Append('\n');
+            sb.Append("  ");
+            sb.Append(LabelOfKind(keys[k]));
+            sb.Append(": ");
+            sb.Append(clusters);
+            sb.Append(" скопл., жил в среднем ");
+            sb.Append(avg.ToString("0.0"));
+            sb.Append(" (всего ");
+            sb.Append(nodes);
+            sb.Append(')');
+        }
+        sb.Append('\n');
+        sb.Append("  итого: ");
+        sb.Append(totalClusters);
+        sb.Append(" скоплений, ");
+        sb.Append(totalNodes);
+        sb.Append(" жил");
+        Debug.Log(sb.ToString());
+    }
+
+    static string KindKey(PatchKind kind)
+    {
+        switch (kind)
+        {
+            case PatchKind.Sand: return "sand";
+            case PatchKind.Tree: return "tree";
+            case PatchKind.Coal: return "coal";
+            case PatchKind.Copper: return "copper";
+            case PatchKind.Iron: return "iron";
+            case PatchKind.Sulfur: return "sulfur";
+            default: return "stone";
+        }
+    }
+
+    GameObject PrefabOfKind(PatchKind kind)
+    {
+        switch (kind)
+        {
+            case PatchKind.Sand: return sandPrefab;
+            case PatchKind.Tree: return treePrefab;
+            case PatchKind.Coal: return coalPrefab;
+            case PatchKind.Copper: return copperPrefab;
+            case PatchKind.Iron: return ironPrefab;
+            case PatchKind.Sulfur: return sulfurPrefab;
+            default: return stonePrefab;
         }
     }
 
@@ -405,44 +789,6 @@ public class WorldResourceScatterer : MonoBehaviour
                 return false;
         }
         return true;
-    }
-
-    int SpawnScatter(Vector2Int center, List<Vector2Int> pool, GameObject prefab, int want)
-    {
-        if (prefab == null)
-            return 0;
-
-        int radius = Mathf.Max(4, clusterRadius);
-        var pick = new List<Vector2Int>(want);
-        var reserved = new HashSet<Vector2Int>();
-
-        var candidates = new List<Vector2Int>(64);
-        for (int i = 0; i < pool.Count; i++)
-        {
-            if (Chebyshev(pool[i], center) <= radius)
-                candidates.Add(pool[i]);
-        }
-        Shuffle(candidates);
-
-        for (int i = 0; i < candidates.Count && pick.Count < want; i++)
-        {
-            Vector2Int cell = candidates[i];
-            if (used.Contains(cell) || reserved.Contains(cell) || ResourceNode.HasNode(cell))
-                continue;
-            if (!FarFromUsed(cell, nodeGap) || !FarFromSet(cell, reserved, nodeGap))
-                continue;
-            pick.Add(cell);
-            reserved.Add(cell);
-        }
-
-        if (pick.Count < 5)
-            return 0;
-
-        for (int i = 0; i < pick.Count; i++)
-            SpawnNode(prefab, pick[i]);
-
-        clusterCenters.Add(center);
-        return pick.Count;
     }
 
     static bool FarFromSet(Vector2Int cell, HashSet<Vector2Int> set, int gap)
@@ -692,13 +1038,5 @@ public class WorldResourceScatterer : MonoBehaviour
         Debug.LogWarning("WorldResourceScatterer: missing prefab " + name);
         return null;
     }
-
-    struct MountainInfo
-    {
-        public int id;
-        public List<Vector2Int> cells;
-        public int peaks;
-        public int slopes;
-        public MountainOre ore;
-    }
 }
+

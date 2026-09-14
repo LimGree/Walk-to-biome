@@ -81,7 +81,7 @@ public class WaterExtractor : BuildingBase, IInteractable
             if (front != null && front != this)
                 return true;
         }
-        return false;
+        return HasPushNeighbor();
     }
 
     public void Interact(GameObject interactor)
@@ -132,8 +132,7 @@ public class WaterExtractor : BuildingBase, IInteractable
         Transform existing = transform.Find("OutputSocket");
         GameObject go = existing != null ? existing.gameObject : new GameObject("OutputSocket");
         go.transform.SetParent(transform, false);
-        if (existing == null)
-            go.transform.localPosition = new Vector3(0f, 0.3f, 1f);
+        BuildingPrefabLayout.PlaceSocket(go.transform, new Vector3(0f, 0.3f, 0.5f), BuildingPrefabLayout.OutputRotation);
 
         BuildingSocket socket = go.GetComponent<BuildingSocket>();
         if (socket == null)

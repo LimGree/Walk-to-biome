@@ -20,16 +20,24 @@ public class ResearchSystem : MonoBehaviour
     [Tooltip("id исследований, каждое из которых даёт +1 слот лаборатории (уровни 4 и 5).")]
     public string[] extraLabSlotResearchIds =
     {
-        "research_advanced_automation",
-        "research_petrochemistry"
+        "research_extractor_2",
+        "research_assembler_2"
     };
 
     private readonly HashSet<ResearchNodeData> unlockedResearch = new HashSet<ResearchNodeData>();
     private readonly HashSet<BuildingData> unlockedBuildings = new HashSet<BuildingData>();
     private readonly HashSet<RecipeData> unlockedRecipes = new HashSet<RecipeData>();
-    private readonly Dictionary<ItemData, int> submittedItems = new Dictionary<ItemData, int>();
+    private readonly Dictionary<ResearchNodeData, Dictionary<ItemData, int>> submittedByNode =
+        new Dictionary<ResearchNodeData, Dictionary<ItemData, int>>();
 
-    public ResearchNodeData CurrentResearch { get; private set; }
+    public ResearchNodeData CurrentResearch
+    {
+        get
+        {
+            List<ResearchNodeData> available = GetAvailableResearch();
+            return available.Count > 0 ? available[0] : null;
+        }
+    }
 
     public event System.Action OnUnlocksChanged;
     public event System.Action OnResearchProgressChanged;
@@ -120,20 +128,7 @@ public class ResearchSystem : MonoBehaviour
 
     public bool SetCurrentResearch(ResearchNodeData node)
     {
-        if (node == null)
-            return false;
-        if (!CanStartResearch(node))
-            return false;
-        if (CurrentResearch != null && CurrentResearch != node)
-            return false;
-
-        if (CurrentResearch == node)
-            return true;
-
-        CurrentResearch = node;
-        submittedItems.Clear();
-        OnResearchProgressChanged?.Invoke();
-        return true;
+        return node != null && CanStartResearch(node);
     }
 
     public bool TrySubmitItem(ItemData item)
@@ -142,63 +137,88 @@ public class ResearchSystem : MonoBehaviour
             return false;
 
         bool countedForResearch = false;
-        if (CurrentResearch != null && CurrentResearch.requiredItems != null)
+        List<ResearchNodeData> available = GetAvailableResearch();
+        for (int i = 0; i < available.Count; i++)
         {
-            int requiredAmount = 0;
-            bool needed = false;
-            for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
-            {
-                ItemStack req = CurrentResearch.requiredItems[i];
-                if (req.item == item)
-                {
-                    needed = true;
-                    requiredAmount = req.amount;
-                    break;
-                }
-            }
-
-            if (needed)
-            {
-                submittedItems.TryGetValue(item, out int have);
-                if (have < requiredAmount)
-                {
-                    submittedItems[item] = have + 1;
-                    countedForResearch = true;
-                    OnResearchProgressChanged?.Invoke();
-                    TryCompleteCurrentResearch();
-                }
-            }
+            ResearchNodeData node = available[i];
+            if (!NeedsItem(node, item))
+                continue;
+            Dictionary<ItemData, int> bag = ProgressOf(node);
+            int need = RequiredAmount(node, item);
+            bag.TryGetValue(item, out int have);
+            if (have >= need)
+                continue;
+            bag[item] = have + 1;
+            countedForResearch = true;
+            if (IsNodeComplete(node))
+                CompleteResearch(node, grantReward: true);
         }
+
+        if (countedForResearch)
+            OnResearchProgressChanged?.Invoke();
 
         if (!countedForResearch && Economy.IsGear(item) && BeltSpeedSystem.Instance != null)
-            BeltSpeedSystem.Instance.SubmitGear();
-
-        if (!countedForResearch)
         {
-            int coins = Economy.SellValue(item);
-            if (coins > 0 && PlayerWallet.Instance != null)
-                PlayerWallet.Instance.AddCoins(coins);
+            BeltSpeedSystem.Instance.SubmitGear();
+            return true;
         }
+
+        int coins = Economy.SellValue(item);
+        if (coins > 0 && PlayerWallet.Instance != null)
+            PlayerWallet.Instance.AddCoins(coins);
 
         return true;
     }
 
-    void TryCompleteCurrentResearch()
+    static bool NeedsItem(ResearchNodeData node, ItemData item)
     {
-        if (CurrentResearch == null || CurrentResearch.requiredItems == null)
-            return;
+        return RequiredAmount(node, item) > 0;
+    }
 
-        for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
+    static int RequiredAmount(ResearchNodeData node, ItemData item)
+    {
+        if (node == null || item == null || node.requiredItems == null)
+            return 0;
+        for (int i = 0; i < node.requiredItems.Count; i++)
         {
-            ItemStack req = CurrentResearch.requiredItems[i];
-            if (req.item == null)
-                continue;
-            submittedItems.TryGetValue(req.item, out int have);
-            if (have < req.amount)
-                return;
+            ItemStack req = node.requiredItems[i];
+            if (req.item == item)
+                return Mathf.Max(0, req.amount);
         }
 
-        CompleteResearch(CurrentResearch, grantReward: true);
+        return 0;
+    }
+
+    Dictionary<ItemData, int> ProgressOf(ResearchNodeData node)
+    {
+        if (node == null)
+            return new Dictionary<ItemData, int>();
+        Dictionary<ItemData, int> bag;
+        if (!submittedByNode.TryGetValue(node, out bag) || bag == null)
+        {
+            bag = new Dictionary<ItemData, int>();
+            submittedByNode[node] = bag;
+        }
+
+        return bag;
+    }
+
+    bool IsNodeComplete(ResearchNodeData node)
+    {
+        if (node == null || node.requiredItems == null)
+            return false;
+        Dictionary<ItemData, int> bag = ProgressOf(node);
+        for (int i = 0; i < node.requiredItems.Count; i++)
+        {
+            ItemStack req = node.requiredItems[i];
+            if (req.item == null)
+                continue;
+            bag.TryGetValue(req.item, out int have);
+            if (have < req.amount)
+                return false;
+        }
+
+        return true;
     }
 
     public void CompleteResearch(ResearchNodeData node)
@@ -231,11 +251,7 @@ public class ResearchSystem : MonoBehaviour
             }
         }
 
-        if (CurrentResearch == node)
-        {
-            CurrentResearch = null;
-            submittedItems.Clear();
-        }
+        submittedByNode.Remove(node);
 
         if (grantReward)
         {
@@ -244,6 +260,10 @@ public class ResearchSystem : MonoBehaviour
                 PlayerWallet.Instance.AddRubies(rubies);
             Debug.Log($"[Research] Completed: {node.displayName}  +{rubies} ruby");
             UiAudio.PlayNotify();
+            UiNotification.Push(
+                UiLocale.T("hud.research_done"),
+                node.displayName,
+                UiStatus.Completed);
         }
         else
         {
@@ -265,18 +285,30 @@ public class ResearchSystem : MonoBehaviour
 
     public float GetCurrentProgress01()
     {
-        if (CurrentResearch == null || CurrentResearch.requiredItems == null || CurrentResearch.requiredItems.Count == 0)
+        List<ResearchNodeData> available = GetAvailableResearch();
+        if (available.Count == 0)
+            return 0f;
+        float sum = 0f;
+        for (int i = 0; i < available.Count; i++)
+            sum += GetProgress01(available[i]);
+        return sum / available.Count;
+    }
+
+    public float GetProgress01(ResearchNodeData node)
+    {
+        if (node == null || node.requiredItems == null || node.requiredItems.Count == 0)
             return 0f;
 
         int totalRequired = 0;
         int totalSubmitted = 0;
-        for (int i = 0; i < CurrentResearch.requiredItems.Count; i++)
+        Dictionary<ItemData, int> bag = ProgressOf(node);
+        for (int i = 0; i < node.requiredItems.Count; i++)
         {
-            ItemStack req = CurrentResearch.requiredItems[i];
+            ItemStack req = node.requiredItems[i];
             if (req.item == null)
                 continue;
             totalRequired += Mathf.Max(0, req.amount);
-            submittedItems.TryGetValue(req.item, out int have);
+            bag.TryGetValue(req.item, out int have);
             totalSubmitted += Mathf.Min(have, Mathf.Max(0, req.amount));
         }
 
@@ -287,7 +319,24 @@ public class ResearchSystem : MonoBehaviour
     {
         if (item == null)
             return 0;
-        submittedItems.TryGetValue(item, out int have);
+        int best = 0;
+        foreach (var pair in submittedByNode)
+        {
+            if (pair.Value == null)
+                continue;
+            pair.Value.TryGetValue(item, out int have);
+            if (have > best)
+                best = have;
+        }
+
+        return best;
+    }
+
+    public int GetSubmitted(ResearchNodeData node, ItemData item)
+    {
+        if (node == null || item == null)
+            return 0;
+        ProgressOf(node).TryGetValue(item, out int have);
         return have;
     }
 
@@ -420,15 +469,24 @@ public class ResearchSystem : MonoBehaviour
         if (CurrentResearch != null)
             save.currentResearchId = CurrentResearch.id;
 
-        foreach (var pair in submittedItems)
+        foreach (var pair in submittedByNode)
         {
-            if (pair.Key == null || string.IsNullOrEmpty(pair.Key.id))
+            if (pair.Key == null || string.IsNullOrEmpty(pair.Key.id) || pair.Value == null)
                 continue;
-            save.submittedItems.Add(new ItemAmountSave
+            var row = new ResearchProgressSave { researchId = pair.Key.id };
+            foreach (var itemPair in pair.Value)
             {
-                itemId = pair.Key.id,
-                amount = pair.Value
-            });
+                if (itemPair.Key == null || string.IsNullOrEmpty(itemPair.Key.id) || itemPair.Value <= 0)
+                    continue;
+                row.submitted.Add(new ItemAmountSave
+                {
+                    itemId = itemPair.Key.id,
+                    amount = itemPair.Value
+                });
+            }
+
+            if (row.submitted.Count > 0)
+                save.inProgress.Add(row);
         }
 
         return save;
@@ -438,8 +496,7 @@ public class ResearchSystem : MonoBehaviour
     {
         GrantStartingUnlocks();
         unlockedResearch.Clear();
-        CurrentResearch = null;
-        submittedItems.Clear();
+        submittedByNode.Clear();
 
         if (save == null)
             return;
@@ -454,24 +511,42 @@ public class ResearchSystem : MonoBehaviour
             }
         }
 
-        ResearchNodeData current = FindNode(save.currentResearchId);
-        if (current != null && CanStartResearch(current))
+        if (save.inProgress != null)
         {
-            CurrentResearch = current;
-            if (save.submittedItems != null)
+            for (int i = 0; i < save.inProgress.Count; i++)
+                ApplyProgressRow(save.inProgress[i]);
+        }
+        else if (!string.IsNullOrEmpty(save.currentResearchId) && save.submittedItems != null)
+        {
+            ApplyProgressRow(new ResearchProgressSave
             {
-                for (int i = 0; i < save.submittedItems.Count; i++)
-                {
-                    ItemAmountSave entry = save.submittedItems[i];
-                    ItemData item = FindItem(entry.itemId);
-                    if (item != null && entry.amount > 0)
-                        submittedItems[item] = entry.amount;
-                }
-            }
+                researchId = save.currentResearchId,
+                submitted = save.submittedItems
+            });
         }
 
         OnUnlocksChanged?.Invoke();
         OnResearchProgressChanged?.Invoke();
+    }
+
+    void ApplyProgressRow(ResearchProgressSave row)
+    {
+        if (row == null || row.submitted == null)
+            return;
+        ResearchNodeData node = FindNode(row.researchId);
+        if (node == null || IsResearchUnlocked(node) || !CanStartResearch(node))
+            return;
+        Dictionary<ItemData, int> bag = ProgressOf(node);
+        for (int i = 0; i < row.submitted.Count; i++)
+        {
+            ItemAmountSave entry = row.submitted[i];
+            ItemData item = FindItem(entry.itemId);
+            if (item != null && entry.amount > 0)
+                bag[item] = entry.amount;
+        }
+
+        if (IsNodeComplete(node))
+            CompleteResearch(node, grantReward: false);
     }
 
     ResearchNodeData FindNode(string id)

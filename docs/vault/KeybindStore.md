@@ -18,6 +18,6 @@ JSON переназначений в PlayerPrefs `InputBindingOverrides`.
 - `StartRebind` — «нажмите новую клавишу», Esc отмена
 - `ResetBinding` / `ResetAll`
 - `Hint("Jump")` — текст для подсказок внизу экрана
-- `BlocksGameplayInput` — пока слушаем новую клавишу, игра не должна ставить здания
+- `BlocksGameplayInput` — пока слушаем новую клавишу **или в поле ввода текст** (в том числе имя метки / `UiModal`), хоткеи игры молчат. `B` / русская `и` не должны включать стройку.
 
 Связи: почти весь ввод. UI: [[KeybindSettingsUI]], [[InputHintUI]].
