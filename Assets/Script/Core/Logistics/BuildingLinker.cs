@@ -72,25 +72,15 @@ public static class BuildingLinker
         return obj != null ? obj.GetComponent<BuildingBase>() : null;
     }
 
-    public static Vector2Int GetSocketCell(BuildingSocket socket)
+    public static Vector2Int GetSocketFrontCell(BuildingSocket socket)
     {
         if (socket == null)
             return Vector2Int.zero;
 
-        Vector2Int cell = WorldToCell(socket.transform.position);
-        BuildingBase owner = socket.GetComponentInParent<BuildingBase>();
-        if (owner == null || !OccupiesCell(owner, cell))
-            return cell;
-
-        Vector2Int dir = SocketWorldCardinal(socket);
-        if (dir.x == 0 && dir.y == 0)
-            return cell;
-        return cell + dir;
-    }
-
-    public static Vector2Int GetSocketFrontCell(BuildingSocket socket)
-    {
-        return GetSocketCell(socket);
+        float cell = GridFootprint.CellSize;
+        Vector3 outward = socket.GetOutward();
+        Vector3 probe = socket.transform.position + outward * (cell * 0.55f);
+        return WorldToCell(probe);
     }
 
     public static bool FeedsInto(BuildingBase candidate, Vector2Int targetCell)
@@ -110,7 +100,10 @@ public static class BuildingLinker
             BuildingSocket output = candidate.outputSockets[i];
             if (output == null)
                 continue;
-            if (GetSocketCell(output) == targetCell)
+            Vector2Int dir = SocketWorldCardinal(output);
+            if (dir.x == 0 && dir.y == 0)
+                continue;
+            if (OccupiesCell(candidate, targetCell - dir))
                 return true;
         }
 
@@ -134,7 +127,10 @@ public static class BuildingLinker
             BuildingSocket input = target.inputSockets[i];
             if (input == null)
                 continue;
-            if (GetSocketCell(input) == fromCell)
+            Vector2Int inward = SocketWorldCardinal(input);
+            if (inward.x == 0 && inward.y == 0)
+                continue;
+            if (OccupiesCell(target, fromCell + inward))
                 return true;
         }
 
@@ -407,6 +403,7 @@ public static class BuildingLinker
         if (target.inputSockets == null)
             return null;
 
+        Vector2Int fromCell = from is Conveyor conv ? conv.Cell : WorldToCell(from.transform.position);
         for (int i = 0; i < target.inputSockets.Length; i++)
         {
             BuildingSocket input = target.inputSockets[i];
@@ -414,15 +411,10 @@ public static class BuildingLinker
                 continue;
             if (input.connectedSocket != null && input.connectedSocket != fromOutput)
                 continue;
-            Vector2Int socketCell = GetSocketCell(input);
-            if (from is Conveyor conv)
-            {
-                if (socketCell == conv.Cell)
-                    return input;
+            Vector2Int inward = SocketWorldCardinal(input);
+            if (inward.x == 0 && inward.y == 0)
                 continue;
-            }
-
-            if (OccupiesCell(from, socketCell))
+            if (OccupiesCell(target, fromCell + inward))
                 return input;
         }
 

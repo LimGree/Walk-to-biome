@@ -14,12 +14,12 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
+  m_Fog: 1
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_FogMode: 3
+  m_FogMode: 1
   m_FogDensity: 0.01
-  m_LinearFogStart: 0
-  m_LinearFogEnd: 300
+  m_LinearFogStart: 1
+  m_LinearFogEnd: 160
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
@@ -572,25 +572,56 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   allResearchNodes:
-  - {fileID: 11400000, guid: 246ed4fc676b61b4eb3e9df45a3e7e71, type: 2}
-  - {fileID: 11400000, guid: 48c17754ce4d9a549adea9119d631c5a, type: 2}
-  - {fileID: 11400000, guid: 1a34ef5082ad6414ead63fc762ae0f41, type: 2}
-  - {fileID: 11400000, guid: c8f1a2b34d5e6f708192a3b4c5d6e7f8, type: 2}
-  - {fileID: 11400000, guid: e5f60718293a4b5c6d7e8f901a2b3c4d, type: 2}
-  - {fileID: 11400000, guid: 0415263748596a7b8c9d0e1f20314253, type: 2}
-  - {fileID: 11400000, guid: cc15263748596a7b8c9d0e1f20314208, type: 2}
+  - {fileID: 11400000, guid: c76fc1e111d54ed6bba3d6ec739c5f32, type: 2}
+  - {fileID: 11400000, guid: 657b68c631014ee686428b919844b4ab, type: 2}
+  - {fileID: 11400000, guid: d6a29259111e4d4cb5433deec828ab42, type: 2}
+  - {fileID: 11400000, guid: 30b30a210e1b4538afb4eab773d4170e, type: 2}
+  - {fileID: 11400000, guid: 0331235024c64137806a07b3dccfcf56, type: 2}
+  - {fileID: 11400000, guid: 205564eef0984e59b13b3d7de7101745, type: 2}
+  - {fileID: 11400000, guid: c9a82ed38f0a4cce881c406d8737097c, type: 2}
+  - {fileID: 11400000, guid: af6e4f12a2e446168c2cc29b79f70dd9, type: 2}
+  - {fileID: 11400000, guid: 67142d36c21144efb3917b4f81c3203a, type: 2}
+  - {fileID: 11400000, guid: 36f000e1c18e499981637e4cd62b8198, type: 2}
+  - {fileID: 11400000, guid: 7cd407ca38cd45708dad3df5bd252587, type: 2}
+  - {fileID: 11400000, guid: 073bcb93316e4470b9fc4aec97ba1b99, type: 2}
+  - {fileID: 11400000, guid: 71effd72167c404eaa4d90fdb276274d, type: 2}
+  - {fileID: 11400000, guid: 88e20895b0344b47b39ca8ec4f33159c, type: 2}
+  - {fileID: 11400000, guid: 66a5fef8bdb442f79a54060ba6efd7f5, type: 2}
+  - {fileID: 11400000, guid: 507227d3c046498e9af697a8837bc73f, type: 2}
+  - {fileID: 11400000, guid: 63c4f9723138470f8e69f803bc21132b, type: 2}
+  - {fileID: 11400000, guid: ad1524a5bc6d4e8ba7728543c8ca539a, type: 2}
+  - {fileID: 11400000, guid: e004b4ec54af41868a772b80416813c2, type: 2}
+  - {fileID: 11400000, guid: 5394c62a58434d198d58ffb44f61d965, type: 2}
+  - {fileID: 11400000, guid: d0a485075b2445abaae1f5bac98c79bd, type: 2}
+  - {fileID: 11400000, guid: 5c1c4be4935f4e1eba780db8862385c6, type: 2}
+  - {fileID: 11400000, guid: 90243480eaf3481b8cb579a7a2c66f03, type: 2}
+  - {fileID: 11400000, guid: 32e2a1564ac84709a88416d615bdf480, type: 2}
+  - {fileID: 11400000, guid: 2a4962a0ba9c4e7bb792bc326a6c757f, type: 2}
+  - {fileID: 11400000, guid: 4b30179e820845c9b9670c5629df3d74, type: 2}
+  - {fileID: 11400000, guid: b7b4445bdfea47269a84c316dc35fde1, type: 2}
+  - {fileID: 11400000, guid: 5c7490ffac324a509cfc70ed3360fee5, type: 2}
+  - {fileID: 11400000, guid: 05ebe19147b046d4ac8bfc78f701398f, type: 2}
+  - {fileID: 11400000, guid: dd10bf33815b45e1825367c2502d8f84, type: 2}
+  - {fileID: 11400000, guid: c0491f823d0c403b87834b2486333fb8, type: 2}
+  - {fileID: 11400000, guid: fbd03714653a4f228b1678998ab438d6, type: 2}
+  - {fileID: 11400000, guid: 992e8576437b430d834d4fff67f6b384, type: 2}
+  - {fileID: 11400000, guid: 52214fda94894985b93b79cfaaa044be, type: 2}
+  - {fileID: 11400000, guid: 4a47cd21780040899deb154a27e65508, type: 2}
+  - {fileID: 11400000, guid: ab6ae0847e604f33954b15fbf91d22ab, type: 2}
+  - {fileID: 11400000, guid: 6df43228a5ac4647ad1493d566a36fa1, type: 2}
+  - {fileID: 11400000, guid: 7e0939b8f5b2426c866239f321e8d5e0, type: 2}
+  - {fileID: 11400000, guid: c591b890283a4ba0b238e036f17bf88a, type: 2}
+  - {fileID: 11400000, guid: 38bcb882c0914dbab21ae46599b5e73a, type: 2}
   startingBuildings:
   - {fileID: 11400000, guid: e153fbce38af1794f88cf2afdfa4b2e3, type: 2}
   - {fileID: 11400000, guid: cf0cda2cb8d44854581c3c885d2752dc, type: 2}
   - {fileID: 11400000, guid: 420d6311d2dbd034086710d3dc619d7d, type: 2}
-  startingRecipes:
-  - {fileID: 11400000, guid: f151608f38544b9469cdd3fb90000d9f, type: 2}
-  - {fileID: 11400000, guid: ba9f47351aacd3649a369fbf937f6f61, type: 2}
+  startingRecipes: []
   baseLabLimit: 1
   maxLabLimit: 3
   extraLabSlotResearchIds:
-  - research_advanced_automation
-  - research_petrochemistry
+  - research_extractor_2
+  - research_assembler_2
 --- !u!1 &1172840490
 GameObject:
   m_ObjectHideFlags: 0

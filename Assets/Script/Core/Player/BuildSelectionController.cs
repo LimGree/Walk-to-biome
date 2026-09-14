@@ -495,7 +495,7 @@ public class BuildSelectionController : MonoBehaviour
                 recipe = c.recipe,
                 pairExit = c.pairExit,
                 pairId = c.pairId,
-                ghost = CreateGhost(c.data, c.pairExit, c.level)
+                ghost = CreateGhost(c.data, c.pairExit)
             });
         }
     }
@@ -548,7 +548,7 @@ public class BuildSelectionController : MonoBehaviour
                 yaw = b.transform.eulerAngles.y,
                 level = b.ReadLevel(),
                 recipe = ReadRecipe(b),
-                ghost = CreateGhost(b.data, false, b.ReadLevel())
+                ghost = CreateGhost(b.data)
             });
         }
 
@@ -888,7 +888,7 @@ public class BuildSelectionController : MonoBehaviour
         crafter.SetRecipe(recipe);
     }
 
-    GameObject CreateGhost(BuildingData data, bool pairExit = false, int level = 1)
+    GameObject CreateGhost(BuildingData data, bool pairExit = false)
     {
         if (data == null)
             return null;
@@ -900,9 +900,6 @@ public class BuildSelectionController : MonoBehaviour
 
         GameObject ghost = Instantiate(source);
         BuildingVisuals.PrepareGhostInstance(ghost);
-        BuildingBase ghostBuilding = ghost.GetComponent<BuildingBase>();
-        if (ghostBuilding != null)
-            BuildingVisuals.ApplyLevel(ghostBuilding, level);
 
         Conveyor belt = ghost.GetComponent<Conveyor>();
         if (belt == null && data.IsConveyor)

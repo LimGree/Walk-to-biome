@@ -64,17 +64,15 @@ public class SocketArrow : MonoBehaviour
 
     static void RefreshAll()
     {
-        SocketArrow[] all = FindObjectsByType<SocketArrow>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        for (int i = 0; i < all.Length; i++)
-        {
-            if (all[i] != null)
-                all[i].Apply();
-        }
-
         for (int i = live.Count - 1; i >= 0; i--)
         {
             if (live[i] == null)
+            {
                 live.RemoveAt(i);
+                continue;
+            }
+
+            live[i].Apply();
         }
     }
 
@@ -101,14 +99,9 @@ public class SocketArrow : MonoBehaviour
         bool show = !Application.isPlaying || buildMode;
         if (show && Application.isPlaying)
         {
-            if (!WorldView.InRange(transform.position))
-                show = false;
-            else
-            {
-                Conveyor belt = GetComponentInParent<Conveyor>();
-                if (belt != null)
-                    show = belt.ShouldShowIoArrow(this);
-            }
+            Conveyor belt = GetComponentInParent<Conveyor>();
+            if (belt != null)
+                show = belt.ShouldShowIoArrow(this);
         }
 
         if (rends == null || rends.Length == 0)
