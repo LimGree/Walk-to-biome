@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: "\u041F\u0440\u043E\u0432\u043E\u0434 "
   inputs:
   - item: {fileID: 11400000, guid: d94633f2ce269a444bcaf41dd83cc631, type: 2}
-    amount: 1
+    amount: 2
   outputs:
   - item: {fileID: 11400000, guid: 217f28faff3699148aee942274ec50ec, type: 2}
-    amount: 2
+    amount: 1
   craftTime: 1
   requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}
+  allowedBuildingIds:
+  - assembler

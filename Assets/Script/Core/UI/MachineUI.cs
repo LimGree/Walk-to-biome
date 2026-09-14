@@ -1,196 +1,288 @@
-﻿using System.Collections.Generic;
-using TMPro;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class MachineUI : MonoBehaviour
 {
     public static MachineUI Instance { get; private set; }
 
-    [Header("Main Panel")]
+    [Header("Legacy uGUI (hidden)")]
     public GameObject machinePanel;
-    public TextMeshProUGUI titleText;
-    public Button closeButton;
-
-    [Header("Content Roots")]
     public GameObject extractorContent;
     public GameObject smelterContent;
     public GameObject assemblerContent;
     public GameObject researchLabContent;
 
-    [Header("Extractor UI")]
-    public Transform extractorButtonsParent;
-    public GameObject resourceButtonPrefab;
-    public ItemData[] availableResources;          // Iron Ore, Copper Ore, Coal...
-
-    [Header("Smelter / Assembler UI")]
-    public Transform recipeButtonsParent;
-    public GameObject recipeButtonPrefab;
-    public TextMeshProUGUI currentRecipeText;
-    public Slider progressSlider;
-
-    [Header("Research Lab UI")]
-    public Transform researchButtonsParent;
-    public GameObject researchButtonPrefab;
-    public TextMeshProUGUI researchProgressText;
-    public Slider researchProgressSlider;
-
-    GameObject storageContent;
-    Transform storageSlotsParent;
-    TextMeshProUGUI storageSummaryText;
-
-    GameObject armFilterContent;
-    Transform armFilterParent;
-    TextMeshProUGUI armFilterSummary;
-    Image headerIcon;
+    [Header("Data")]
+    public ItemData[] availableResources;
+    public RecipeData[] allRecipes;
 
     public bool IsOpen { get; private set; }
 
-    private BuildingBase currentBuilding;
+    VisualElement overlay;
+    Label statusLabel;
+    VisualElement progress;
+    VisualElement tabRow;
+    Button tabResearch;
+    Button tabRecipes;
+    Button tabBelts;
+    Button tabStats;
+    VisualElement bodyHost;
+    ScrollView bodyList;
+    VisualElement researchPage;
+    VisualElement recipePage;
+    VisualElement beltPage;
+    VisualElement statsPage;
+    VisualElement researchView;
+    VisualElement researchCanvas;
+    VisualElement researchDetail;
+    readonly ResearchTreeNav researchNav = new ResearchTreeNav();
+    string selectedResearchId;
+    ScrollView recipeList;
+    ScrollView beltList;
+    ScrollView statsList;
+    VisualElement storageGrid;
+    VisualElement storageScroll;
+    Label storageSummary;
+    VisualElement armGrid;
+    VisualElement armScroll;
+    Label armSummary;
+    Button upgradeBtn;
+    VisualElement recipeSearchHost;
+    TextField recipeSearch;
+    VisualElement codexSearchHost;
+    TextField codexSearch;
+    VisualElement filterSearchHost;
+    TextField filterSearch;
+    string upgradeTipTitle = "";
+    string upgradeTipBody = "";
+    readonly List<VisualElement> storageSlots = new List<VisualElement>();
 
+    BuildingBase currentBuilding;
+    public bool IsLabView { get; private set; }
+    int labTab;
+    float nextStatsRefresh;
 
-    [Header("All recipes in game")]
-    public RecipeData[] allRecipes;
+    const int TabResearch = 0;
+    const int TabRecipes = 1;
+    const int TabBelts = 2;
+    const int TabStats = 3;
 
     void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
+
+    void OnEnable()
+    {
+        BindLiveEvents();
+    }
+
+    void OnDisable()
+    {
+        UnbindLiveEvents();
+    }
+
+    void OnDestroy()
+    {
+        UnbindLiveEvents();
+        if (Instance == this)
+            Instance = null;
     }
 
     void Start()
     {
-        ApplyChrome();
-
-        if (machinePanel != null)
-            machinePanel.SetActive(false);
-
-        if (closeButton != null)
-            closeButton.onClick.AddListener(Close);
+        Build();
+        BindLiveEvents();
+        IndustryUi.HideLegacy(this, machinePanel, extractorContent, smelterContent, assemblerContent, researchLabContent);
+        IndustryUi.DisableHudCanvas(this);
     }
 
-    void ApplyChrome()
+    void BindLiveEvents()
     {
-        Image panelImage = machinePanel != null ? machinePanel.GetComponent<Image>() : null;
-        if (panelImage == null && machinePanel != null)
-            panelImage = machinePanel.AddComponent<Image>();
-        UiTheme.StyleImage(panelImage, UiTheme.Panel);
-
-        if (titleText != null)
+        UnbindLiveEvents();
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.OnChanged += OnLiveChanged;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.OnChanged += OnLiveChanged;
+        if (ResearchSystem.Instance != null)
         {
-            UiTheme.StyleText(titleText, 30f, UiTheme.Text, FontStyles.Bold);
-            titleText.alignment = TextAlignmentOptions.MidlineLeft;
-        }
-
-        if (currentRecipeText != null)
-        {
-            UiTheme.StyleText(currentRecipeText, 20f, UiTheme.Accent);
-            currentRecipeText.alignment = TextAlignmentOptions.MidlineLeft;
-        }
-
-        if (researchProgressText != null)
-        {
-            UiTheme.StyleText(researchProgressText, 20f, UiTheme.Text);
-            researchProgressText.alignment = TextAlignmentOptions.MidlineLeft;
-        }
-
-        UiTheme.StyleSlider(progressSlider);
-        UiTheme.StyleSlider(researchProgressSlider);
-
-        PrepareScrollList(recipeButtonsParent, new Vector2(880f, 156f));
-        PrepareScrollList(researchButtonsParent, new Vector2(880f, 176f));
-        PrepareScrollList(extractorButtonsParent, new Vector2(880f, 156f));
-
-        EnsureHeaderIcon();
-
-        if (closeButton != null)
-        {
-            Image closeImage = closeButton.GetComponent<Image>();
-            UiTheme.StyleImage(closeImage, UiTheme.Danger);
-            var closeText = closeButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (closeText != null)
-            {
-                closeText.text = "✕";
-                UiTheme.StyleText(closeText, 22f, Color.white, FontStyles.Bold);
-                closeText.alignment = TextAlignmentOptions.Center;
-            }
+            ResearchSystem.Instance.OnUnlocksChanged += OnLiveChanged;
+            ResearchSystem.Instance.OnResearchProgressChanged += OnLiveChanged;
         }
     }
 
-    void EnsureHeaderIcon()
+    void UnbindLiveEvents()
     {
-        if (headerIcon != null || titleText == null)
-            return;
-
-        Transform parent = titleText.transform.parent;
-        if (parent == null)
-            return;
-
-        GameObject go = new GameObject("HeaderIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        go.transform.SetParent(parent, false);
-        headerIcon = go.GetComponent<Image>();
-        headerIcon.preserveAspect = true;
-        headerIcon.raycastTarget = false;
-        headerIcon.color = Color.white;
-
-        RectTransform iconRt = headerIcon.rectTransform;
-        RectTransform titleRt = titleText.rectTransform;
-        iconRt.anchorMin = titleRt.anchorMin;
-        iconRt.anchorMax = new Vector2(titleRt.anchorMin.x, titleRt.anchorMax.y);
-        iconRt.pivot = new Vector2(0f, 0.5f);
-        iconRt.anchoredPosition = titleRt.anchoredPosition;
-        iconRt.sizeDelta = new Vector2(48f, 48f);
-
-        titleRt.offsetMin = new Vector2(titleRt.offsetMin.x + 58f, titleRt.offsetMin.y);
-    }
-
-    void SetHeader(string title, BuildingBase building)
-    {
-        if (titleText != null)
-            titleText.text = title;
-
-        EnsureHeaderIcon();
-        if (headerIcon == null)
-            return;
-
-        Sprite icon = building != null && building.data != null ? building.data.icon : null;
-        headerIcon.sprite = icon;
-        headerIcon.enabled = icon != null;
-        headerIcon.color = Color.white;
-    }
-
-    static void PrepareScrollList(Transform list, Vector2 cell)
-    {
-        if (list == null)
-            return;
-
-        UiTheme.EnsureGrid(list, cell, new Vector2(12f, 12f), 1);
-        UiTheme.EnsureVerticalScroll(list as RectTransform);
+        if (BeltSpeedSystem.Instance != null)
+            BeltSpeedSystem.Instance.OnChanged -= OnLiveChanged;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.OnChanged -= OnLiveChanged;
+        if (ResearchSystem.Instance != null)
+        {
+            ResearchSystem.Instance.OnUnlocksChanged -= OnLiveChanged;
+            ResearchSystem.Instance.OnResearchProgressChanged -= OnLiveChanged;
+        }
     }
 
     void Update()
     {
-        // Обновляем прогресс, если панель открыта
-        if (IsOpen && currentBuilding != null)
-        {
+        if (IsOpen && (currentBuilding != null || IsLabView))
             UpdateProgress();
-        }
     }
 
-    // ================== ОТКРЫТИЕ ==================
+    void Build()
+    {
+        VisualElement root = IndustryUi.Mount(this, 110);
+        overlay = IndustryUi.OverlayPanel("Building", null, Close);
+        VisualElement panel = IndustryUi.PanelOf(overlay);
+        VisualElement header = overlay.Q("Header");
+        Button close = overlay.Q<Button>("Close");
+        upgradeBtn = IndustryUi.Btn(UiLocale.T("machine.upgrade"), OnUpgradeClicked, "btn-small", "btn-primary", "upgrade-btn");
+        if (header != null)
+        {
+            if (close != null)
+                header.Insert(header.IndexOf(close), upgradeBtn);
+            else
+                header.Add(upgradeBtn);
+        }
+        IndustryUi.Show(upgradeBtn, false);
+        upgradeBtn.RegisterCallback<PointerEnterEvent>(OnUpgradeHover);
+        upgradeBtn.RegisterCallback<PointerLeaveEvent>(_ => UiTooltip.Hide());
+        var statusRow = IndustryUi.El("StatusRow", "status-row");
+        statusRow.Add(IndustryUi.El("Dot", "status-dot"));
+        statusLabel = IndustryUi.Text("Status", "", "body-small", "grow");
+        statusRow.Add(statusLabel);
+        panel.Add(statusRow);
+        progress = IndustryUi.ProgressBar("Progress");
+        panel.Add(progress);
+
+        tabRow = IndustryUi.El("Tabs", "tab-row");
+        tabResearch = IndustryUi.TabBtn(UiLocale.T("machine.tab_research"), () => OpenLabTab(TabResearch));
+        tabRecipes = IndustryUi.TabBtn(UiLocale.T("machine.tab_recipes"), () => OpenLabTab(TabRecipes));
+        tabBelts = IndustryUi.TabBtn(UiLocale.T("machine.tab_belts"), () => OpenLabTab(TabBelts));
+        tabStats = IndustryUi.TabBtn(UiLocale.T("machine.tab_stats"), () => OpenLabTab(TabStats));
+        tabRow.Add(tabResearch);
+        tabRow.Add(tabRecipes);
+        tabRow.Add(tabBelts);
+        tabRow.Add(tabStats);
+        panel.Add(tabRow);
+
+        bodyHost = IndustryUi.El("Body", "col", "grow");
+        recipeSearchHost = IndustryUi.El("RecipeSearchHost", "search-host");
+        recipeSearchHost.Add(IndustryUi.Text("RL", UiLocale.T("machine.search_recipe"), "label-caps"));
+        recipeSearch = new TextField { name = "RecipeSearch" };
+        recipeSearch.AddToClassList("field");
+        recipeSearch.AddToClassList("search-field");
+        recipeSearch.RegisterValueChangedCallback(_ =>
+        {
+            if (currentBuilding is CrafterBuilding crafter)
+                RefreshRecipeList(crafter);
+        });
+        recipeSearchHost.Add(recipeSearch);
+        recipeSearchHost.pickingMode = PickingMode.Position;
+        bodyHost.Add(recipeSearchHost);
+
+        bodyList = IndustryUi.Scroll("BodyList");
+        bodyHost.Add(bodyList);
+
+        researchPage = IndustryUi.El("ResearchPage", "research-layout", "grow");
+        researchView = IndustryUi.El("ResearchView", "research-view", "grow");
+        researchView.pickingMode = PickingMode.Position;
+        researchCanvas = IndustryUi.El("ResearchCanvas", "research-canvas");
+        researchView.Add(researchCanvas);
+        researchNav.Attach(researchView, researchCanvas);
+        researchDetail = IndustryUi.El("ResearchDetail", "research-detail", "col");
+        researchPage.Add(researchView);
+        researchPage.Add(researchDetail);
+
+        recipePage = IndustryUi.El("RecipePage", "col", "grow");
+        codexSearchHost = IndustryUi.El("CodexSearchHost", "search-host");
+        codexSearchHost.Add(IndustryUi.Text("CL", UiLocale.T("machine.search_recipe"), "label-caps"));
+        var searchRow = IndustryUi.El("CodexSearchRow", "row", "codex-search-row");
+        searchRow.Add(IndustryUi.Text("Plus", "+", "codex-search-plus"));
+        codexSearch = new TextField { name = "CodexSearch" };
+        codexSearch.AddToClassList("field");
+        codexSearch.AddToClassList("search-field");
+        codexSearch.AddToClassList("grow");
+        if (codexSearch.textEdition != null)
+            codexSearch.textEdition.placeholder = UiLocale.T("codex.search");
+        codexSearch.RegisterValueChangedCallback(_ => FillRecipeTab());
+        searchRow.Add(codexSearch);
+        codexSearchHost.Add(searchRow);
+        recipeList = IndustryUi.Scroll("RecipeList");
+        recipePage.Add(codexSearchHost);
+        recipePage.Add(recipeList);
+
+        beltPage = IndustryUi.El("BeltPage", "col", "grow");
+        beltList = IndustryUi.Scroll("BeltList");
+        beltPage.Add(beltList);
+
+        statsPage = IndustryUi.El("StatsPage", "col", "grow");
+        statsList = IndustryUi.Scroll("StatsList");
+        statsPage.Add(statsList);
+
+        storageSummary = IndustryUi.Text("StorageSum", "", "body-text");
+        storageScroll = IndustryUi.Scroll("StorageScroll");
+        storageGrid = IndustryUi.El("StorageGrid", "grid");
+        storageScroll.Add(storageGrid);
+        armSummary = IndustryUi.Text("ArmSum", "", "body-text");
+        filterSearchHost = IndustryUi.El("FilterSearchHost", "search-host");
+        filterSearchHost.Add(IndustryUi.Text("FL", UiLocale.T("machine.search_filter"), "label-caps"));
+        filterSearch = new TextField { name = "FilterSearch" };
+        filterSearch.AddToClassList("field");
+        filterSearch.AddToClassList("search-field");
+        filterSearch.RegisterValueChangedCallback(_ =>
+        {
+            if (currentBuilding is RoboticArm arm)
+                RefreshArmFilter(arm);
+        });
+        filterSearchHost.Add(filterSearch);
+        filterSearchHost.pickingMode = PickingMode.Position;
+        armScroll = IndustryUi.Scroll("ArmScroll");
+        armGrid = IndustryUi.El("ArmGrid", "col");
+        armScroll.Add(armGrid);
+
+        bodyHost.Add(researchPage);
+        bodyHost.Add(recipePage);
+        bodyHost.Add(beltPage);
+        bodyHost.Add(statsPage);
+        bodyHost.Add(storageSummary);
+        bodyHost.Add(storageScroll);
+        bodyHost.Add(armSummary);
+        bodyHost.Add(filterSearchHost);
+        bodyHost.Add(armScroll);
+        panel.Add(bodyHost);
+
+        IndustryUi.Show(overlay, false);
+        root.Add(overlay);
+        HidePages();
+    }
 
     public void Open(BuildingBase building)
     {
-        if (building == null) return;
+        BindLiveEvents();
+        if (building == null)
+            return;
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+        if (overlay == null)
+            Build();
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            WalletHud.Instance.SetShopOpen(false);
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            SelectionActionsUI.Instance.SetOpen(false);
 
         currentBuilding = building;
+        IsLabView = building is ResearchLab;
         IsOpen = true;
-
-        // Прячем все контенты
-        HideAllContents();
+        HidePages();
 
         if (building is OilExtractor oil)
         {
@@ -216,10 +308,10 @@ public class MachineUI : MonoBehaviour
             SetHeader(title, building);
             ShowCrafterUI(crafter);
         }
-        else if (building is ResearchLab lab)
+        else if (building is ResearchLab)
         {
             SetHeader("Research Lab", building);
-            ShowResearchLabUI(lab);
+            ShowResearchLabUI();
         }
         else if (building is StorageContainer storage)
         {
@@ -234,514 +326,786 @@ public class MachineUI : MonoBehaviour
         else
         {
             SetHeader(building.data != null ? building.data.displayName : "Building", building);
+            IndustryUi.Show(bodyList, true);
         }
 
-        machinePanel.SetActive(true);
+        BindUpgrade(building);
+        IndustryUi.Show(overlay, true);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
+        else
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+            SetPlayerControl(false);
+        }
+    }
 
-        // Курсор
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+    public void ToggleLab()
+    {
+        if (IsOpen && IsLabView)
+            Close();
+        else
+            OpenLab();
+    }
 
-        // === Отключаем движение и камеру ===
-        SetPlayerControl(false);
+    public void OpenLab()
+    {
+        ResearchLab lab = FindWorldLab();
+        if (lab != null)
+        {
+            Open(lab);
+            return;
+        }
+
+        BindLiveEvents();
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+        if (overlay == null)
+            Build();
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused)
+            return;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            WalletHud.Instance.SetShopOpen(false);
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
+            SelectionActionsUI.Instance.SetOpen(false);
+
+        currentBuilding = null;
+        IsLabView = true;
+        IsOpen = true;
+        HidePages();
+        BuildingData labData = GameDatabase.FindBuilding("research_lab");
+        IndustryUi.SetHeader(overlay, labData != null ? labData.displayName : "Research Lab", labData != null ? labData.icon : null);
+        ShowResearchLabUI();
+        BindUpgrade(null);
+        IndustryUi.Show(overlay, true);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestoreGameplayFocus();
+        else
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+            SetPlayerControl(false);
+        }
+    }
+
+    static ResearchLab FindWorldLab()
+    {
+        ResearchLab[] labs = UnityEngine.Object.FindObjectsByType<ResearchLab>(FindObjectsSortMode.None);
+        for (int i = 0; i < labs.Length; i++)
+        {
+            if (labs[i] != null && labs[i].IsWorldLab)
+                return labs[i];
+        }
+
+        return labs.Length > 0 ? labs[0] : null;
     }
 
     public void Close()
     {
         IsOpen = false;
+        IsLabView = false;
         currentBuilding = null;
-
-        if (machinePanel != null)
-            machinePanel.SetActive(false);
-
+        KeybindStore.SuppressGameplay();
+        IndustryUi.Show(upgradeBtn, false);
+        IndustryUi.Show(overlay, false);
         if (GameManager.Instance != null)
             GameManager.Instance.RestoreGameplayFocus();
         else
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            UnityEngine.Cursor.lockState = CursorLockMode.Locked;
+            UnityEngine.Cursor.visible = false;
             SetPlayerControl(true);
         }
     }
-    void SetPlayerControl(bool enabled)
-    {
-        var movement = FindFirstObjectByType<PlayerMovement>();
-        if (movement != null)
-        {
-            movement.canMove = enabled;
-            movement.canLook = enabled;
-        }
 
-        // Можно также отключать строительство, если нужно
-        // var builder = FindFirstObjectByType<PlayerBuilder>();
-        // if (builder != null) builder.SetBuildMode(enabled);
+    void SetHeader(string title, BuildingBase building)
+    {
+        Sprite icon = building != null && building.data != null ? building.data.icon : null;
+        IndustryUi.SetHeader(overlay, title, icon);
     }
 
-    void HideAllContents()
+    void SetStatus(string text, UiStatus status)
     {
-        if (extractorContent) extractorContent.SetActive(false);
-        if (smelterContent) smelterContent.SetActive(false);
-        if (assemblerContent) assemblerContent.SetActive(false);
-        if (researchLabContent) researchLabContent.SetActive(false);
-        if (storageContent) storageContent.SetActive(false);
-        if (armFilterContent) armFilterContent.SetActive(false);
+        if (statusLabel != null)
+            statusLabel.text = text ?? "";
+        VisualElement row = statusLabel != null ? statusLabel.parent : null;
+        if (row != null)
+            UiStatusUtil.Apply(row, status);
+    }
+
+    static void SetPlayerControl(bool enabled)
+    {
+        PlayerMovement movement = FindFirstObjectByType<PlayerMovement>();
+        if (movement == null)
+            return;
+        movement.canMove = enabled;
+        movement.canLook = enabled;
+    }
+
+    void HidePages()
+    {
+        IndustryUi.Show(tabRow, false);
+        IndustryUi.Show(bodyList, false);
+        IndustryUi.Show(researchPage, false);
+        IndustryUi.Show(recipePage, false);
+        IndustryUi.Show(beltPage, false);
+        IndustryUi.Show(statsPage, false);
+        IndustryUi.Show(storageSummary, false);
+        IndustryUi.Show(storageScroll, false);
+        IndustryUi.Show(armSummary, false);
+        IndustryUi.Show(armScroll, false);
+        IndustryUi.Show(recipeSearchHost, false);
+        IndustryUi.Show(filterSearchHost, false);
+        IndustryUi.Show(progress, false);
+        if (statusLabel != null)
+        {
+            statusLabel.text = "";
+            VisualElement row = statusLabel.parent;
+            if (row != null)
+                UiStatusUtil.Apply(row, UiStatus.Neutral);
+        }
     }
 
     void ShowOilExtractorUI(OilExtractor oil)
     {
-        if (extractorContent != null)
-            extractorContent.SetActive(true);
-        if (extractorButtonsParent == null)
-            return;
-
-        foreach (Transform child in extractorButtonsParent)
-            Destroy(child.gameObject);
-
-        var fake = ScriptableObject.CreateInstance<RecipeData>();
-        fake.displayName = oil.resource != null
-            ? "Добыча  " + oil.resource.displayName
-            : "Нет нефти";
+        IndustryUi.Show(bodyList, true);
+        bodyList.Clear();
+        var outputs = new List<ItemStack>();
         if (oil.resource != null)
-            fake.outputs.Add(new ItemStack(oil.resource, oil.CurrentItemsPerCycle));
-
-        UiFactory.CreateRecipeCard(extractorButtonsParent, fake, true, null);
-        Object.Destroy(fake);
-
-        string stats = oil.RichnessName + "  ·  " + oil.CurrentInterval.ToString("0.##") + " с / цикл";
-        UiFactory.CreateActionButton(
-            extractorButtonsParent,
+            outputs.Add(new ItemStack(oil.resource, oil.CurrentItemsPerCycle));
+        string title = oil.resource != null ? "Добыча  " + oil.resource.displayName : "Нет нефти";
+        bodyList.Add(IndustryUi.RecipeCard(title, null, outputs, true, null));
+        bodyList.Add(IndustryUi.ActionCard(
             "Скважина",
-            stats + "  ·  бесконечный запас",
+            oil.RichnessName + "  ·  " + oil.CurrentInterval.ToString("0.##") + " с / цикл  ·  бесконечный запас",
             false,
-            null);
+            null));
     }
 
     void ShowWaterExtractorUI(WaterExtractor pump)
     {
-        if (extractorContent != null)
-            extractorContent.SetActive(true);
-        if (extractorButtonsParent == null)
-            return;
-
-        foreach (Transform child in extractorButtonsParent)
-            Destroy(child.gameObject);
-
-        var fake = ScriptableObject.CreateInstance<RecipeData>();
-        fake.displayName = pump.resource != null
-            ? "Добыча  " + pump.resource.displayName
-            : "Нет воды";
+        IndustryUi.Show(bodyList, true);
+        bodyList.Clear();
+        var outputs = new List<ItemStack>();
         if (pump.resource != null)
-            fake.outputs.Add(new ItemStack(pump.resource, pump.CurrentItemsPerCycle));
-
-        UiFactory.CreateRecipeCard(extractorButtonsParent, fake, true, null);
-        Object.Destroy(fake);
-
-        string stats = pump.CurrentInterval.ToString("0.##") + " с / цикл";
-        UiFactory.CreateActionButton(
-            extractorButtonsParent,
+            outputs.Add(new ItemStack(pump.resource, pump.CurrentItemsPerCycle));
+        string title = pump.resource != null ? "Добыча  " + pump.resource.displayName : "Нет воды";
+        bodyList.Add(IndustryUi.RecipeCard(title, null, outputs, true, null));
+        bodyList.Add(IndustryUi.ActionCard(
             "Источник",
-            stats + "  ·  бесконечный запас",
+            pump.CurrentInterval.ToString("0.##") + " с / цикл  ·  бесконечный запас",
             false,
-            null);
+            null));
     }
-
-    // ================== EXTRACTOR ==================
 
     void ShowExtractorUI(Extractor extractor)
     {
-        extractorContent.SetActive(true);
-
-        foreach (Transform child in extractorButtonsParent)
-            Destroy(child.gameObject);
-
-        var fake = ScriptableObject.CreateInstance<RecipeData>();
-        fake.displayName = extractor.resource != null
+        IndustryUi.Show(bodyList, true);
+        bodyList.Clear();
+        var outputs = new List<ItemStack>();
+        if (extractor.resource != null)
+            outputs.Add(new ItemStack(extractor.resource, extractor.CurrentItemsPerCycle));
+        string title = extractor.resource != null
             ? "Mining  " + extractor.resource.displayName
             : "No resource node";
-        if (extractor.resource != null)
-            fake.outputs.Add(new ItemStack(extractor.resource, extractor.CurrentItemsPerCycle));
-
-        UiFactory.CreateRecipeCard(extractorButtonsParent, fake, true, null);
-        Object.Destroy(fake);
-
-        string stats = $"{extractor.CurrentInterval:0.##} с / цикл  ·  {extractor.CurrentItemsPerCycle} шт";
-        if (extractor.CanUpgrade)
-        {
-            string next = $"{extractor.upgradedExtractInterval:0.##} с / цикл  ·  {Mathf.Max(1, extractor.upgradedItemsPerCycle)} шт";
-            UiFactory.CreateActionButton(
-                extractorButtonsParent,
-                "Прокачать  →  ур. 2",
-                "Сейчас: " + stats + "   |   После: " + next,
-                true,
-                () =>
-                {
-                    if (extractor.TryUpgrade())
-                    {
-                        SetHeader("Extractor  ·  ур. " + extractor.level, extractor);
-                        ShowExtractorUI(extractor);
-                    }
-                });
-        }
-        else
-        {
-            UiFactory.CreateActionButton(
-                extractorButtonsParent,
-                "Улучшено до ур. 2",
-                stats,
-                false,
-                null);
-        }
+        bodyList.Add(IndustryUi.RecipeCard(title, null, outputs, true, null));
     }
 
     void ShowCrafterUI(CrafterBuilding crafter)
     {
-        if (smelterContent != null)
-            smelterContent.SetActive(true);
+        IndustryUi.Show(recipeSearchHost, true);
+        IndustryUi.Show(bodyList, true);
+        IndustryUi.Show(progress, true);
+        if (recipeSearch != null)
+            recipeSearch.value = "";
         RefreshRecipeList(crafter);
     }
 
     void RefreshRecipeList(CrafterBuilding crafter)
     {
-        if (recipeButtonsParent == null) return;
-
-        foreach (Transform child in recipeButtonsParent)
-            Destroy(child.gameObject);
-
-        RecipeData[] catalog = GameDatabase.AllRecipes();
+        if (bodyList == null)
+            return;
+        bodyList.Clear();
         if (crafter == null)
             return;
 
+        RecipeData[] catalog = GameDatabase.AllRecipes();
         BuildingData thisBuildingData = crafter.data;
         RecipeData selected = crafter.currentRecipe;
+        string query = recipeSearch != null ? recipeSearch.value : "";
 
-        for (int i = 0; i < catalog.Length; i++)
+        if (catalog != null)
         {
-            RecipeData recipe = catalog[i];
-            if (recipe == null)
-                continue;
-            if (!recipe.AllowsBuilding(thisBuildingData))
-                continue;
-            if (ResearchSystem.Instance != null && !ResearchSystem.Instance.IsRecipeUnlocked(recipe))
-                continue;
+            for (int i = 0; i < catalog.Length; i++)
+            {
+                RecipeData recipe = catalog[i];
+                if (recipe == null)
+                    continue;
+                if (!recipe.AllowsBuilding(thisBuildingData))
+                    continue;
+                if (ResearchSystem.Instance != null && !ResearchSystem.Instance.IsRecipeUnlocked(recipe))
+                    continue;
+                if (!MatchesRecipe(recipe, query))
+                    continue;
 
-            RecipeData captured = recipe;
-            UiFactory.CreateRecipeCard(
-                recipeButtonsParent,
-                recipe,
-                selected == recipe,
-                () =>
-                {
-                    crafter.SetRecipe(captured);
-                    RefreshRecipeList(crafter);
-                });
+                RecipeData captured = recipe;
+                VisualElement card = IndustryUi.RecipeCard(
+                    recipe,
+                    selected == recipe,
+                    () =>
+                    {
+                        crafter.SetRecipe(captured);
+                        RefreshRecipeList(crafter);
+                    });
+                if (!string.IsNullOrEmpty(recipe.id))
+                    card.name = "Rec_" + recipe.id.Trim();
+                bodyList.Add(card);
+            }
         }
 
-        if (currentRecipeText != null)
-            currentRecipeText.text = selected != null ? "Selected: " + selected.displayName : "Select a recipe";
-
-        Assembler assembler = crafter as Assembler;
-        if (assembler != null)
-            AddAssemblerUpgradeButton(assembler);
+        SetStatus(
+            selected != null ? selected.displayName : "Select a recipe",
+            selected != null ? UiStatus.Running : UiStatus.Ready);
     }
 
-    void AddAssemblerUpgradeButton(Assembler assembler)
+    static bool TryPaidUpgrade(BuildingBase building)
     {
-        if (recipeButtonsParent == null || assembler == null)
+        if (building == null || !building.CanUpgradeBuilding)
+            return false;
+        int cost = Economy.UpgradeCost(building);
+        if (PlayerWallet.Instance != null && !PlayerWallet.Instance.TrySpendCoins(cost))
+            return false;
+        if (building.TryUpgradeBuilding())
+            return true;
+        if (PlayerWallet.Instance != null)
+            PlayerWallet.Instance.AddCoins(cost);
+        return false;
+    }
+
+    void BindUpgrade(BuildingBase building)
+    {
+        bool can = building != null && building.CanUpgradeBuilding;
+        IndustryUi.Show(upgradeBtn, can);
+        if (!can || upgradeBtn == null)
             return;
 
-        string speed = "×" + assembler.CraftSpeed.ToString("0.##");
-        if (assembler.CanUpgrade)
+        int cost = Economy.UpgradeCost(building);
+        string money = IndustryUi.Money(cost);
+        bool canPay = PlayerWallet.Instance == null || PlayerWallet.Instance.CanAfford(cost);
+        IndustryUi.SetButtonLabel(upgradeBtn, UiLocale.T("machine.upgrade"));
+        upgradeTipTitle = UiLocale.T("machine.upgrade_cost", money);
+        if (building is Extractor extractor)
         {
-            UiFactory.CreateActionButton(
-                recipeButtonsParent,
-                "Прокачать  →  ур. 2",
-                "Скорость крафта " + speed + "  →  ×" + Mathf.Max(1f, assembler.upgradedCraftSpeed).ToString("0.##"),
-                true,
-                () =>
-                {
-                    if (assembler.TryUpgrade())
-                    {
-                        SetHeader("Assembler  ·  ур. " + assembler.level, assembler);
-                        RefreshRecipeList(assembler);
-                    }
-                });
+            string now = extractor.CurrentInterval.ToString("0.##") + " с / " + extractor.CurrentItemsPerCycle;
+            string next = (extractor.upgradedExtractInterval * Economy.ExtractTimeMul).ToString("0.##") + " с / "
+                + Mathf.Max(1, extractor.upgradedItemsPerCycle);
+            upgradeTipBody = UiLocale.T("machine.upgrade_ext", now, next);
+        }
+        else if (building is CrafterBuilding crafter)
+        {
+            upgradeTipBody = UiLocale.T("machine.upgrade_craft", "×" + crafter.CraftSpeed.ToString("0.##"));
         }
         else
-        {
-            UiFactory.CreateActionButton(
-                recipeButtonsParent,
-                "Улучшено до ур. 2",
-                "Скорость крафта " + speed,
-                false,
-                null);
-        }
+            upgradeTipBody = "";
+
+        if (!canPay)
+            upgradeTipBody = string.IsNullOrEmpty(upgradeTipBody)
+                ? UiLocale.T("machine.upgrade_need")
+                : upgradeTipBody + "  ·  " + UiLocale.T("machine.upgrade_need");
     }
 
+    void OnUpgradeClicked()
+    {
+        if (currentBuilding == null || !currentBuilding.CanUpgradeBuilding)
+            return;
+        if (!TryPaidUpgrade(currentBuilding))
+        {
+            UiAudio.PlayError();
+            return;
+        }
+        GameAudio.World("world_upgrade", currentBuilding.transform.position);
+        Open(currentBuilding);
+    }
 
+    void OnUpgradeHover(PointerEnterEvent evt)
+    {
+        if (upgradeBtn == null || upgradeBtn.style.display == DisplayStyle.None)
+            return;
+        UiTooltip.Show(upgradeBtn, upgradeTipTitle, upgradeTipBody, (Vector2)evt.position);
+    }
 
-    // ================== STORAGE ==================
+    static bool MatchesRecipe(RecipeData recipe, string query)
+    {
+        if (string.IsNullOrEmpty(query))
+            return true;
+        if (MatchesQuery(recipe.displayName, query) || MatchesQuery(recipe.id, query))
+            return true;
+        if (MatchesStacks(recipe.inputs, query) || MatchesStacks(recipe.outputs, query))
+            return true;
+        return false;
+    }
+
+    static bool MatchesStacks(IList<ItemStack> stacks, string query)
+    {
+        if (stacks == null)
+            return false;
+        for (int i = 0; i < stacks.Count; i++)
+        {
+            ItemData item = stacks[i] != null ? stacks[i].item : null;
+            if (item != null && (MatchesQuery(item.displayName, query) || MatchesQuery(item.id, query)))
+                return true;
+        }
+        return false;
+    }
+
+    static bool MatchesQuery(string value, string query)
+    {
+        if (string.IsNullOrEmpty(query))
+            return true;
+        return !string.IsNullOrEmpty(value)
+            && value.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
 
     void ShowStorageUI(StorageContainer storage)
     {
-        EnsureStorageUi();
-        if (storageContent != null)
-            storageContent.SetActive(true);
+        IndustryUi.Show(storageSummary, true);
+        IndustryUi.Show(storageScroll, true);
         RefreshStorageSlots(storage);
-    }
-
-    void EnsureStorageUi()
-    {
-        if (storageContent != null)
-            return;
-
-        Transform host = null;
-        if (extractorContent != null)
-            host = extractorContent.transform.parent;
-        if (host == null && machinePanel != null)
-            host = machinePanel.transform;
-        if (host == null)
-            return;
-
-        storageContent = new GameObject("StorageContent", typeof(RectTransform));
-        storageContent.transform.SetParent(host, false);
-        RectTransform root = storageContent.GetComponent<RectTransform>();
-        root.anchorMin = Vector2.zero;
-        root.anchorMax = Vector2.one;
-        root.offsetMin = Vector2.zero;
-        root.offsetMax = Vector2.zero;
-
-        storageSummaryText = UiTheme.AddText(root, "Summary", "", 20f, UiTheme.Text);
-        RectTransform summaryRt = storageSummaryText.rectTransform;
-        summaryRt.anchorMin = new Vector2(0f, 1f);
-        summaryRt.anchorMax = new Vector2(1f, 1f);
-        summaryRt.pivot = new Vector2(0.5f, 1f);
-        summaryRt.anchoredPosition = new Vector2(0f, -8f);
-        summaryRt.sizeDelta = new Vector2(-32f, 32f);
-
-        GameObject gridGo = new GameObject("Slots", typeof(RectTransform));
-        gridGo.transform.SetParent(root, false);
-        RectTransform gridRt = gridGo.GetComponent<RectTransform>();
-        gridRt.anchorMin = new Vector2(0f, 0f);
-        gridRt.anchorMax = new Vector2(1f, 1f);
-        gridRt.offsetMin = new Vector2(16f, 16f);
-        gridRt.offsetMax = new Vector2(-16f, -48f);
-        storageSlotsParent = gridRt;
-
-        UiTheme.EnsureGrid(storageSlotsParent, new Vector2(220f, 220f), new Vector2(16f, 16f), 2);
-        UiTheme.EnsureVerticalScroll(gridRt);
     }
 
     void RefreshStorageSlots(StorageContainer storage)
     {
-        EnsureStorageUi();
-        if (storage == null || storageSlotsParent == null)
+        if (storage == null || storageGrid == null)
             return;
 
         int count = storage.SlotCount;
-        while (storageSlotsParent.childCount < count)
-            UiFactory.CreateStorageSlot(storageSlotsParent);
-
-        for (int i = 0; i < storageSlotsParent.childCount; i++)
+        while (storageSlots.Count < count)
         {
-            GameObject slot = storageSlotsParent.GetChild(i).gameObject;
-            slot.SetActive(i < count);
-            if (i < count)
-                UiFactory.BindStorageSlot(slot, storage.GetSlot(i));
+            VisualElement cell = IndustryUi.StorageCell();
+            storageSlots.Add(cell);
+            storageGrid.Add(cell);
         }
 
-        if (storageSummaryText != null)
+        for (int i = 0; i < storageSlots.Count; i++)
+        {
+            IndustryUi.Show(storageSlots[i], i < count);
+            if (i < count)
+                IndustryUi.BindStorage(storageSlots[i], storage.GetSlot(i));
+        }
+
+        if (storageSummary != null)
         {
             string typeName = storage.StoredType != null ? storage.StoredType.displayName : "пусто";
-            storageSummaryText.text = $"{typeName}  ·  стеки {storage.UsedSlotCount} / {count}";
+            storageSummary.text = $"{typeName}  ·  стеки {storage.UsedSlotCount} / {count}";
         }
     }
-
-    // ================== ROBOTIC ARM ==================
 
     void ShowRoboticArmUI(RoboticArm arm)
     {
-        EnsureArmFilterUi();
-        if (armFilterContent != null)
-            armFilterContent.SetActive(true);
+        IndustryUi.Show(armSummary, true);
+        IndustryUi.Show(filterSearchHost, true);
+        IndustryUi.Show(armScroll, true);
+        if (filterSearch != null)
+            filterSearch.value = "";
         RefreshArmFilter(arm);
-    }
-
-    void EnsureArmFilterUi()
-    {
-        if (armFilterContent != null)
-            return;
-
-        Transform host = null;
-        if (extractorContent != null)
-            host = extractorContent.transform.parent;
-        if (host == null && machinePanel != null)
-            host = machinePanel.transform;
-        if (host == null)
-            return;
-
-        armFilterContent = new GameObject("ArmFilterContent", typeof(RectTransform));
-        armFilterContent.transform.SetParent(host, false);
-        RectTransform root = armFilterContent.GetComponent<RectTransform>();
-        root.anchorMin = Vector2.zero;
-        root.anchorMax = Vector2.one;
-        root.offsetMin = Vector2.zero;
-        root.offsetMax = Vector2.zero;
-
-        armFilterSummary = UiTheme.AddText(root, "Summary", "", 20f, UiTheme.Text);
-        RectTransform summaryRt = armFilterSummary.rectTransform;
-        summaryRt.anchorMin = new Vector2(0f, 1f);
-        summaryRt.anchorMax = new Vector2(1f, 1f);
-        summaryRt.pivot = new Vector2(0.5f, 1f);
-        summaryRt.anchoredPosition = new Vector2(0f, -8f);
-        summaryRt.sizeDelta = new Vector2(-32f, 32f);
-
-        GameObject gridGo = new GameObject("Filters", typeof(RectTransform));
-        gridGo.transform.SetParent(root, false);
-        RectTransform gridRt = gridGo.GetComponent<RectTransform>();
-        gridRt.anchorMin = new Vector2(0f, 0f);
-        gridRt.anchorMax = new Vector2(1f, 1f);
-        gridRt.offsetMin = new Vector2(16f, 16f);
-        gridRt.offsetMax = new Vector2(-16f, -48f);
-        armFilterParent = gridRt;
-
-        UiTheme.EnsureGrid(armFilterParent, new Vector2(280f, 80f), new Vector2(10f, 10f), 2);
-        UiTheme.EnsureVerticalScroll(gridRt);
     }
 
     void RefreshArmFilter(RoboticArm arm)
     {
-        EnsureArmFilterUi();
-        if (arm == null || armFilterParent == null)
+        if (arm == null || armGrid == null)
             return;
 
-        foreach (Transform child in armFilterParent)
-            Destroy(child.gameObject);
-
-        UiFactory.CreateFilterCard(
-            armFilterParent,
-            null,
-            "Любые предметы",
-            arm.filter == null ? "выбрано" : "без фильтра",
-            arm.filter == null,
-            () =>
-            {
-                arm.SetFilter(null);
-                RefreshArmFilter(arm);
-            });
+        armGrid.Clear();
+        string query = filterSearch != null ? filterSearch.value : "";
+        if (MatchesQuery(UiLocale.T("machine.filter_any"), query))
+        {
+            armGrid.Add(IndustryUi.FilterCard(
+                null,
+                UiLocale.T("machine.filter_any"),
+                arm.filter == null ? UiLocale.T("machine.filter_on") : UiLocale.T("machine.filter_off"),
+                arm.filter == null,
+                () =>
+                {
+                    arm.SetFilter(null);
+                    RefreshArmFilter(arm);
+                }));
+        }
 
         var seen = new HashSet<string>();
         ItemData[] items = GameDatabase.AllItems();
-        for (int i = 0; i < items.Length; i++)
+        if (items != null)
         {
-            ItemData item = items[i];
-            if (item == null || string.IsNullOrEmpty(item.id) || !seen.Add(item.id))
-                continue;
-
-            ItemData captured = item;
-            bool selected = arm.filter == item;
-            UiFactory.CreateFilterCard(
-                armFilterParent,
-                item.icon,
-                item.displayName,
-                selected ? "фильтр" : "брать только это",
-                selected,
-                () =>
-                {
-                    arm.SetFilter(captured);
-                    RefreshArmFilter(arm);
-                });
+            for (int i = 0; i < items.Length; i++)
+            {
+                ItemData item = items[i];
+                if (item == null || string.IsNullOrEmpty(item.id) || !seen.Add(item.id))
+                    continue;
+                if (!MatchesQuery(item.displayName, query) && !MatchesQuery(item.id, query))
+                    continue;
+                ItemData captured = item;
+                bool selected = arm.filter == item;
+                armGrid.Add(IndustryUi.FilterCard(
+                    item.icon,
+                    item.displayName,
+                    selected ? UiLocale.T("machine.filter_set") : UiLocale.T("machine.filter_only"),
+                    selected,
+                    () =>
+                    {
+                        arm.SetFilter(captured);
+                        RefreshArmFilter(arm);
+                    }));
+            }
         }
 
-        if (armFilterSummary != null)
+        UpdateArmSummary(arm);
+    }
+
+    void UpdateArmSummary(RoboticArm arm)
+    {
+        if (armSummary == null || arm == null)
+            return;
+        string name = arm.filter != null ? arm.filter.displayName : "любые";
+        string held = arm.HeldItem != null ? arm.HeldItem.displayName : "пусто";
+        armSummary.text = $"Фильтр: {name}   ·   в руке: {held}";
+    }
+
+    void ShowResearchLabUI()
+    {
+        IndustryUi.Show(tabRow, true);
+        IndustryUi.Show(progress, true);
+        OpenLabTab(labTab);
+    }
+
+    void OnLiveChanged()
+    {
+        if (!IsOpen)
+            return;
+        if (IsLabView)
         {
-            string name = arm.filter != null ? arm.filter.displayName : "любые";
-            string held = arm.HeldItem != null ? arm.HeldItem.displayName : "пусто";
-            armFilterSummary.text = $"Фильтр: {name}   ·   в руке: {held}";
+            BindUpgrade(currentBuilding);
+            if (labTab == TabResearch)
+                FillResearchTab();
+            else if (labTab == TabRecipes)
+                FillRecipeTab();
+            else if (labTab == TabBelts)
+                RebuildBeltTree();
+            else
+                RebuildStatsList();
+            return;
+        }
+
+        if (currentBuilding == null)
+            return;
+        BindUpgrade(currentBuilding);
+    }
+
+    void OpenLabTab(int tab)
+    {
+        if (labTab != tab)
+            UiAudio.PlayTab();
+        labTab = tab;
+        IndustryUi.Show(researchPage, tab == TabResearch);
+        IndustryUi.Show(recipePage, tab == TabRecipes);
+        IndustryUi.Show(beltPage, tab == TabBelts);
+        IndustryUi.Show(statsPage, tab == TabStats);
+        IndustryUi.SetOn(tabResearch, tab == TabResearch, "tab-on");
+        IndustryUi.SetOn(tabRecipes, tab == TabRecipes, "tab-on");
+        IndustryUi.SetOn(tabBelts, tab == TabBelts, "tab-on");
+        IndustryUi.SetOn(tabStats, tab == TabStats, "tab-on");
+
+        if (tab == TabResearch)
+            FillResearchTab();
+        else if (tab == TabRecipes)
+            FillRecipeTab();
+        else if (tab == TabBelts)
+            RebuildBeltTree();
+        else
+            RebuildStatsList();
+    }
+
+    void FillRecipeTab()
+    {
+        if (recipeList == null)
+            return;
+        recipeList.Clear();
+        string query = codexSearch != null ? codexSearch.value : "";
+        List<RecipeCodex.Entry> entries = RecipeCodex.Build();
+        for (int i = 0; i < entries.Count; i++)
+        {
+            RecipeCodex.Entry entry = entries[i];
+            if (entry.item == null)
+                continue;
+            if (!RecipeCodex.Matches(entry, query))
+                continue;
+            recipeList.Add(IndustryUi.CodexCard(entry));
         }
     }
 
-    // ================== RESEARCH LAB ==================
-
-    void ShowResearchLabUI(ResearchLab lab)
+    void FillResearchTab()
     {
-        researchLabContent.SetActive(true);
-
-        foreach (Transform child in researchButtonsParent)
-            Destroy(child.gameObject);
-
-        if (ResearchSystem.Instance == null)
+        if (researchCanvas == null || ResearchSystem.Instance == null)
             return;
 
-        foreach (var node in ResearchSystem.Instance.GetAllNodes())
+        if (string.IsNullOrEmpty(selectedResearchId))
         {
-            if (node == null) continue;
+            ResearchNodeData pick = ResearchTree.DefaultSelection();
+            selectedResearchId = pick != null ? pick.id : null;
+        }
 
-            string status = "READY";
-            bool canStart = ResearchSystem.Instance.CanStartResearch(node);
-            if (ResearchSystem.Instance.IsResearchUnlocked(node))
-            {
-                status = "DONE";
-                canStart = false;
-            }
-            else if (ResearchSystem.Instance.CurrentResearch == node)
-            {
-                status = "ACTIVE";
-                canStart = false;
-            }
-            else if (!canStart)
-            {
-                status = "LOCKED";
-            }
+        int nodes = CountResearchNodes();
+        if (researchCanvas.childCount != nodes || !researchCanvas.ClassListContains("tree-rev3"))
+        {
+            ResearchTree.Build(researchCanvas, OnPickResearch, selectedResearchId);
+            ScrollResearchIntoView(selectedResearchId);
+        }
+        else
+            ResearchTree.ApplyStatus(researchCanvas, selectedResearchId);
 
-            ResearchNodeData captured = node;
-            UiFactory.CreateResearchCard(
-                researchButtonsParent,
-                node,
-                status,
-                canStart,
-                () =>
-                {
-                    if (ResearchSystem.Instance.SetCurrentResearch(captured))
-                        Close();
-                });
+        ResearchNodeData selected = FindResearchNode(selectedResearchId);
+        ResearchTree.FillDetail(researchDetail, selected, () => StartPickedResearch(selected));
+    }
+
+    void OnPickResearch(ResearchNodeData node)
+    {
+        if (node == null)
+            return;
+        selectedResearchId = node.id;
+        FillResearchTab();
+    }
+
+    void StartPickedResearch(ResearchNodeData node)
+    {
+        if (node == null || ResearchSystem.Instance == null)
+            return;
+        if (ResearchSystem.Instance.SetCurrentResearch(node))
+            UiAudio.PlayConfirm();
+    }
+
+    void ScrollResearchIntoView(string id)
+    {
+        if (researchCanvas == null || string.IsNullOrEmpty(id))
+            return;
+        VisualElement card = researchCanvas.Q("Res_" + id);
+        if (card != null)
+            researchNav.Focus(card);
+    }
+
+    static int CountResearchNodes()
+    {
+        if (ResearchSystem.Instance == null)
+            return 0;
+        List<ResearchNodeData> nodes = ResearchSystem.Instance.GetAllNodes();
+        int n = 0;
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            if (nodes[i] != null)
+                n++;
+        }
+
+        return n;
+    }
+
+    static ResearchNodeData FindResearchNode(string id)
+    {
+        if (string.IsNullOrEmpty(id) || ResearchSystem.Instance == null)
+            return null;
+        List<ResearchNodeData> nodes = ResearchSystem.Instance.GetAllNodes();
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            if (nodes[i] != null && GameDatabase.Normalize(nodes[i].id) == GameDatabase.Normalize(id))
+                return nodes[i];
+        }
+
+        return GameDatabase.FindResearch(id);
+    }
+
+    void RebuildBeltTree()
+    {
+        if (beltList == null)
+            return;
+
+        beltList.Clear();
+        BeltSpeedSystem belts = BeltSpeedSystem.Instance;
+        int level = belts != null ? belts.Level : 0;
+        int have = belts != null ? belts.GearsTowardNext : 0;
+        int max = Economy.BeltMaxLevel;
+        ItemData gear = GameDatabase.FindItem("gear");
+        Sprite gearIcon = gear != null ? gear.icon : null;
+
+        beltList.Add(IndustryUi.Text("Head", UiLocale.T("belt.title"), "title"));
+        beltList.Add(IndustryUi.Text("Hint", UiLocale.T("belt.hint"), "muted"));
+
+        if (belts != null && belts.IsMaxed)
+        {
+            beltList.Add(IndustryUi.Text("Max", UiLocale.T("belt.maxed", belts.Multiplier.ToString("0.##")), "gold"));
+        }
+        else
+        {
+            int gearCost = belts != null ? belts.NextGearCost : Economy.BeltGearCost(1);
+            int coinCost = belts != null ? belts.NextCoinCost : Economy.BeltCoinCost(1);
+            int left = Mathf.Max(0, gearCost - have);
+            bool gearsReady = belts != null && belts.GearsReady;
+            bool canBuy = belts != null && belts.CanBuyNext;
+            string buyLabel = canBuy
+                ? UiLocale.T("belt.buy", IndustryUi.Money(coinCost))
+                : !gearsReady
+                    ? UiLocale.T("belt.need_gears", left)
+                    : UiLocale.T("belt.need_coins");
+            Button buy = IndustryUi.Btn(buyLabel, () =>
+            {
+                if (BeltSpeedSystem.Instance != null && BeltSpeedSystem.Instance.TryBuyNext())
+                    UiAudio.PlayConfirm();
+            }, "btn-primary");
+            buy.SetEnabled(canBuy);
+            beltList.Add(buy);
+            beltList.Add(IndustryUi.Text("Pay", UiLocale.T("belt.coins", IndustryUi.Money(coinCost)), "gold"));
+        }
+
+        int lastShown = Mathf.Min(max, level + 1);
+        for (int i = 0; i <= lastShown; i++)
+        {
+            bool unlocked = i <= level;
+            bool next = i == level + 1 && i <= max;
+            float speedNow = Economy.BeltMultiplier(i);
+            float speedPrev = i == 0 ? speedNow : Economy.BeltMultiplier(i - 1);
+            int cost = i == 0 ? 0 : Economy.BeltGearCost(i);
+            string state = unlocked
+                ? (i == level ? UiLocale.T("belt.current") : UiLocale.T("belt.open"))
+                : UiLocale.T("belt.next");
+            string speedText = i == 0
+                ? UiLocale.T("belt.speed", speedNow.ToString("0.##"))
+                : UiLocale.T("belt.speed_to", speedPrev.ToString("0.##"), speedNow.ToString("0.##"));
+            string costText = i == 0
+                ? UiLocale.T("belt.start")
+                : next
+                    ? UiLocale.T("belt.gears", have, cost)
+                    : UiLocale.T("belt.gears_cost", cost);
+
+            beltList.Add(BeltNode(
+                UiLocale.T("belt.level", i) + "  ·  " + state,
+                speedText,
+                costText,
+                gearIcon,
+                unlocked,
+                next));
         }
     }
 
-    // ================== PROGRESS ==================
+    static VisualElement BeltNode(string title, string speed, string cost, Sprite icon, bool unlocked, bool next)
+    {
+        var row = IndustryUi.El("Belt", "card");
+        if (next)
+            row.AddToClassList("card-on");
+        var mark = IndustryUi.El("Mark", "belt-mark");
+        mark.style.backgroundColor = next
+            ? new Color(0.86f, 0.65f, 0.29f)
+            : unlocked
+                ? new Color(0.43f, 0.77f, 0.51f)
+                : new Color(0.35f, 0.38f, 0.4f);
+        row.Add(mark);
+        row.Add(IndustryUi.Icon(icon, "icon-32"));
+        var col = IndustryUi.El("C", "col", "grow");
+        col.Add(IndustryUi.Text("T", title, unlocked || next ? "body-text" : "muted"));
+        col.Add(IndustryUi.Text("S", speed, "gold"));
+        col.Add(IndustryUi.Text("K", cost, next ? "warn" : "muted"));
+        row.Add(col);
+        return row;
+    }
+
+    void RebuildStatsList()
+    {
+        if (statsList == null)
+            return;
+
+        statsList.Clear();
+        ProductionStats stats = ProductionStats.Instance;
+        PlayerWallet wallet = PlayerWallet.Instance;
+
+        AddMoneyStat(
+            GameHudIcons.Coin,
+            "Монеты",
+            wallet != null ? wallet.Coins : 0,
+            stats != null ? stats.CoinsPerMinute() : 0f,
+            stats != null ? stats.CoinsSpentPerMinute() : 0f,
+            stats != null ? stats.CoinsGainedTotal : 0,
+            stats != null ? stats.CoinsSpentTotal : 0);
+        AddMoneyStat(
+            GameHudIcons.Ruby,
+            "Рубины",
+            wallet != null ? wallet.Rubies : 0,
+            stats != null ? stats.RubiesPerMinute() : 0f,
+            0f,
+            stats != null ? stats.RubiesGainedTotal : 0,
+            0);
+
+        if (stats != null)
+        {
+            var ids = new HashSet<string>();
+            foreach (var pair in stats.ProducedTotal)
+                ids.Add(pair.Key);
+            foreach (var pair in stats.ConsumedTotal)
+                ids.Add(pair.Key);
+            var sorted = new List<string>(ids);
+            sorted.Sort();
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                string id = sorted[i];
+                ItemData item = GameDatabase.FindItem(id);
+                stats.ProducedTotal.TryGetValue(id, out int made);
+                stats.ConsumedTotal.TryGetValue(id, out int used);
+                statsList.Add(IndustryUi.StatRow(
+                    item != null ? item.icon : null,
+                    item != null ? item.displayName : id,
+                    "всего +" + made + "   −" + used
+                    + "   ·   +" + stats.ProducedPerMinute(id).ToString("0.#") + "/мин   −"
+                    + stats.ConsumedPerMinute(id).ToString("0.#") + "/мин"));
+            }
+        }
+
+        nextStatsRefresh = Time.unscaledTime + 0.6f;
+    }
+
+    void AddMoneyStat(Sprite icon, string name, int now, float plusMin, float minusMin, int gained, int spent)
+    {
+        string detail = "сейчас " + now + "   всего +" + gained + (spent > 0 ? "  −" + spent : "")
+            + "   ·   +" + plusMin.ToString("0.#") + "/мин"
+            + (minusMin > 0f ? "   −" + minusMin.ToString("0.#") + "/мин" : "");
+        statsList.Add(IndustryUi.StatRow(icon, name, detail));
+    }
 
     void UpdateProgress()
     {
-        if (currentBuilding is CrafterBuilding crafter && progressSlider != null)
+        if (currentBuilding is CrafterBuilding crafter)
         {
-            if (crafter.currentRecipe != null && crafter.currentRecipe.craftTime > 0f)
-                progressSlider.value = crafter.craftProgress / crafter.currentRecipe.craftTime;
-            else
-                progressSlider.value = 0f;
+            float t = 0f;
+            float need = Economy.CraftNeed(crafter.currentRecipe);
+            if (need > 0f)
+                t = crafter.craftProgress / need;
+            IndustryUi.SetProgress(progress, t);
         }
         else if (currentBuilding is StorageContainer storage)
         {
             RefreshStorageSlots(storage);
         }
-        else if (currentBuilding is RoboticArm arm && armFilterSummary != null)
+        else if (currentBuilding is RoboticArm arm)
         {
-            string name = arm.filter != null ? arm.filter.displayName : "любые";
-            string held = arm.HeldItem != null ? arm.HeldItem.displayName : "пусто";
-            armFilterSummary.text = $"Фильтр: {name}   ·   в руке: {held}";
+            UpdateArmSummary(arm);
         }
-        else if (currentBuilding is ResearchLab)
+        else if (IsLabView || currentBuilding is ResearchLab)
         {
-            float progress = ResearchSystem.Instance != null
-                ? ResearchSystem.Instance.GetCurrentProgress01()
-                : 0f;
-            if (researchProgressSlider != null)
-                researchProgressSlider.value = progress;
-            if (researchProgressText != null)
-            {
-                string name = ResearchSystem.Instance != null && ResearchSystem.Instance.CurrentResearch != null
-                    ? ResearchSystem.Instance.CurrentResearch.displayName
-                    : "None";
-                researchProgressText.text = $"{name}: {(progress * 100f):0}%";
-            }
+            ResearchSystem rs = ResearchSystem.Instance;
+            int active = rs != null ? rs.GetAvailableResearch().Count : 0;
+            float t = rs != null ? rs.GetCurrentProgress01() : 0f;
+            IndustryUi.SetProgress(progress, t);
+            string name = active > 0
+                ? UiLocale.T("research.active_count", active)
+                : UiLocale.T("research.none");
+            SetStatus(name + "  " + (t * 100f).ToString("0") + "%",
+                active > 0 ? UiStatus.Running : UiStatus.Ready);
+
+            if (labTab == TabStats && Time.unscaledTime >= nextStatsRefresh)
+                RebuildStatsList();
         }
     }
 }

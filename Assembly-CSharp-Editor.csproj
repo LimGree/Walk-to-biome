@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Script\Core\Editor\BuildingFootprintEditor.cs" />
+    <Compile Include="Assets\Editor\AlphaBuild.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

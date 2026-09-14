@@ -20,4 +20,8 @@ public class ItemData : ScriptableObject
     [Header("Future")]
     [Tooltip("Жидкость: нефть, вода, кислота. Пока на ленты не влияет.")]
     public bool isFluid;
+
+    [Header("Economy")]
+    [Tooltip("Монеты за сдачу одного предмета в лабораторию.")]
+    public int sellValue;
 }

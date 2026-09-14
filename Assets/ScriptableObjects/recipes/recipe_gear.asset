@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: "\u0428\u0435\u0441\u0442\u0435\u0440\u043D\u044F "
   inputs:
   - item: {fileID: 11400000, guid: cb75865d8806d3241bface48dad202fd, type: 2}
-    amount: 1
+    amount: 2
   outputs:
   - item: {fileID: 11400000, guid: 9d495ae5fdb87d6479f40cd1e73fed53, type: 2}
-    amount: 2
-  craftTime: 2
+    amount: 1
+  craftTime: 1
   requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}

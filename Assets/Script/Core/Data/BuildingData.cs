@@ -17,8 +17,24 @@ public class BuildingData : ScriptableObject
     public GameObject cornerPrefab;
     [Tooltip("Гост угла для превью линии. Если пусто — берётся cornerPrefab.")]
     public GameObject cornerGhostPrefab;
+    [Tooltip("T: вход сзади + один бок (зеркало на другой бок). conveer_4_5.")]
+    public GameObject teePrefab;
+    [Tooltip("Гост T. Если пусто — берётся teePrefab.")]
+    public GameObject teeGhostPrefab;
+    [Tooltip("Два бока, сзади нет. conveer_6.")]
+    public GameObject sidesPrefab;
+    [Tooltip("Гост двух боков. Если пусто — берётся sidesPrefab.")]
+    public GameObject sidesGhostPrefab;
+    [Tooltip("Три входа. conveer_3.")]
+    public GameObject triplePrefab;
+    [Tooltip("Гост трёх входов. Если пусто — берётся triplePrefab.")]
+    public GameObject tripleGhostPrefab;
     [Tooltip("Труба: ставится линией, как конвейер, но возит только жидкости.")]
     public bool isPipe;
+    [Tooltip("Парный выход подземного конвейера. Если задан — вход и выход ставятся одним жестом по прямой.")]
+    public GameObject pairExitPrefab;
+    [Tooltip("Максимум пустых клеток между входом и выходом (сами концы не считаются).")]
+    public int pairMaxGap = 5;
 
     [Header("Visuals")]
     public Sprite icon;
@@ -28,7 +44,8 @@ public class BuildingData : ScriptableObject
     public Vector2Int size = Vector2Int.one;
     public bool canRotate = true;
 
-    [Header("Optional")]
+    [Header("Economy")]
+    [Tooltip("Цена установки в монетах.")]
     public int buildCost = 0;
 
     [Header("Placement")]
@@ -40,6 +57,7 @@ public class BuildingData : ScriptableObject
     public bool requiresWater;
 
     public bool IsConveyor => cornerPrefab != null || isPipe;
+    public bool IsPairedStraight => pairExitPrefab != null;
 
     public GameObject GetDefaultPlacePrefab()
     {

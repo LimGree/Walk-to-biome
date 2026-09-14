@@ -1,39 +1,45 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
 
+/// <summary>
+/// Клавиша Research (T) открывает то же окно, что E по лаборатории.
+/// </summary>
 public class ResearchUI : MonoBehaviour
 {
-    [Header("References")]
-    public ResearchSystem researchSystem;
-    public GameObject menuPanel;
-    public Transform nodesParent;
-    public GameObject nodeButtonPrefab;
+    public static ResearchUI Instance { get; private set; }
 
-    private bool isOpen = false;
-    private InputSystem_Actions inputActions;
+    public bool IsOpen =>
+        MachineUI.Instance != null && MachineUI.Instance.IsOpen && MachineUI.Instance.IsLabView;
+
+    InputSystem_Actions inputActions;
 
     void Awake()
     {
+        Instance = this;
         inputActions = KeybindStore.Shared;
     }
 
     void Start()
     {
-        if (menuPanel != null)
-            menuPanel.SetActive(false);
+        IndustryUi.DisableHudCanvas(this);
     }
 
     void OnEnable()
     {
-        inputActions.Player.Research.performed += OnResearchToggle;
+        if (inputActions != null)
+            inputActions.Player.Research.performed += OnResearchToggle;
     }
 
     void OnDisable()
     {
-        inputActions.Player.Research.performed -= OnResearchToggle;
+        if (inputActions != null)
+            inputActions.Player.Research.performed -= OnResearchToggle;
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     void OnResearchToggle(InputAction.CallbackContext ctx)
@@ -42,44 +48,27 @@ public class ResearchUI : MonoBehaviour
             return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
-        if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+        if (MachineUI.Instance != null && MachineUI.Instance.IsOpen && !MachineUI.Instance.IsLabView)
             return;
         ToggleMenu();
     }
 
     public void ToggleMenu()
     {
-        isOpen = !isOpen;
-
-        if (menuPanel != null)
-            menuPanel.SetActive(isOpen);
-
-        Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = isOpen;
-
-        if (isOpen)
-            RefreshList();
+        if (MachineUI.Instance == null)
+            return;
+        MachineUI.Instance.ToggleLab();
     }
 
-    void RefreshList()
+    public void Open()
     {
-        if (nodesParent == null || nodeButtonPrefab == null || researchSystem == null) return;
+        if (MachineUI.Instance != null)
+            MachineUI.Instance.OpenLab();
+    }
 
-        foreach (Transform child in nodesParent)
-            Destroy(child.gameObject);
-
-        foreach (var node in researchSystem.GetAllNodes())
-        {
-            GameObject btn = Instantiate(nodeButtonPrefab, nodesParent);
-
-            var text = btn.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null)
-            {
-                string status = researchSystem.IsResearchUnlocked(node) ? " [DONE]" : "";
-                text.text = node.displayName + status;
-            }
-
-            // Можно добавить блокировку кнопок и т.д.
-        }
+    public void Close()
+    {
+        if (MachineUI.Instance != null && MachineUI.Instance.IsLabView)
+            MachineUI.Instance.Close();
     }
 }

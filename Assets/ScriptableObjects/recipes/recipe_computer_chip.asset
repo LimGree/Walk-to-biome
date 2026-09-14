@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: recipe_computer_chip
   m_EditorClassIdentifier: 
   id: recipe_computer_chip
-  displayName: "Компьютерный чип"
+  displayName: "\u041A\u043E\u043C\u043F\u044C\u044E\u0442\u0435\u0440\u043D\u044B\u0439
+    \u0447\u0438\u043F"
   inputs:
   - item: {fileID: 11400000, guid: 61b810ccecfea014ebb50eda1ac4dcf9, type: 2}
     amount: 4
@@ -23,6 +24,6 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: aa15263748596a7b8c9d0e1f20314201, type: 2}
     amount: 1
   craftTime: 5
-  requiredBuilding: {fileID: 11400000, guid: a6f6efc8d7ff3de4d88c3e747f9532ef, type: 2}
+  requiredBuilding: {fileID: 11400000, guid: aa77969c1caec2b4b9322b591842ed57, type: 2}
   allowedBuildingIds:
-  - assembler
+  - constructor

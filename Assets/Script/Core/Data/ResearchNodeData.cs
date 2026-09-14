@@ -11,11 +11,12 @@ public class ResearchNodeData : ScriptableObject
     public Sprite icon;
 
     [Header("Requirements")]
-    public List<ItemStack> requiredItems = new List<ItemStack>();   // что нужно сдать в Research Lab
-    public List<ResearchNodeData> requiredResearches;               // какие исследования должны быть открыты до этого
+    public List<ItemStack> requiredItems = new List<ItemStack>();   // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ Research Lab
+    public List<ResearchNodeData> requiredResearches;               // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
     [Header("Rewards")]
-    public List<BuildingData> unlockedBuildings;    // какие здания открывает
-    public List<RecipeData> unlockedRecipes;        // какие рецепты открывает
-    // Можно потом добавить и другие награды (скорость конвейеров и т.д.)
+    public List<BuildingData> unlockedBuildings;    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    public List<RecipeData> unlockedRecipes;        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    [Tooltip("Р СѓР±РёРЅС‹ Р·Р° Р·Р°РІРµСЂС€РµРЅРёРµ. 0 = Р°РІС‚Рѕ РїРѕ РѕР±СЉС‘РјСѓ СЃРґР°С‡Рё.")]
+    public int rubyReward;
 }

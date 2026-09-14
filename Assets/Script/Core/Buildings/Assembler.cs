@@ -3,13 +3,16 @@ using UnityEngine;
 public class Assembler : CrafterBuilding
 {
     [Header("Upgrade")]
-    public int level = 1;
     public float upgradedCraftSpeed = 2f;
 
     GameObject level1Visual;
     GameObject level2Visual;
 
     public bool CanUpgrade => level < 2;
+    public override bool CanUpgradeBuilding =>
+        CanUpgrade
+        && ResearchSystem.Instance != null
+        && ResearchSystem.Instance.IsResearchIdUnlocked("research_assembler_2");
     public override float CraftSpeed => level >= 2 ? Mathf.Max(1f, upgradedCraftSpeed) : 1f;
 
     void Awake()
@@ -29,7 +32,12 @@ public class Assembler : CrafterBuilding
 
     public bool TryUpgrade()
     {
-        if (!CanUpgrade)
+        return TryUpgradeBuilding();
+    }
+
+    public override bool TryUpgradeBuilding()
+    {
+        if (!CanUpgradeBuilding)
             return false;
 
         level = 2;
@@ -52,6 +60,7 @@ public class Assembler : CrafterBuilding
 
     void ApplyLevel()
     {
+        BuildingVisuals.ApplyLevel(this, level);
         if (level1Visual != null)
             level1Visual.SetActive(level < 2);
         if (level2Visual != null)
@@ -60,6 +69,12 @@ public class Assembler : CrafterBuilding
 
     void BindVisuals()
     {
+        Transform l1 = BuildingPrefabLayout.FindLevel1(transform);
+        Transform l2 = BuildingPrefabLayout.FindLevel2(transform);
+        if (level1Visual == null && l1 != null)
+            level1Visual = l1.gameObject;
+        if (level2Visual == null && l2 != null)
+            level2Visual = l2.gameObject;
         if (level1Visual == null)
             level1Visual = FindNamedChild("Assembler_Level_1");
         if (level2Visual == null)

@@ -27,7 +27,7 @@ public class OilExtractor : BuildingBase, IInteractable
         }
     }
 
-    public float CurrentInterval => Mathf.Max(0.05f, extractInterval);
+    public float CurrentInterval => Mathf.Max(0.05f, extractInterval * Economy.ExtractTimeMul);
     public int CurrentItemsPerCycle => Mathf.Max(1, itemsPerCycle);
 
     void Awake()
@@ -64,7 +64,12 @@ public class OilExtractor : BuildingBase, IInteractable
     {
         ResolveResource();
         if (resource == null)
+        {
+            GameAudio.Loop(this, "bld_oil_loop", false);
             return;
+        }
+
+        GameAudio.Loop(this, "bld_oil_loop", HasOutputSpace(1));
 
         timer += Time.deltaTime;
         if (timer < CurrentInterval)
@@ -81,6 +86,7 @@ public class OilExtractor : BuildingBase, IInteractable
                 break;
             if (!TryOutputToAny(resource))
                 break;
+            ProductionStats.Instance?.RecordProduced(resource, 1);
         }
     }
 
@@ -99,7 +105,7 @@ public class OilExtractor : BuildingBase, IInteractable
             if (front != null && front != this)
                 return true;
         }
-        return false;
+        return HasPushNeighbor();
     }
 
     public override void WriteSave(BuildingSaveData save)
@@ -173,8 +179,7 @@ public class OilExtractor : BuildingBase, IInteractable
         Transform existing = transform.Find("OutputSocket");
         GameObject go = existing != null ? existing.gameObject : new GameObject("OutputSocket");
         go.transform.SetParent(transform, false);
-        if (existing == null)
-            go.transform.localPosition = new Vector3(0f, 0.3f, 1f);
+        BuildingPrefabLayout.PlaceSocket(go.transform, new Vector3(0f, 0.3f, 0.5f), BuildingPrefabLayout.OutputRotation);
 
         BuildingSocket socket = go.GetComponent<BuildingSocket>();
         if (socket == null)

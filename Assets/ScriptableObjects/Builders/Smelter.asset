@@ -22,4 +22,4 @@ MonoBehaviour:
   icon: {fileID: 921189587, guid: afb6d635905e5b146bb278982b78d174, type: 3}
   size: {x: 1, y: 1}
   canRotate: 1
-  buildCost: 0
+  buildCost: 90

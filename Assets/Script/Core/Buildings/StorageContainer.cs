@@ -295,7 +295,7 @@ public class StorageContainer : BuildingBase, IInteractable
         {
             inputSockets = new[]
             {
-                FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -0.5f))
+                FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -0.5f), BuildingPrefabLayout.InputRotation)
             };
         }
 
@@ -303,7 +303,7 @@ public class StorageContainer : BuildingBase, IInteractable
         {
             outputSockets = new[]
             {
-                FindOrCreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, 0.5f))
+                FindOrCreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, 0.5f), BuildingPrefabLayout.OutputRotation)
             };
         }
     }
@@ -313,20 +313,20 @@ public class StorageContainer : BuildingBase, IInteractable
         return sockets == null || sockets.Length == 0 || sockets[0] == null;
     }
 
-    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos)
+    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos, Quaternion localRot)
     {
         Transform existing = transform.Find(socketName);
         GameObject go;
         if (existing != null)
         {
             go = existing.gameObject;
+            BuildingPrefabLayout.PlaceSocket(existing, localPos, localRot);
         }
         else
         {
             go = new GameObject(socketName);
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = localPos;
-            go.transform.localRotation = Quaternion.identity;
+            BuildingPrefabLayout.PlaceSocket(go.transform, localPos, localRot);
         }
 
         BuildingSocket socket = go.GetComponent<BuildingSocket>();

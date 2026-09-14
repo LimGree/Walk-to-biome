@@ -44,6 +44,7 @@ public class Splitter : BuildingBase
         isLive = true;
         EnsureSetup();
         nextOutput = 0;
+        WorldSim.RegisterSplitter(this);
         base.OnPlaced();
     }
 
@@ -51,6 +52,7 @@ public class Splitter : BuildingBase
     {
         isLive = false;
         ClearCargo();
+        WorldSim.UnregisterSplitter(this);
         base.OnRemoved();
     }
 
@@ -82,7 +84,7 @@ public class Splitter : BuildingBase
             return false;
 
         Vector3 from = visual != null ? visual.position : transform.position;
-        SpawnCargo(item, visual, InferEntryFromWorld(from), Vector2Int.zero);
+        SpawnCargo(item, null, InferEntryFromWorld(from), Vector2Int.zero);
         return true;
     }
 
@@ -143,7 +145,12 @@ public class Splitter : BuildingBase
         return nearest >= ItemGap;
     }
 
-    void Update()
+    public void SimDraw()
+    {
+        SubmitCargoDraws();
+    }
+
+    public void SimTick()
     {
         if (!isLive)
             return;
@@ -152,41 +159,116 @@ public class Splitter : BuildingBase
         float move = speed * Time.deltaTime / Mathf.Max(0.05f, cell);
         float gap = ItemGap;
 
-        cargo.Sort((a, b) => b.progress.CompareTo(a.progress));
-
         for (int i = 0; i < cargo.Count; i++)
         {
-            float limit = i == 0 ? 1f : cargo[i - 1].progress - gap;
+            float limit = 1f;
+            float progress = cargo[i].progress;
+            for (int j = 0; j < cargo.Count; j++)
+            {
+                if (j == i)
+                    continue;
+                float other = cargo[j].progress;
+                if (other > progress)
+                    limit = Mathf.Min(limit, other - gap);
+            }
             if (limit < 0f)
                 limit = 0f;
-
-            Cargo item = cargo[i];
-            if (item.progress < limit)
-                item.progress = Mathf.Min(limit, item.progress + move);
+            if (progress < limit)
+                cargo[i].progress = Mathf.Min(limit, progress + move);
         }
 
-        if (cargo.Count > 0 && cargo[0].progress >= 0.999f)
-        {
-            if (TryHandOff(cargo[0]))
-                cargo.RemoveAt(0);
-            else
-                cargo[0].progress = 1f;
-        }
-
+        int front = -1;
+        float best = 0.999f;
         for (int i = 0; i < cargo.Count; i++)
-            UpdateCargoVisual(cargo[i]);
+        {
+            if (cargo[i].progress >= best)
+            {
+                best = cargo[i].progress;
+                front = i;
+            }
+        }
+        if (front >= 0)
+        {
+            if (TryHandOff(cargo[front]))
+            {
+                ReleaseCargoVisual(cargo[front]);
+                cargo.RemoveAt(front);
+            }
+            else
+                cargo[front].progress = 1f;
+        }
+
+        SimDraw();
+    }
+
+    void SubmitCargoDraws()
+    {
+        bool show = WorldView.InRange(transform.position);
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            Cargo item = cargo[i];
+            if (show)
+            {
+                if (item.visual == null)
+                    item.visual = BeltItemView.Rent(item.item, itemScale);
+                Vector3 pos = EvaluatePath(item, item.progress);
+                Vector3 look = EvaluatePath(item, Mathf.Min(1f, item.progress + 0.05f)) - pos;
+                BeltItemView.Update(item.visual, pos, look);
+            }
+            else
+                ReleaseCargoVisual(item);
+        }
     }
 
     bool TryHandOff(Cargo item)
     {
-        Vector2Int nextCell = Cell + item.exitDir;
-        BuildingBase dest = BuildingLinker.GetBuildingAt(nextCell);
-        if (dest == null)
+        EnsureSetup();
+        int count = outputSockets != null ? outputSockets.Length : 0;
+        if (count <= 0)
+            return TryGive(item, item.exitDir);
+
+        Vector2Int entry = item.entryDir;
+        int start = nextOutput;
+        for (int n = 0; n < count; n++)
+        {
+            int index = (start + n) % count;
+            BuildingSocket socket = outputSockets[index];
+            if (socket == null)
+                continue;
+
+            Vector2Int dir = BuildingLinker.ToCardinal(socket.GetOutward());
+            if (dir == Opposite(entry))
+                continue;
+            if (dir.x == 0 && dir.y == 0)
+                continue;
+
+            if (!TryGive(item, dir))
+                continue;
+
+            item.exitDir = dir;
+            nextOutput = (index + 1) % count;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool TryGive(Cargo item, Vector2Int dir)
+    {
+        if (dir.x == 0 && dir.y == 0)
+            return false;
+
+        BuildingBase dest = BuildingLinker.GetBuildingAt(Cell + dir);
+        if (dest == null || dest == this)
             return false;
 
         Conveyor nextBelt = dest as Conveyor;
         if (nextBelt != null)
-            return nextBelt.TryAcceptTransfer(item.item, item.visual);
+        {
+            if (nextBelt is Pipe)
+                return false;
+            return nextBelt.TryAcceptTransfer(item.item, item.visual, this);
+        }
 
         Splitter nextSplit = dest as Splitter;
         if (nextSplit != null)
@@ -202,12 +284,15 @@ public class Splitter : BuildingBase
         BuildingSocket destInput = dest.inputSockets != null && dest.inputSockets.Length > 0
             ? dest.inputSockets[0]
             : null;
-        if (!dest.TryReceiveItem(item.item, destInput))
-            return false;
+        return dest.TryReceiveItem(item.item, destInput);
+    }
 
-        BeltItemView.Destroy(item.visual);
+    static void ReleaseCargoVisual(Cargo item)
+    {
+        if (item == null || item.visual == null)
+            return;
+        BeltItemView.Release(item.visual, item.item);
         item.visual = null;
-        return true;
     }
 
     void SpawnCargo(ItemData item, Transform visual, Vector2Int entryDir, Vector2Int exitDir)
@@ -225,24 +310,19 @@ public class Splitter : BuildingBase
             entryDir = entryDir,
             exitDir = exitDir
         };
-
-        if (cargoItem.visual == null)
-            cargoItem.visual = BeltItemView.Create(item, itemScale);
-        else
-            BeltItemView.Prepare(cargoItem.visual);
-
-        if (cargoItem.visual != null)
-            cargoItem.visual.SetParent(transform, true);
-
+        if (WorldView.InRange(transform.position))
+        {
+            if (cargoItem.visual == null)
+                cargoItem.visual = BeltItemView.Rent(item, itemScale);
+            else
+                BeltItemView.Prepare(cargoItem.visual);
+        }
+        else if (cargoItem.visual != null)
+        {
+            BeltItemView.Release(cargoItem.visual, item);
+            cargoItem.visual = null;
+        }
         cargo.Add(cargoItem);
-        UpdateCargoVisual(cargoItem);
-    }
-
-    void UpdateCargoVisual(Cargo item)
-    {
-        Vector3 pos = EvaluatePath(item, item.progress);
-        Vector3 look = EvaluatePath(item, Mathf.Min(1f, item.progress + 0.05f)) - pos;
-        BeltItemView.Update(item.visual, pos, look);
     }
 
     Vector3 EvaluatePath(Cargo item, float t)
@@ -392,10 +472,15 @@ public class Splitter : BuildingBase
         }
     }
 
+    public void DevClearCargo()
+    {
+        ClearCargo();
+    }
+
     void ClearCargo()
     {
         for (int i = 0; i < cargo.Count; i++)
-            BeltItemView.Destroy(cargo[i].visual);
+            ReleaseCargoVisual(cargo[i]);
         cargo.Clear();
     }
 
@@ -440,7 +525,7 @@ public class Splitter : BuildingBase
         {
             inputSockets = new[]
             {
-                FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0.5f, 0.3f, 0f))
+                FindOrCreateSocket("InputSocket", SocketType.Input, new Vector3(0f, 0.3f, -0.5f), BuildingPrefabLayout.InputRotation)
             };
         }
         else
@@ -452,9 +537,9 @@ public class Splitter : BuildingBase
         {
             outputSockets = new[]
             {
-                FindOrCreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, -0.5f)),
-                FindOrCreateSocket("OutputSocket (1)", SocketType.Output, new Vector3(0f, 0.3f, 0.5f)),
-                FindOrCreateSocket("OutputSocket (2)", SocketType.Output, new Vector3(-0.5f, 0.3f, 0f))
+                FindOrCreateSocket("OutputSocket", SocketType.Output, new Vector3(0f, 0.3f, 0.5f), BuildingPrefabLayout.OutputRotation),
+                FindOrCreateSocket("OutputSocket (1)", SocketType.Output, new Vector3(0.5f, 0.3f, 0f), Quaternion.Euler(0f, 90f, 0f)),
+                FindOrCreateSocket("OutputSocket (2)", SocketType.Output, new Vector3(-0.5f, 0.3f, 0f), Quaternion.Euler(0f, -90f, 0f))
             };
         }
         else
@@ -487,20 +572,20 @@ public class Splitter : BuildingBase
         return sockets == null || sockets.Length == 0 || sockets[0] == null;
     }
 
-    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos)
+    BuildingSocket FindOrCreateSocket(string socketName, SocketType type, Vector3 localPos, Quaternion localRot)
     {
         Transform existing = transform.Find(socketName);
         GameObject go;
         if (existing != null)
         {
             go = existing.gameObject;
+            BuildingPrefabLayout.PlaceSocket(existing, localPos, localRot);
         }
         else
         {
             go = new GameObject(socketName);
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = localPos;
-            go.transform.localRotation = Quaternion.identity;
+            BuildingPrefabLayout.PlaceSocket(go.transform, localPos, localRot);
         }
 
         BuildingSocket socket = go.GetComponent<BuildingSocket>();
@@ -532,13 +617,10 @@ public class Splitter : BuildingBase
         return height;
     }
 
-    protected override void LateUpdate()
-    {
-    }
-
     protected override void OnDestroy()
     {
         ClearCargo();
+        WorldSim.UnregisterSplitter(this);
         base.OnDestroy();
     }
 

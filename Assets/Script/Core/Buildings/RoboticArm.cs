@@ -88,7 +88,10 @@ public class RoboticArm : BuildingBase, IInteractable
         if (!isLive)
             return;
 
-        UpdateHeldVisual();
+        if (WorldView.InRange(transform.position))
+            UpdateHeldVisual();
+        else if (heldVisual != null)
+            heldVisual.gameObject.SetActive(false);
 
         cooldown -= Time.deltaTime;
         if (cooldown > 0f)
@@ -197,9 +200,10 @@ public class RoboticArm : BuildingBase, IInteractable
         Conveyor belt = dest as Conveyor;
         if (belt != null)
         {
-            if (!belt.TryAcceptTransfer(item, visual))
+            if (!belt.TryAcceptTransfer(item, visual, this))
                 return false;
             TakeFromHand(visual, false);
+            BeltItemView.Release(visual, item);
             return true;
         }
 
@@ -209,6 +213,7 @@ public class RoboticArm : BuildingBase, IInteractable
             if (!splitter.TryAcceptTransfer(item, visual))
                 return false;
             TakeFromHand(visual, false);
+            BeltItemView.Release(visual, item);
             return true;
         }
 
@@ -227,7 +232,7 @@ public class RoboticArm : BuildingBase, IInteractable
 
     void TryReturn(BuildingBase source, ItemData item, Transform visual)
     {
-        if (source is Conveyor belt && belt.TryAcceptTransfer(item, visual))
+        if (source is Conveyor belt && belt.TryAcceptTransfer(item, visual, this))
             return;
         if (source is Splitter splitter && splitter.TryAcceptTransfer(item, visual))
             return;
@@ -276,6 +281,9 @@ public class RoboticArm : BuildingBase, IInteractable
     {
         if (heldVisual == null)
             return;
+
+        if (!heldVisual.gameObject.activeSelf)
+            heldVisual.gameObject.SetActive(true);
 
         Vector3 pos = transform.position + Vector3.up * itemHeight;
         Vector3 look = BuildingLinker.CardinalToWorld(BackDir());
@@ -352,10 +360,6 @@ public class RoboticArm : BuildingBase, IInteractable
     {
         if (MachineUI.Instance != null)
             MachineUI.Instance.Open(this);
-    }
-
-    protected override void LateUpdate()
-    {
     }
 
     protected override void OnDestroy()

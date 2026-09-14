@@ -25,9 +25,14 @@ public class Extractor : BuildingBase, IInteractable
     private float timer;
     private ResourceNode boundNode;
     private float nextFailLogTime;
+    float simCarry;
 
     public bool CanUpgrade => level < 2;
-    public float CurrentInterval => Mathf.Max(0.05f, extractInterval);
+    public override bool CanUpgradeBuilding =>
+        CanUpgrade
+        && ResearchSystem.Instance != null
+        && ResearchSystem.Instance.IsResearchIdUnlocked("research_extractor_2");
+    public float CurrentInterval => Mathf.Max(0.05f, extractInterval * Economy.ExtractTimeMul);
     public int CurrentItemsPerCycle => Mathf.Max(1, itemsPerCycle);
 
     void Awake()
@@ -55,7 +60,12 @@ public class Extractor : BuildingBase, IInteractable
 
     public bool TryUpgrade()
     {
-        if (!CanUpgrade)
+        return TryUpgradeBuilding();
+    }
+
+    public override bool TryUpgradeBuilding()
+    {
+        if (!CanUpgradeBuilding)
             return false;
 
         level = 2;
@@ -84,6 +94,7 @@ public class Extractor : BuildingBase, IInteractable
             itemsPerCycle = Mathf.Max(1, upgradedItemsPerCycle);
         }
 
+        BuildingVisuals.ApplyLevel(this, level);
         if (level1Visual != null)
             level1Visual.SetActive(level < 2);
         if (level2Visual != null)
@@ -95,6 +106,12 @@ public class Extractor : BuildingBase, IInteractable
 
     void BindVisuals()
     {
+        Transform l1 = BuildingPrefabLayout.FindLevel1(transform);
+        Transform l2 = BuildingPrefabLayout.FindLevel2(transform);
+        if (level1Visual == null && l1 != null)
+            level1Visual = l1.gameObject;
+        if (level2Visual == null && l2 != null)
+            level2Visual = l2.gameObject;
         if (level1Visual == null)
             level1Visual = FindNamedChild("extractor_level_1");
         if (level2Visual == null)
@@ -146,7 +163,7 @@ public class Extractor : BuildingBase, IInteractable
         }
     }
 
-    void BindToNearbyNode()
+    public void BindToNearbyNode()
     {
         boundNode = null;
         resource = null;
@@ -168,11 +185,25 @@ public class Extractor : BuildingBase, IInteractable
 
     void Update()
     {
-        if (resource == null) return;
+        simCarry += Time.deltaTime;
+        if (simCarry < 0.12f)
+            return;
+        float dt = simCarry;
+        simCarry = 0f;
 
-        timer += Time.deltaTime;
-        if (timer < extractInterval) return;
-        timer -= extractInterval;
+        if (resource == null)
+        {
+            GameAudio.Loop(this, "bld_extractor_loop", false);
+            return;
+        }
+
+        bool working = boundNode != null && HasOutputSpace(1);
+        GameAudio.Loop(this, "bld_extractor_loop", working && WorldView.InRange(transform.position));
+
+        float interval = CurrentInterval;
+        timer += dt;
+        if (timer < interval) return;
+        timer -= interval;
 
         if (!HasOutputSpace(itemsPerCycle) && !CanPushAnyNow())
         {
@@ -194,6 +225,8 @@ public class Extractor : BuildingBase, IInteractable
 
             if (!TryOutputToAny(resource))
                 break;
+
+            ProductionStats.Instance?.RecordProduced(resource, 1);
 
             if (showDebug)
                 Debug.Log($"[Extractor] Выдал {resource.displayName}");
@@ -222,7 +255,7 @@ public class Extractor : BuildingBase, IInteractable
                 return true;
         }
 
-        return false;
+        return HasPushNeighbor();
     }
 
     public void Interact(GameObject interactor)

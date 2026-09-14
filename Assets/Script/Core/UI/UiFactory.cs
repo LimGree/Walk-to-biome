@@ -128,11 +128,16 @@ public static class UiFactory
         if (!unlocked)
             icon.color = new Color(1f, 1f, 1f, 0.35f);
 
+        string titleValue = data != null ? data.displayName : "Building";
+        int cost = Economy.BuildCost(data);
+        if (cost > 0)
+            titleValue += "  ·  " + cost + "¤";
+
         TextMeshProUGUI title = UiTheme.AddText(
             card.transform,
             "Title",
-            data != null ? data.displayName : "Building",
-            18f,
+            titleValue,
+            16f,
             unlocked ? UiTheme.Text : UiTheme.TextDim);
         title.alignment = TextAlignmentOptions.Center;
         RectTransform titleRt = title.rectTransform;

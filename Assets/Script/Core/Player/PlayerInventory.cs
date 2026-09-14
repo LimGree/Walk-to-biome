@@ -38,6 +38,22 @@ public class PlayerInventory : MonoBehaviour
         FillEmptySlotsFromUnlocks();
     }
 
+    public void ClearHotbar()
+    {
+        EnsureHotbarArray();
+        for (int i = 0; i < hotbar.Length; i++)
+            hotbar[i] = null;
+        seenUnlocks.Clear();
+        OnHotbarChanged?.Invoke();
+        OnSelectionChanged?.Invoke(selectedIndex);
+    }
+
+    public void AllowAutofillAndFill()
+    {
+        seenUnlocks.Clear();
+        FillEmptySlotsFromUnlocks();
+    }
+
     void OnDestroy()
     {
         if (ResearchSystem.Instance != null)
@@ -84,9 +100,15 @@ public class PlayerInventory : MonoBehaviour
 
     void OnInventoryToggle(InputAction.CallbackContext ctx)
     {
+        if (KeybindStore.BlocksGameplayInput)
+            return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            return;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
             return;
 
         PlayerBuilder builder = ResolveBuilder();
@@ -112,7 +134,13 @@ public class PlayerInventory : MonoBehaviour
 
     bool CanUseHotbar()
     {
+        if (KeybindStore.BlocksGameplayInput)
+            return false;
         if (MachineUI.Instance != null && MachineUI.Instance.IsOpen)
+            return false;
+        if (WalletHud.Instance != null && WalletHud.Instance.IsShopOpen)
+            return false;
+        if (SelectionActionsUI.Instance != null && SelectionActionsUI.Instance.IsOpen)
             return false;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused)
             return false;
@@ -153,6 +181,9 @@ public class PlayerInventory : MonoBehaviour
 
     void FillEmptySlotsFromUnlocks()
     {
+        if (TutorialSystem.Instance != null && TutorialSystem.Instance.BlocksHotbarAutofill)
+            return;
+
         EnsureHotbarArray();
         List<BuildingData> unlocked = GetUnlockedBuildings();
         for (int i = 0; i < unlocked.Count; i++)
@@ -247,6 +278,7 @@ public class PlayerInventory : MonoBehaviour
 
         selectedIndex = index;
         OnSelectionChanged?.Invoke(selectedIndex);
+        GameAudio.Ui("ui_select");
     }
 
     public void SelectEmptyTool()
@@ -399,10 +431,7 @@ public class PlayerInventory : MonoBehaviour
 
         if (!any)
             FillEmptySlotsFromUnlocks();
-        else
-        {
-            OnHotbarChanged?.Invoke();
-            OnSelectionChanged?.Invoke(selectedIndex);
-        }
+        OnHotbarChanged?.Invoke();
+        OnSelectionChanged?.Invoke(selectedIndex);
     }
 }
